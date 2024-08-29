@@ -1,8 +1,8 @@
 """
 title: AddMetadata
 author: thiswillbeyourightub
-author_url: TODO
-funding_url: TODO
+author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
+funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 version: 0.1
 """
 
