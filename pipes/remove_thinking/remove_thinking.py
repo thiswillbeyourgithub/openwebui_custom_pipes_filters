@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.0.0
+version: 1.0.1
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -123,17 +123,20 @@ class Pipe:
             pprint(body)
 
         # match the api key
-        await prog("Start")
         headers = {}
         headers["Authorization"] = f"Bearer {apikey}"
+        payload = body.copy()
 
         try:
             if body["stream"]:
                 model = self.valves.chat_model
+                title = False
+                user = f"{__user__['name']}_{__user__['email']}"
             else:
                 # stream disabled is only used for the summary title creator AFAIK
+                title = True
                 model = self.valves.title_chat_model
-            payload = body.copy()
+                user = f"titlecreator_{__user__['name']}_{__user__['email']}"
             payload["model"] = model
 
             await prog("Waiting for response")
@@ -146,7 +149,7 @@ class Pipe:
             r.raise_for_status()
             assert r.status_code == 200, f"Invalid status code: {r.status_code}"
 
-            if body["stream"]:
+            if not title:
                 await prog("Receiving chunks")
 
                 # disabled, return all directly
