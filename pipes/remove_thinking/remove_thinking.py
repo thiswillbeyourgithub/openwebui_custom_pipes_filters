@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filte
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
 version: 1.0.0
-license: MIT
+license: GPLv3
 description: A pipe function remove thinking blocks
 """
 
