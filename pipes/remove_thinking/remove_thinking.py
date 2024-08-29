@@ -139,6 +139,24 @@ class Pipe:
                 user = f"titlecreator_{__user__['name']}_{__user__['email']}"
             payload["model"] = model
 
+            # also sets the user and if it's a titlecreator or not
+            if "user" not in body:
+                payload["user"] = user
+            elif payload["user"] in user:
+                payload["user"] = user
+
+            if "metadata" in payload:
+                assert "custom_metadata" not in payload, f"Found metadata and custom_metadata in payload"
+                payload["custom_metadata"] = payload["metadata"]
+                del payload["metadata"]
+
+            if title and "custom_metadata" in payload:
+                if "tags" in payload["custom_metadata"]:
+                    assert isinstance(payload["custom_metadata"]["tags"], list), f"payload['tags'] was not a list but '{type(payload['custom_metadata']['tags'])}"
+                    payload["custom_metadata"]["tags"].append("title_ceator")
+                else:
+                    payload["custom_metadata"]["tags"] = ["title_ceator"]
+
             await prog("Waiting for response")
             r = requests.post(
                 url=f"{self.valves.LITELLM_BASE_URL}/v1/chat/completions",
