@@ -3,7 +3,10 @@ title: WarnIfLongChat
 author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
-version: 0.1
+version: 1.0.0
+date: 2024-08-29
+license: MIT
+description: A filter that adds a soft and hard limit to the number of messages in a chat.
 """
 
 from pydantic import BaseModel, Field

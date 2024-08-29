@@ -1,12 +1,12 @@
 """
 title: CostTrackingPipe
 author: thiswillbeyourgithub
-date: 2024-08-21
-version: 3.1.1
-license: MIT
-description: A pipe function to track user costs and remove 'thinkin' blocks
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
+version: 3.1.1
+date: 2024-08-21
+license: MIT
+description: A pipe function to track user costs and remove 'thinking' blocks
 """
 
 from typing import List, Union, Generator, Iterator, Callable, Any, Optional

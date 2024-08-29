@@ -1,12 +1,12 @@
 """
 title: RemoveThinkingPipe
 author: thiswillbeyourgithub
-date: 2024-08-21
-version: 3.1.1
-license: MIT
-description: A pipe function to track user costs and remove 'thinkin' blocks
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
+date: 2024-08-21
+version: 1.0.0
+license: MIT
+description: A pipe function remove thinking blocks
 """
 
 from typing import Union, Generator, Iterator, Callable, Any, Optional
