@@ -150,12 +150,15 @@ class Pipe:
                 payload["custom_metadata"] = payload["metadata"]
                 del payload["metadata"]
 
-            if title and "custom_metadata" in payload:
-                if "tags" in payload["custom_metadata"]:
-                    assert isinstance(payload["custom_metadata"]["tags"], list), f"payload['tags'] was not a list but '{type(payload['custom_metadata']['tags'])}"
-                    payload["custom_metadata"]["tags"].append("title_ceator")
+            if title:
+                if "custom_metadata" in payload:
+                    if "tags" in payload["custom_metadata"]:
+                        assert isinstance(payload["custom_metadata"]["tags"], list), f"payload['tags'] was not a list but '{type(payload['custom_metadata']['tags'])}"
+                        payload["custom_metadata"]["tags"].append("title_ceator")
+                    else:
+                        payload["custom_metadata"]["tags"] = ["title_ceator"]
                 else:
-                    payload["custom_metadata"]["tags"] = ["title_ceator"]
+                    payload["custom_metadata"] = {"tags": ["title_creator"]}
 
             await prog("Waiting for response")
             r = requests.post(
