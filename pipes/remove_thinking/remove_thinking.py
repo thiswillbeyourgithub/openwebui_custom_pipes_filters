@@ -48,18 +48,7 @@ class Pipe:
         )
 
     def __init__(self):
-        # You can also set the pipelines that are available in this pipeline.
-        # Set manifold to True if you want to use this pipeline as a manifold.
-        # Manifold pipelines can have multiple pipelines.
-        # self.type = "manifold"
-
-        # Optionally, you can set the id and name of the pipeline.
-        # Best practice is to not specify the id so that it can be automatically inferred from the filename, so that users can install multiple versions of the same pipeline.
-        # The identifier must be unique across all pipelines.
-        # The identifier must be an alphanumeric string that can include underscores or hyphens. It cannot contain spaces, special characters, slashes, or backslashes.
-        self.id = "cost_tracking_pipe"
-
-        # Optionally, you can set the name of the manifold pipeline.
+        self.id = "RemoveThinkingPipe"
         self.name = "RemoveThinkingPipe"
 
         # Initialize rate limits
