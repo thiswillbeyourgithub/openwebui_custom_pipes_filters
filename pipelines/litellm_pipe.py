@@ -2,7 +2,7 @@
 title: LiteLLM Manifold Pipeline
 author: changchiyou (fork by thiswillbeyourigthub)
 date: 2024-09-01
-version: 1.0.1
+version: 1.1.0
 license: MIT
 description: A manifold pipeline that uses LiteLLM.
 funding_url: https://github.com/open-webui/pipelines/discussions/198#discussioncomment-10348421
@@ -27,7 +27,7 @@ class Pipeline:
         self.id = "litellm_manifold"
 
         # Optionally, you can set the name of the manifold pipeline.
-        self.name = "LiteLLM_Manifold: "
+        self.name = "LiteLLM_Manifold"
 
         # Initialize rate limits
         self.valves = self.Valves(
