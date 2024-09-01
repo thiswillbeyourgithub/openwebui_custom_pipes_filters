@@ -13,6 +13,7 @@ from schemas import OpenAIChatMessage
 from pydantic import BaseModel
 import requests
 import os
+import json
 
 
 class Pipeline:
@@ -115,6 +116,8 @@ class Pipeline:
 
             if body.get('custom_metadata'):
                 payload["metadata"] = body["custom_metadata"]
+
+            print(json.dumps(payload))
 
             r = requests.post(
                 url=f"{self.valves.LITELLM_BASE_URL}/v1/chat/completions",
