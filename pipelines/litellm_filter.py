@@ -80,6 +80,7 @@ class Pipeline:
             body["custom_metadata"]["trace_user_id"] = f'{user["name"]} / {user["email"]}'
         else:
             print(f"Error: user & body[\"user\"] are both None")
+        body["custom_metadata"]["user"] = body["custom_metadata"]["trace_user_id"]
 
         # add missing tags
         if self.valves.tags.strip():
