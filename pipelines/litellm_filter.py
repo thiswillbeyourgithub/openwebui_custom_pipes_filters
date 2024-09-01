@@ -82,9 +82,9 @@ class Pipeline:
             print(f"Error: user & body[\"user\"] are both None")
 
         # add missing tags
-        if self.valves.tags:
+        if self.valves.tags.strip():
             if "tags" in body["custom_metadata"]:
-                for t in self.valves.tags:
+                for t in json.loads(self.valves.tags):
                     if t not in body["custom_metadata"]["tags"]:
                         body["custom_metadata"]["tags"].append(t)
             else:
