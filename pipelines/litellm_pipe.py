@@ -27,7 +27,7 @@ class Pipeline:
         self.id = "litellm_manifold"
 
         # Optionally, you can set the name of the manifold pipeline.
-        self.name = "LiteLLM_Manifold"
+        self.name = "litellm_manifold"
 
         # Initialize rate limits
         self.valves = self.Valves(
