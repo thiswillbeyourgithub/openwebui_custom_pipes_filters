@@ -95,7 +95,7 @@ class Pipeline:
     def pipe(
         self, user_message: str, model_id: str, messages: List[dict], body: dict
     ) -> Union[str, Generator, Iterator]:
-        if "user" in body and self.valves.LITELLM_PIPELINE_DEBUG::
+        if "user" in body and self.valves.LITELLM_PIPELINE_DEBUG:
             print("###################################### " + self.name)
             print(f'# User: {body["user"]["name"]} / {body["user"]["email"]}')
             print(f"# Message: {user_message}")
