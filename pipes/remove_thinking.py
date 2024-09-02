@@ -225,10 +225,6 @@ class Pipe:
                     match = self.pattern.search(buffer)
                     if match:  # Remove the thought block
                         buffer = buffer[: match.start()] + buffer[match.end() :]
-                        while buffer.startswith("\n"):
-                            buffer = buffer[1:]
-                        while buffer.endswith("\n"):
-                            buffer = buffer[:-1]
                         thought_removed += 1
                         await succ(f"Removed {thought_removed} thought block")
 
@@ -242,20 +238,12 @@ class Pipe:
                         elif len(buffer) > len_start_thought:
                             to_yield = buffer[:-len_start_thought]
                             buffer = buffer[-len_start_thought:]
-                            while buffer.startswith("\n"):
-                                buffer = buffer[1:]
-                            while buffer.endswith("\n"):
-                                buffer = buffer[:-1]
                             yield to_yield
 
                 if buffer:  # Yield any remaining content with finish_reason "stop"
                     if self.pattern.search(buffer):
                         match = self.pattern.search(buffer)
                         buffer = buffer[: match.start()] + buffer[match.end() :]
-                        while buffer.startswith("\n"):
-                            buffer = buffer[1:]
-                        while buffer.endswith("\n"):
-                            buffer = buffer[:-1]
                         thought_removed += 1
                         yield buffer
                         await succ(f"Removed {thought_removed} thought block")
