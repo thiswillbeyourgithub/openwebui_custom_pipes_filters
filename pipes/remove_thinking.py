@@ -200,10 +200,14 @@ class Pipe:
                         parsed_line = json.loads(line)
                     except (json.JSONDecodeError, KeyError):
                         continue
+
+                    if "error" in parsed_line and "message" in parsed_line["error"] and parsed_line["error"]["message"]:
+                        raise Exception(f"Error: {parsed_line['error']['message']}")
+
                     try:
                         content = parsed_line["choices"][0]["delta"].get("content", "")
-                    except KeyError as err:
-                        raise Exception(f"KeyError for parsed_line: '{err}'.\nParsed_line: '{parsed_line}'")
+                    except KeyError as e:
+                        raise Exception(f"KeyError for parsed_line: '{e}'.\nParsed_line: '{parsed_line}'")
 
                     if not content:
                         continue
