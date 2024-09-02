@@ -160,6 +160,15 @@ class Pipe:
                 else:
                     payload["custom_metadata"] = {"tags": ["title_creator"]}
 
+
+            # add langfuse session_id
+            if "custom_metadata" in payload:
+                if "session_id" not in body["custom_metadata"]:
+                    body["custom_metadata"]["session_id"] = body["chat_id"]
+                elif body["custom_metadata"]["session_id"] != body["chat_id"]:
+                    print(f"Error: distinct 'session_id' found: '{body['custom_metadata']['session_id']}' in body and '{body['chat_id']}' in body. Keeping the later")
+                    body["custom_metadata"]["session_id"] = body["chat_id"]
+
             await prog("Waiting for response")
             r = requests.post(
                 url=f"{self.valves.LITELLM_BASE_URL}/v1/chat/completions",
