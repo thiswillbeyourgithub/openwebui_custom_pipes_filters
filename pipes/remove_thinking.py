@@ -123,32 +123,33 @@ class Pipe:
             pprint(body.keys())
             pprint(body)
 
-        if self.valves.cache_system_prompt:
-            for i, m in enumerate(body["messages"]):
-                if m["role"] != "system":
-                    continue
-                if isinstance(m["content"], str):
-                    body["messages"][i] = {
-                        "type": "text",
-                        "text": m["content"],
-                        "cache_control": {"type": "ephemeral"}
-                    }
-                elif isinstance(m["content"], list):
-                    for ii, mm in enumerate(m["content"]):
-                        m["content"][ii]["cache_control"] = {"type": "ephemeral"}
-                    body["messages"][i]["content"] = m["content"]
-                elif isinstance(m["content"], dict):
-                    body["messages"][i]["content"]["cache_control"] = {"type": "ephemeral"}
-                else:
-                    raise Exception(f"Unexpected system message: '{m}'")
+        # if self.valves.cache_system_prompt:
+        #     for i, m in enumerate(body["messages"]):
+        #         if m["role"] != "system":
+        #             continue
+        #         if isinstance(m["content"], str):
+        #             body["messages"][i] = [{
+        #                 "role": "system",
+        #                 "type": "text",
+        #                 "text": m["content"],
+        #                 "cache_control": {"type": "ephemeral"}
+        #             }]
+        #         elif isinstance(m["content"], list):
+        #             for ii, mm in enumerate(m["content"]):
+        #                 m["content"][ii]["cache_control"] = {"type": "ephemeral"}
+        #             body["messages"][i]["content"] = m["content"]
+        #         elif isinstance(m["content"], dict):
+        #             body["messages"][i]["content"]["cache_control"] = {"type": "ephemeral"}
+        #         else:
+        #             raise Exception(f"Unexpected system message: '{m}'")
 
         # match the api key
         headers = {}
         headers["Authorization"] = f"Bearer {apikey}"
         payload = body.copy()
 
-        if self.valves.cache_system_prompt:
-            headers["extra_headers"] = "anthropic-beta: prompt-caching-2024-07-31"
+        # if self.valves.cache_system_prompt:
+        #     headers["extra_headers"] = "anthropic-beta: prompt-caching-2024-07-31"
 
         try:
             if body["stream"]:
