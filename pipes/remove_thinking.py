@@ -232,7 +232,7 @@ class Pipe:
                         # remove ulterior thought blocks
                         start_match = self.start_thought.search(buffer)
                         if start_match:
-                            await prog(f"Waiting for thought n°{thought_removed+1} to finish")
+                            await prog(f"Waiting for thought n°{thought_removed + 1} to finish")
 
                         # TODO: actually the start_thought is not of the same length as its pattern but in most cases it's a good upper bound
                         elif len(buffer) > len_start_thought:
