@@ -67,7 +67,7 @@ class Pipe:
         print(f"{self.name}: {message}")
         return message
 
-    def on_valves_updated(self):
+    def update_valves(self):
         """This function is called when the valves are updated."""
         self.p("Updating valves")
 
@@ -97,6 +97,8 @@ class Pipe:
         *args,
         **kwargs,
     ) -> Union[str, Generator, Iterator]:
+
+        self.update_valves()
 
         apikey = self.valves.api_key
 
