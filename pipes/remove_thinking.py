@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.1.1
+version: 1.2.0
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -77,7 +77,7 @@ class Pipe:
             api_key, str
         ), f"Expected api_key to be a str, not {type(api_key)}"
         api_key = api_key.strip()
-        assert api_key, "Api_key is empty"
+        assert api_key, "Valve api_key is empty"
 
         self.start_thought = re.compile(self.valves.start_thought)
         self.stop_thought = re.compile(self.valves.stop_thought)
@@ -98,69 +98,71 @@ class Pipe:
         **kwargs,
     ) -> Union[str, Generator, Iterator]:
 
-        self.update_valves()
-
-        apikey = self.valves.api_key
-
-        # prints and emitter to show progress
-        def pprint(message: str) -> str:
-            self.p(f"'{__user__['name']}': {message}")
-            return message
-
-        emitter = EventEmitter(__event_emitter__)
-        clear_emitter = not self.valves.debug
-
-        async def prog(message: str) -> None:
-            await emitter.progress_update(pprint(message))
-
-        async def succ(message: str) -> None:
-            await emitter.success_update(pprint(message))
-
-        async def err(message: str) -> None:
-            nonlocal clear_emitter
-            clear_emitter = False
-            await emitter.error_update(pprint(message))
-
-        # to know in the future if there are new arguments I could use
-        if args or kwargs:
-            if args:
-                pprint("Received args:" + str(args))
-            if kwargs:
-                pprint("Received kwargs:" + str(kwargs))
-
-        if self.valves.debug:
-            pprint(body.keys())
-            pprint(body)
-
-        # if self.valves.cache_system_prompt:
-        #     for i, m in enumerate(body["messages"]):
-        #         if m["role"] != "system":
-        #             continue
-        #         if isinstance(m["content"], str):
-        #             body["messages"][i] = [{
-        #                 "role": "system",
-        #                 "type": "text",
-        #                 "text": m["content"],
-        #                 "cache_control": {"type": "ephemeral"}
-        #             }]
-        #         elif isinstance(m["content"], list):
-        #             for ii, mm in enumerate(m["content"]):
-        #                 m["content"][ii]["cache_control"] = {"type": "ephemeral"}
-        #             body["messages"][i]["content"] = m["content"]
-        #         elif isinstance(m["content"], dict):
-        #             body["messages"][i]["content"]["cache_control"] = {"type": "ephemeral"}
-        #         else:
-        #             raise Exception(f"Unexpected system message: '{m}'")
-
-        # match the api key
-        headers = {}
-        headers["Authorization"] = f"Bearer {apikey}"
-        payload = body.copy()
-
-        # if self.valves.cache_system_prompt:
-        #     headers["extra_headers"] = "anthropic-beta: prompt-caching-2024-07-31"
-
+        # wrap the whole function into a try block to yield the exception
         try:
+
+            self.update_valves()
+
+            apikey = self.valves.api_key
+
+            # prints and emitter to show progress
+            def pprint(message: str) -> str:
+                self.p(f"'{__user__['name']}': {message}")
+                return message
+
+            emitter = EventEmitter(__event_emitter__)
+            clear_emitter = not self.valves.debug
+
+            async def prog(message: str) -> None:
+                await emitter.progress_update(pprint(message))
+
+            async def succ(message: str) -> None:
+                await emitter.success_update(pprint(message))
+
+            async def err(message: str) -> None:
+                nonlocal clear_emitter
+                clear_emitter = False
+                await emitter.error_update(pprint(message))
+
+            # to know in the future if there are new arguments I could use
+            if args or kwargs:
+                if args:
+                    pprint("Received args:" + str(args))
+                if kwargs:
+                    pprint("Received kwargs:" + str(kwargs))
+
+            if self.valves.debug:
+                pprint(body.keys())
+                pprint(body)
+
+            # if self.valves.cache_system_prompt:
+            #     for i, m in enumerate(body["messages"]):
+            #         if m["role"] != "system":
+            #             continue
+            #         if isinstance(m["content"], str):
+            #             body["messages"][i] = [{
+            #                 "role": "system",
+            #                 "type": "text",
+            #                 "text": m["content"],
+            #                 "cache_control": {"type": "ephemeral"}
+            #             }]
+            #         elif isinstance(m["content"], list):
+            #             for ii, mm in enumerate(m["content"]):
+            #                 m["content"][ii]["cache_control"] = {"type": "ephemeral"}
+            #             body["messages"][i]["content"] = m["content"]
+            #         elif isinstance(m["content"], dict):
+            #             body["messages"][i]["content"]["cache_control"] = {"type": "ephemeral"}
+            #         else:
+            #             raise Exception(f"Unexpected system message: '{m}'")
+
+            # match the api key
+            headers = {}
+            headers["Authorization"] = f"Bearer {apikey}"
+            payload = body.copy()
+
+            # if self.valves.cache_system_prompt:
+            #     headers["extra_headers"] = "anthropic-beta: prompt-caching-2024-07-31"
+
             if body["stream"]:
                 model = self.valves.chat_model
                 title = False
@@ -179,7 +181,7 @@ class Pipe:
                 payload["user"] = user
 
             if "metadata" in payload:
-                assert "custom_metadata" not in payload, f"Found metadata and custom_metadata in payload"
+                assert "custom_metadata" not in payload, "Found metadata and custom_metadata in payload"
                 payload["custom_metadata"] = payload["metadata"]
                 del payload["metadata"]
 
