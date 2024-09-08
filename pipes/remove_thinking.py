@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.2.2
+version: 1.3.0
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -60,7 +60,6 @@ class Pipe:
 
         # Initialize rate limits
         self.valves = self.Valves()
-        self.uvalves = self.UserValves()
 
         self.start_thought = re.compile(self.valves.start_thought)
         self.stop_thought = re.compile(self.valves.stop_thought)
@@ -76,8 +75,6 @@ class Pipe:
 
     def update_valves(self):
         """This function is called when the valves are updated."""
-        self.p("Updating valves")
-
         # just checking the validity of the api_key
         api_key = self.valves.api_key
         assert isinstance(
@@ -92,7 +89,6 @@ class Pipe:
             self.valves.start_thought + "(.*)?" + self.valves.stop_thought,
             flags=re.DOTALL | re.MULTILINE,
         )
-        self.p("Done updating valves")
 
 
     async def pipe(
@@ -117,7 +113,7 @@ class Pipe:
                 return message
 
             emitter = EventEmitter(__event_emitter__)
-            clear_emitter = not self.uvalves.debug
+            clear_emitter = not __user__["valves"].debug
 
             async def prog(message: str) -> None:
                 await emitter.progress_update(pprint(message))
@@ -137,7 +133,7 @@ class Pipe:
                 if kwargs:
                     pprint("Received kwargs:" + str(kwargs))
 
-            if self.uvalves.debug:
+            if __user__["valves"].debug:
                 pprint(body.keys())
                 pprint(body)
 
@@ -227,7 +223,7 @@ class Pipe:
                 await prog("Receiving chunks")
 
                 # disabled, return all directly
-                if not self.uvalves.remove_thoughts:
+                if not __user__["valves"].remove_thoughts:
                     for line in r.iter_lines():
                         try:
                             content = self.parse_chunk(line)
