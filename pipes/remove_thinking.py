@@ -137,34 +137,6 @@ class Pipe:
                 pprint(body.keys())
                 pprint(body)
 
-            # if self.valves.cache_system_prompt:
-            #     for i, m in enumerate(body["messages"]):
-            #         if m["role"] != "system":
-            #             continue
-            #         if isinstance(m["content"], str):
-            #             body["messages"][i] = [{
-            #                 "role": "system",
-            #                 "type": "text",
-            #                 "text": m["content"],
-            #                 "cache_control": {"type": "ephemeral"}
-            #             }]
-            #         elif isinstance(m["content"], list):
-            #             for ii, mm in enumerate(m["content"]):
-            #                 m["content"][ii]["cache_control"] = {"type": "ephemeral"}
-            #             body["messages"][i]["content"] = m["content"]
-            #         elif isinstance(m["content"], dict):
-            #             body["messages"][i]["content"]["cache_control"] = {"type": "ephemeral"}
-            #         else:
-            #             raise Exception(f"Unexpected system message: '{m}'")
-
-            # match the api key
-            headers = {}
-            headers["Authorization"] = f"Bearer {apikey}"
-            payload = body.copy()
-
-            # if self.valves.cache_system_prompt:
-            #     headers["extra_headers"] = "anthropic-beta: prompt-caching-2024-07-31"
-
             if body["stream"]:
                 model = self.valves.chat_model
                 title = False
@@ -174,6 +146,42 @@ class Pipe:
                 title = True
                 model = self.valves.title_chat_model
                 user = f"titlecreator_{__user__['name']}_{__user__['email']}"
+
+
+            # claude prompt caching
+            can_be_cached = False
+            for w in ["anthropic", "claude", "haiku", "sonnet"]:
+                if w in model.lower():
+                    can_be_cached = True
+                    break
+            if self.valves.cache_system_prompt and can_be_cached:
+                pprint("Enabling anthropic caching")
+                for i, m in enumerate(body["messages"]):
+                    if m["role"] != "system":
+                        continue
+                    if isinstance(m["content"], str):
+                        body["messages"][i] = [{
+                            "role": "system",
+                            "type": "text",
+                            "text": m["content"],
+                            "cache_control": {"type": "ephemeral"}
+                        }]
+                    elif isinstance(m["content"], list):
+                        for ii, mm in enumerate(m["content"]):
+                            m["content"][ii]["cache_control"] = {"type": "ephemeral"}
+                        body["messages"][i]["content"] = m["content"]
+                    elif isinstance(m["content"], dict):
+                        body["messages"][i]["content"]["cache_control"] = {"type": "ephemeral"}
+                    else:
+                        raise Exception(f"Unexpected system message: '{m}'")
+            else:
+                pprint("Disabling anthropic caching")
+
+            # match the api key
+            headers = {}
+            headers["Authorization"] = f"Bearer {apikey}"
+
+            payload = body.copy()
             payload["model"] = model
 
             # also sets the user and if it's a titlecreator or not
