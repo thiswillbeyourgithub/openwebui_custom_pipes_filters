@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.2.0
+version: 1.2.1
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -215,6 +215,7 @@ class Pipe:
             assert r.status_code == 200, f"Invalid status code: {r.status_code}"
 
             discarded = ""
+            yielded = ""
 
             if not title:
                 await prog("Receiving chunks")
@@ -222,6 +223,7 @@ class Pipe:
                 # disabled, return all directly
                 if not self.valves.remove_thoughts:
                     for line in r.iter_lines():
+                        yielded += line
                         yield line
                     if clear_emitter:
                         await succ("")  # hides it
@@ -276,6 +278,7 @@ class Pipe:
                         elif len(buffer) > len_start_thought:
                             to_yield = buffer[:-len_start_thought]
                             buffer = buffer[-len_start_thought:]
+                            yielded += to_yield
                             yield to_yield
 
                 if buffer:  # Yield any remaining content with finish_reason "stop"
@@ -283,14 +286,17 @@ class Pipe:
                         match = self.pattern.search(buffer)
                         buffer = buffer[: match.start()] + buffer[match.end() :]
                         thought_removed += 1
+                        yielded += buffer
                         yield buffer
                         await succ(f"Removed {thought_removed} thought block")
 
                     elif self.start_thought.search(buffer):
                         await err("It seems a thought was never finished")
+                        yielded += buffer
                         yield buffer
                     else:
                         # await succ(f"Was waiting for a buffer bit: {buffer}")
+                        yielded += buffer
                         yield buffer
 
                 if not thought_removed:
@@ -301,7 +307,14 @@ class Pipe:
                 await prog("Returning directly")
                 j = r.json()
                 to_yield = j["choices"][0]["message"].get("content", "")
+                yielded += to_yield
                 yield to_yield
+
+            # if no text was shown, show the discarded text at least
+            if not yielded:
+                assert discarded, "No text discarded. Has the model returned nothing?"
+                yield discarded
+            assert yielded, "No text to show so showing what would have been discarded"
 
             if clear_emitter:
                 await succ("")  # hides it
