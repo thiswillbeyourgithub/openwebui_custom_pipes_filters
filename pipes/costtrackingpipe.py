@@ -70,18 +70,9 @@ class Pipe:
 
         # Initialize rate limits
         self.valves = self.Valves()
-        self.uvalves = self.UserValves()
-
-        self.start_thought = re.compile(self.uvalves.start_thoughts)
-        self.stop_thought = re.compile(self.uvalves.stop_thoughts)
-        self.pattern = re.compile(
-            self.uvalves.start_thoughts + "(.*)?" + self.uvalves.stop_thoughts,
-            flags=re.DOTALL | re.MULTILINE,
-        )
 
     async def on_valves_updated(self):
         """This function is called when the valves are updated."""
-
         # just checking the validity of the api_keys
         if self.valves.api_keys is None:
             assert (
@@ -112,6 +103,14 @@ class Pipe:
         *args,
         **kwargs,
     ) -> Union[str, Generator, Iterator]:
+        self.on_valves_updated()
+        self.start_thought = re.compile(__user__["valves"].start_thoughts)
+        self.stop_thought = re.compile(__user__["valves"].stop_thoughts)
+        self.pattern = re.compile(
+            __user__["valves"].start_thoughts + "(.*)?" + __user__["valves"].stop_thoughts,
+            flags=re.DOTALL | re.MULTILINE,
+        )
+
 
         # load the api_keys as a dict
         if self.valves.api_keys is None:
@@ -157,7 +156,7 @@ class Pipe:
             if kwargs:
                 pprint("Received kwargs:" + str(kwargs))
 
-        if self.uvalves.debug:
+        if __user__["valves"].debug:
             pprint(body.keys())
             pprint(body)
 
@@ -165,7 +164,7 @@ class Pipe:
         headers = {}
         await prog("Start")
         username = __user__["name"]
-        if not self.uvalves.enabled:
+        if not __user__["valves"].enabled:
             await prog("Disabled api key matching, will use the default key")
             apikey = api_keys["default"]
             headers["Authorization"] = f"Bearer {apikey}"
@@ -184,10 +183,10 @@ class Pipe:
 
         try:
             if body["stream"]:
-                model = self.uvalves.chat_model
+                model = __user__["valves"].chat_model
             else:
                 # stream disabled is only used for the summary title creator AFAIK
-                model = self.uvalves.title_chat_model
+                model = __user__["valves"].title_chat_model
             payload = {**body, "model": model, "user": username}
 
             await prog("Waiting for response")
@@ -203,7 +202,7 @@ class Pipe:
 
             if body["stream"]:
                 await prog("Receiving chunks")
-                if (not self.uvalves.remove_thoughts) or (not self.uvalves.enabled):
+                if (not __user__["valves"].remove_thoughts) or (not __user__["valves"].enabled):
                     for line in r.iter_lines():
                         yield line
                     return
@@ -213,7 +212,7 @@ class Pipe:
 
                 for line in r.iter_lines():
                     if (
-                        not self.uvalves.debug
+                        not __user__["valves"].debug
                         and "start_time" in locals()
                         and time.time() - start_time > 1
                     ):
@@ -263,7 +262,7 @@ class Pipe:
                 to_yield = j["choices"][0]["message"].get("content", "")
                 yield to_yield
 
-            if not self.uvalves.debug:
+            if not __user__["valves"].debug:
                 await succ("")  # hides it
             return
 
