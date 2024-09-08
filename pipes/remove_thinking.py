@@ -38,18 +38,21 @@ class Pipe:
             default=DEFAULT_TITLE_CHAT_MODEL,
             description="Model to use to generate titles",
         )
-        remove_thoughts: bool = Field(
-            default=True, description="True to remove the thoughts block"
-        )
         start_thought: str = Field(
             default="``` ?thinking", description="Start of thought block"
         )
         stop_thought: str = Field(default="```", description="End of thought block")
         cache_system_prompt: bool = Field(default=True, description="Wether to cache the system prompt, if using a claude model")
+
+    class UserValves(BaseModel):
+        remove_thoughts: bool = Field(
+            default=True, description="True to remove the thoughts block"
+        )
         debug: bool = Field(
             default=False,
             description="Set to True to print more info to the docker logs, also to not remove the last emitter message.",
         )
+
 
     def __init__(self):
         self.id = "RemoveThinkingPipe"
@@ -57,6 +60,7 @@ class Pipe:
 
         # Initialize rate limits
         self.valves = self.Valves()
+        self.uvalves = self.UserValves()
 
         self.start_thought = re.compile(self.valves.start_thought)
         self.stop_thought = re.compile(self.valves.stop_thought)
@@ -114,7 +118,7 @@ class Pipe:
                 return message
 
             emitter = EventEmitter(__event_emitter__)
-            clear_emitter = not self.valves.debug
+            clear_emitter = not self.uvalves.debug
 
             async def prog(message: str) -> None:
                 await emitter.progress_update(pprint(message))
@@ -134,7 +138,7 @@ class Pipe:
                 if kwargs:
                     pprint("Received kwargs:" + str(kwargs))
 
-            if self.valves.debug:
+            if self.uvalves.debug:
                 pprint(body.keys())
                 pprint(body)
 
@@ -224,7 +228,7 @@ class Pipe:
                 await prog("Receiving chunks")
 
                 # disabled, return all directly
-                if not self.valves.remove_thoughts:
+                if not self.uvalves.remove_thoughts:
                     for line in r.iter_lines():
                         yielded += line
                         yield line
