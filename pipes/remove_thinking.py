@@ -62,8 +62,14 @@ class Pipe:
             flags=re.DOTALL | re.MULTILINE,
         )
 
+    def p(self, message: str) -> str:
+        "simple printer"
+        print(f"{self.name}: {message}")
+        return message
+
     def on_valves_updated(self):
         """This function is called when the valves are updated."""
+        self.p("Updating valves")
 
         # just checking the validity of the api_key
         api_key = self.valves.api_key
@@ -79,6 +85,7 @@ class Pipe:
             self.valves.start_thought + "(.*)?" + self.valves.stop_thought,
             flags=re.DOTALL | re.MULTILINE,
         )
+        self.p("Done updating valves")
 
 
     async def pipe(
