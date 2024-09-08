@@ -229,8 +229,18 @@ class Pipe:
                 # disabled, return all directly
                 if not self.uvalves.remove_thoughts:
                     for line in r.iter_lines():
-                        yielded += line
-                        yield line
+                        try:
+                            content = self.parse_chunk(line)
+                        except Exception as err:
+                            err = str(err)
+                            if err == "DONE":
+                                break
+                            elif err == "CONTINUE":
+                                continue
+                            else:
+                                raise
+                        yielded += content
+                        yield content
                     if clear_emitter:
                         await succ("")  # hides it
                     return
@@ -244,27 +254,16 @@ class Pipe:
                     if not line:
                         continue
 
-                    # parse content
-                    line = line.decode("utf-8")
-                    if line.startswith("data: "):
-                        line = line[6:]  # Remove "data: " prefix
-                    if line.strip() == "[DONE]":
-                        break
                     try:
-                        parsed_line = json.loads(line)
-                    except (json.JSONDecodeError, KeyError):
-                        continue
-
-                    if "error" in parsed_line and "message" in parsed_line["error"] and parsed_line["error"]["message"]:
-                        raise Exception(f"Error: {parsed_line['error']['message']}")
-
-                    try:
-                        content = parsed_line["choices"][0]["delta"].get("content", "")
-                    except KeyError as e:
-                        raise Exception(f"KeyError for parsed_line: '{e}'.\nParsed_line: '{parsed_line}'")
-
-                    if not content:
-                        continue
+                        content = self.parse_chunk(line)
+                    except Exception as err:
+                        err = str(err)
+                        if err == "DONE":
+                            break
+                        elif err == "CONTINUE":
+                            continue
+                        else:
+                            raise
                     buffer += content
 
                     match = self.pattern.search(buffer)
@@ -334,6 +333,29 @@ class Pipe:
             else:
                 yield f"An error has occured:\n---\n{e}\n---"
             raise
+
+    def parse_chunk(self, line: bytes) -> str:
+        line = line.decode("utf-8")
+        if line.startswith("data: "):
+            line = line[6:]  # Remove "data: " prefix
+        if line.strip() == "[DONE]":
+            raise Exception("DONE")  # triggers a break
+        try:
+            parsed_line = json.loads(line)
+        except (json.JSONDecodeError, KeyError):
+            raise Exception("CONTINUE")
+
+        if "error" in parsed_line and "message" in parsed_line["error"] and parsed_line["error"]["message"]:
+            raise Exception(f"Error: {parsed_line['error']['message']}")
+
+        try:
+            content = parsed_line["choices"][0]["delta"].get("content", "")
+        except KeyError as e:
+            raise Exception(f"KeyError for parsed_line: '{e}'.\nParsed_line: '{parsed_line}'")
+
+        if not content:
+            raise Exception("CONTINUE")
+        return content
 
 
 class EventEmitter:
