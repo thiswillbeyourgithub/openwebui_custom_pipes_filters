@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.1.0
+version: 1.1.1
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -212,6 +212,8 @@ class Pipe:
             r.raise_for_status()
             assert r.status_code == 200, f"Invalid status code: {r.status_code}"
 
+            discarded = ""
+
             if not title:
                 await prog("Receiving chunks")
 
@@ -257,6 +259,7 @@ class Pipe:
 
                     match = self.pattern.search(buffer)
                     if match:  # Remove the thought block
+                        discarded += buffer[: match.start()] + buffer[match.end() :]
                         buffer = buffer[: match.start()] + buffer[match.end() :]
                         thought_removed += 1
                         await succ(f"Removed {thought_removed} thought block")
@@ -304,6 +307,8 @@ class Pipe:
 
         except Exception as e:
             await err(f"Error: {e}")
+            if "discarded" in locals() and discarded:
+                yield "An error has occured. Here's the discarded text anyway:\n" + discarded + "\n\nError was: '{e}'"
             raise
 
 
