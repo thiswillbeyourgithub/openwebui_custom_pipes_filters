@@ -160,20 +160,25 @@ class Pipe:
                     if m["role"] != "system":
                         continue
                     if isinstance(m["content"], str):
-                        body["messages"][i] = [{
-                            "role": "system",
-                            "type": "text",
-                            "text": m["content"],
-                            "cache_control": {"type": "ephemeral"}
-                        }]
+                        sys_prompt = m["content"]
                     elif isinstance(m["content"], list):
+                        sys_prompt = ""
                         for ii, mm in enumerate(m["content"]):
-                            m["content"][ii]["cache_control"] = {"type": "ephemeral"}
-                        body["messages"][i]["content"] = m["content"]
+                            sys_prompt += mm["text"]
                     elif isinstance(m["content"], dict):
-                        body["messages"][i]["content"]["cache_control"] = {"type": "ephemeral"}
+                        sys_prompt = m["content"]["text"]
                     else:
                         raise Exception(f"Unexpected system message: '{m}'")
+                    body["messages"][i] = {
+                        "role": "system",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": sys_prompt,
+                                "cache_control": {"type": "ephemeral"},
+                            }
+                        ]
+                    }
             else:
                 pprint("Disabling anthropic caching")
 
