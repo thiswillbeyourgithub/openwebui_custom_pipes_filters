@@ -23,7 +23,10 @@ DEFAULT_TITLE_CHAT_MODEL = "litellm_gpt-4o-mini"
 class Pipe:
 
     class Valves(BaseModel):
-        LITELLM_BASE_URL: str = DEFAULT_BASE_URL
+        litellm_base_url: Optional[str] = Field(
+            default=DEFAULT_BASE_URL,
+            description="The base url for litellm",
+        )
         api_key: Optional[str] = Field(
             default=None,
             description="A litellm API api key",
@@ -206,7 +209,7 @@ class Pipe:
 
             await prog("Waiting for response")
             r = requests.post(
-                url=f"{self.valves.LITELLM_BASE_URL}/v1/chat/completions",
+                url=f"{self.valves.litellm_base_url}/v1/chat/completions",
                 json=payload,
                 headers=headers,
                 stream=True,
