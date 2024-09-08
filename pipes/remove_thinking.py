@@ -42,7 +42,7 @@ class Pipe:
             default="``` ?thinking", description="Start of thought block"
         )
         stop_thought: str = Field(default="```", description="End of thought block")
-        cache_system_prompt: bool = Field(default=True, description="Wether to cache the system prompt, if using a claude model")
+        cache_system_prompt: bool = Field(default=False, description="Wether to cache the system prompt, if using a claude model")
 
     class UserValves(BaseModel):
         remove_thoughts: bool = Field(
