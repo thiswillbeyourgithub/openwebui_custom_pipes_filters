@@ -62,7 +62,7 @@ class Pipe:
             flags=re.DOTALL | re.MULTILINE,
         )
 
-    async def on_valves_updated(self):
+    def on_valves_updated(self):
         """This function is called when the valves are updated."""
 
         # just checking the validity of the api_key
