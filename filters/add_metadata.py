@@ -90,13 +90,14 @@ class Filter:
                 await log(f"User key already found in body: '{body['user']}'")
                 if body["user"] != __user__["name"]:
                     await log(f"User key different than expected: '{body['user']}' vs '{__user__['name']}'")
-            body["user"] = __user__["name"]
-            await log(f"Added user '{__user__['name']}'")
+            new_value = f"{__user__['name']}_{__user__['email']}"
+            body["user"] = new_value
+            await log(f"Added user metadata '{new_value}'")
 
             if "metadata" in body:
-                body["metadata"]["open-webui_user"] = __user__
+                body["metadata"]["open-webui_userinfo"] = __user__
             else:
-                body["metadata"] = {"open-webui_user": __user__}
+                body["metadata"] = {"open-webui_userinfo": __user__}
 
         # metadata
         metadata = load_json_dict(self.valves.extra_metadata)
@@ -138,8 +139,8 @@ class Filter:
         await emitter.success_update("")  # hides the emitter
         return body
 
-    def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
-        return body
+    # def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
+    #     return body
 
 
 class EventEmitter:
