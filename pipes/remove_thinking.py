@@ -308,7 +308,9 @@ class Pipe:
         except Exception as e:
             await err(f"Error: {e}")
             if "discarded" in locals() and discarded:
-                yield "An error has occured. Here's the discarded text anyway:\n" + discarded + "\n\nError was: '{e}'"
+                yield f"An error has occured. Here's the discarded text anyway:\n---\n{discarded}\n---\nError was: '{e}'"
+            else:
+                yield f"An error has occured:\n---\n{e}\n---"
             raise
 
 
