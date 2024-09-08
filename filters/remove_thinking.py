@@ -2,7 +2,7 @@
 title: Thinking Filter
 author: TrolleK
 author_url: https://github.com/hosteren & https://huggingface.co/trollek
-version: 0.1
+version: 0.2
 """
 
 import re
@@ -30,7 +30,6 @@ class Filter:
 
         # Initialize 'valves' with specific configurations. Using 'Valves' instance helps encapsulate settings,
         # which ensures settings are managed cohesively and not confused with operational flags like 'file_handler'.
-        self.uvalves = self.UserValves()
         self.valves = self.Valves()
 
         self.pattern = re.compile(
@@ -68,7 +67,7 @@ class Filter:
         self.p(f"outlet:{__user__}")
         # print(f"outlet:content:{body['messages'][-1]['content']}")
         # print(f"outlet:user:{__user__}")
-        if not self.uvalves.enable:
+        if not __user__["valves"].enable:
             self.p("outlet:disabled")
             return body
         # self.p(str(body)
