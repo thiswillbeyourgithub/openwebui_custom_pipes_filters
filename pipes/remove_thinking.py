@@ -330,7 +330,7 @@ class Pipe:
                 yield f"An error has occured:\n---\n{e}\n---"
             raise
 
-    def parse_chunk(self, line: bytes) -> str:
+    def parse_chunk(self, line) -> str:
         line = line.decode("utf-8")
         if line.startswith("data: "):
             line = line[6:]  # Remove "data: " prefix
