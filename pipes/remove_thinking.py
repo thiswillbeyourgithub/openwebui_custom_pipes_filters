@@ -102,7 +102,7 @@ class Pipe:
 
         # prints and emitter to show progress
         def pprint(message: str) -> str:
-            print(f"RemoveThinkingPipe of '{__user__['name']}': " + str(message))
+            self.p(f"'{__user__['name']}': {message}")
             return message
 
         emitter = EventEmitter(__event_emitter__)
