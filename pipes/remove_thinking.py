@@ -240,11 +240,11 @@ class Pipe:
                     for line in r.iter_lines():
                         try:
                             content = self.parse_chunk(line)
-                        except Exception as err:
-                            err = str(err)
-                            if err == "DONE":
+                        except Exception as e:
+                            e = str(e)
+                            if e == "DONE":
                                 break
-                            elif err == "CONTINUE":
+                            elif e == "CONTINUE":
                                 continue
                             else:
                                 raise
@@ -265,11 +265,11 @@ class Pipe:
 
                     try:
                         content = self.parse_chunk(line)
-                    except Exception as err:
-                        err = str(err)
-                        if err == "DONE":
+                    except Exception as e:
+                        e = str(e)
+                        if e == "DONE":
                             break
-                        elif err == "CONTINUE":
+                        elif e == "CONTINUE":
                             continue
                         else:
                             raise
