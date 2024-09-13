@@ -220,13 +220,16 @@ class Pipe:
                     body["custom_metadata"]["session_id"] = body["chat_id"]
 
             await prog("Waiting for response")
-            r = requests.post(
-                url=f"{self.valves.litellm_base_url}/v1/chat/completions",
-                json=payload,
-                headers=headers,
-                stream=True,
-            )
-            r.raise_for_status()
+            try:
+                r = requests.post(
+                    url=f"{self.valves.litellm_base_url}/v1/chat/completions",
+                    json=payload,
+                    headers=headers,
+                    stream=True,
+                )
+                r.raise_for_status()
+            except Exception as e:
+                raise Exception(f"Error when creating requests: ") from e
             assert r.status_code == 200, f"Invalid status code: {r.status_code}"
 
             discarded = ""
@@ -241,13 +244,13 @@ class Pipe:
                         try:
                             content = self.parse_chunk(line)
                         except Exception as e:
-                            e = str(e)
-                            if e == "DONE":
+                            es = str(e)
+                            if es == "DONE":
                                 break
-                            elif e == "CONTINUE":
+                            elif es == "CONTINUE":
                                 continue
                             else:
-                                raise
+                                raise Exception("Error when parsing chunk: ") from e
                         yielded += content
                         yield content
                     if clear_emitter:
