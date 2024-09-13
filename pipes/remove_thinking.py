@@ -114,15 +114,27 @@ class Pipe:
 
             emitter = EventEmitter(__event_emitter__)
             clear_emitter = not __user__["valves"].debug
+            latest_message = ""
 
             async def prog(message: str) -> None:
+                nonlocal latest_message
+                if message == latest_message:
+                    return
+                latest_message = message
                 await emitter.progress_update(pprint(message))
 
             async def succ(message: str) -> None:
+                nonlocal latest_message
+                if message == latest_message:
+                    return
+                latest_message = message
                 await emitter.success_update(pprint(message))
 
             async def err(message: str) -> None:
-                nonlocal clear_emitter
+                nonlocal clear_emitter, latest_message
+                if message == latest_message:
+                    return
+                latest_message = message
                 clear_emitter = False
                 await emitter.error_update(pprint(message))
 
