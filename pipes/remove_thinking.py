@@ -167,7 +167,7 @@ class Pipe:
                     can_be_cached = True
                     break
             if self.valves.cache_system_prompt and can_be_cached:
-                pprint("Enabling anthropic caching")
+                pprint("Using anthropic's prompt caching")
                 for i, m in enumerate(body["messages"]):
                     if m["role"] != "system":
                         continue
@@ -192,7 +192,7 @@ class Pipe:
                         ],
                     }
             else:
-                pprint("Disabling anthropic caching")
+                pprint("Anthropic caching will not be used for this call")
 
             # match the api key
             headers = {}
