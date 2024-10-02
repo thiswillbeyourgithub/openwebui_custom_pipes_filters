@@ -43,7 +43,7 @@ class Pipe:
         )
         stop_thought: str = Field(default="```", description="End of thought block")
         cache_system_prompt: bool = Field(
-            default=False,
+            default=True,
             description="Wether to cache the system prompt, if using a claude model",
         )
 
