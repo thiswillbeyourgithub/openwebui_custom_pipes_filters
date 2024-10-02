@@ -42,7 +42,10 @@ class Pipe:
             default="``` ?thinking", description="Start of thought block"
         )
         stop_thought: str = Field(default="```", description="End of thought block")
-        cache_system_prompt: bool = Field(default=False, description="Wether to cache the system prompt, if using a claude model")
+        cache_system_prompt: bool = Field(
+            default=False,
+            description="Wether to cache the system prompt, if using a claude model",
+        )
 
     class UserValves(BaseModel):
         remove_thoughts: bool = Field(
@@ -52,7 +55,6 @@ class Pipe:
             default=False,
             description="Set to True to print more info to the docker logs, also to not remove the last emitter message.",
         )
-
 
     def __init__(self):
         self.id = "RemoveThinkingPipe"
@@ -89,7 +91,6 @@ class Pipe:
             self.valves.start_thought + "(.*)?" + self.valves.stop_thought,
             flags=re.DOTALL | re.MULTILINE,
         )
-
 
     async def pipe(
         self,
@@ -159,7 +160,6 @@ class Pipe:
                 model = self.valves.title_chat_model
                 user = f"titlecreator_{__user__['name']}_{__user__['email']}"
 
-
             # claude prompt caching
             can_be_cached = False
             for w in ["anthropic", "claude", "haiku", "sonnet"]:
@@ -189,7 +189,7 @@ class Pipe:
                                 "text": sys_prompt,
                                 "cache_control": {"type": "ephemeral"},
                             }
-                        ]
+                        ],
                     }
             else:
                 pprint("Disabling anthropic caching")
@@ -208,27 +208,32 @@ class Pipe:
                 payload["user"] = user
 
             if "metadata" in payload:
-                assert "custom_metadata" not in payload, "Found metadata and custom_metadata in payload"
+                assert (
+                    "custom_metadata" not in payload
+                ), "Found metadata and custom_metadata in payload"
                 payload["custom_metadata"] = payload["metadata"]
                 del payload["metadata"]
 
             if title:
                 if "custom_metadata" in payload:
                     if "tags" in payload["custom_metadata"]:
-                        assert isinstance(payload["custom_metadata"]["tags"], list), f"payload['tags'] was not a list but '{type(payload['custom_metadata']['tags'])}"
+                        assert isinstance(
+                            payload["custom_metadata"]["tags"], list
+                        ), f"payload['tags'] was not a list but '{type(payload['custom_metadata']['tags'])}"
                         payload["custom_metadata"]["tags"].append("title_ceator")
                     else:
                         payload["custom_metadata"]["tags"] = ["title_ceator"]
                 else:
                     payload["custom_metadata"] = {"tags": ["title_creator"]}
 
-
             # add langfuse session_id
             if "custom_metadata" in payload:
                 if "session_id" not in body["custom_metadata"]:
                     body["custom_metadata"]["session_id"] = body["chat_id"]
                 elif body["custom_metadata"]["session_id"] != body["chat_id"]:
-                    print(f"Error: distinct 'session_id' found: '{body['custom_metadata']['session_id']}' in body and '{body['chat_id']}' in body. Keeping the later")
+                    print(
+                        f"Error: distinct 'session_id' found: '{body['custom_metadata']['session_id']}' in body and '{body['chat_id']}' in body. Keeping the later"
+                    )
                     body["custom_metadata"]["session_id"] = body["chat_id"]
 
             await prog("Waiting for response")
@@ -301,7 +306,9 @@ class Pipe:
                         # remove ulterior thought blocks
                         start_match = self.start_thought.search(buffer)
                         if start_match:
-                            await prog(f"Waiting for thought n°{thought_removed + 1} to finish")
+                            await prog(
+                                f"Waiting for thought n°{thought_removed + 1} to finish"
+                            )
 
                         # TODO: actually the start_thought is not of the same length as its pattern but in most cases it's a good upper bound
                         elif len(buffer) > len_start_thought:
@@ -369,13 +376,19 @@ class Pipe:
         except (json.JSONDecodeError, KeyError):
             raise Exception("CONTINUE")
 
-        if "error" in parsed_line and "message" in parsed_line["error"] and parsed_line["error"]["message"]:
+        if (
+            "error" in parsed_line
+            and "message" in parsed_line["error"]
+            and parsed_line["error"]["message"]
+        ):
             raise Exception(f"Error: {parsed_line['error']['message']}")
 
         try:
             content = parsed_line["choices"][0]["delta"].get("content", "")
         except KeyError as e:
-            raise Exception(f"KeyError for parsed_line: '{e}'.\nParsed_line: '{parsed_line}'")
+            raise Exception(
+                f"KeyError for parsed_line: '{e}'.\nParsed_line: '{parsed_line}'"
+            )
 
         if not content:
             raise Exception("CONTINUE")
