@@ -34,7 +34,7 @@ class Filter:
             rf"{self.valves.start_thought_token}(.*?){self.valves.end_thought_token}",
             flags=re.DOTALL | re.MULTILINE,
         )
-        self.converted_pattern = re.compile(r"<details>\s*<summary>Reasonning</summary>.*?</details>")
+        self.converted_pattern = re.compile(r"<details>\s*<summary>Reasonning</summary>.*?</details>", flags=re.DOTALL | re.MULTILINE)
         self.p("Init:done")
         pass
 
