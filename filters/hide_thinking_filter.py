@@ -107,7 +107,6 @@ class Filter:
                     body["messages"][-1]["content"][im2]["text"] = self.hide_thought(m2["text"])
 
         elif isinstance(last_message, str):
-            last_message = last_message["content"].strip()
             old = last_message.strip()
             new = self.hide_thought(old).strip()
             if old != new:
