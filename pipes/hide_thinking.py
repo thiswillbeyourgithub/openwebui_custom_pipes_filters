@@ -298,8 +298,8 @@ class Pipe:
                     if match:  # Remove the thought block
                         section = match.group()
                         buffer = buffer.replace(section, "")
-                        section = self.start_thought.sub("<details>\n<summary>Reasonning</summary>\n\n", section)
-                        section = self.stop_thought.sub("\n\n</details>", section)
+                        section = self.start_thought.sub("\n\n<details>\n<summary>Reasonning</summary>\n\n", section).strip()
+                        section = self.stop_thought.sub("\n\n</details>\n", section).strip()
                         yielded += section
                         yield section
                         thought_removed += 1
@@ -325,8 +325,8 @@ class Pipe:
                     if match:
                         section = match.group()
                         buffer = buffer.replace(section, "")
-                        section = self.start_thought.sub("<details>\n<summary>Reasonning</summary>\n\n", section)
-                        section = self.stop_thought.sub("\n\n</details>", section)
+                        section = self.start_thought.sub("\n\n<details>\n<summary>Reasonning</summary>\n\n", section).strip()
+                        section = self.stop_thought.sub("\n\n</details>\n", section)
                         yielded += section
                         yield section
 
