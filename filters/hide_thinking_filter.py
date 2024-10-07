@@ -45,9 +45,9 @@ class Filter:
             self.p("remove_thought: No thought to remove in text")
             return text
         assert text.strip(), "Received empty text"
-        step1 = self.pattern.sub("", text).strip()
+        step1 = self.pattern.sub("", text)
         assert step1, "Empty text after step 1 of thought removal"
-        step2 = self.converted_pattern.sub("", text).strip()
+        step2 = self.converted_pattern.sub("", text)
         assert step2, "Empty text after step 2 of thought removal"
         self.p("remove_thought: done")
         return step2
