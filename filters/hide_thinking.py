@@ -2,7 +2,7 @@
 title: Thinking Filter
 author: TrolleK
 author_url: https://github.com/hosteren & https://huggingface.co/trollek
-version: 0.2
+version: 0.3
 """
 
 import re
@@ -32,25 +32,51 @@ class Filter:
         # which ensures settings are managed cohesively and not confused with operational flags like 'file_handler'.
         self.valves = self.Valves()
 
+        self.start_thought = re.compile(self.valves.start_thought_token)
+        self.end_thought = re.compile(self.valves.end_thought_token)
+
         self.pattern = re.compile(
             rf"{self.valves.start_thought_token}(.*?){self.valves.end_thought_token}",
             flags=re.DOTALL | re.MULTILINE,
         )
+        self.converted_pattern = re.compile(r"<details>\s*<summary>Reasonning</summary>.*?</details>")
         pass
 
     def remove_thought(self, text: str) -> str:
-        # Remove thought markers from text and return the modified text.
-        # This function is used to remove thought markers from a string of text, which are typically used in chat applications to indicate that a message contains a thought or an idea.
-        return self.pattern.sub("", text)
+        "remove thoughts"
+        if not (self.pattern.search(text) or self.converted_pattern.search(text)):
+            return text
+        assert text.strip(), "Received empty text"
+        step1 = self.pattern.sub("", text).strip()
+        assert step1, "Empty text after step 1 of thought removal"
+        step2 = self.converted_pattern.sub("", text).strip()
+        assert step2, "Empty text after step 2 of thought removal"
+        return step2
 
-    # def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
-    # Modify the request body or validate it before processing by the chat completion API.
-    # This function is the pre-processor for the API where various checks on the input can be performed.
-    # It can also modify the request before sending it to the API.
-    # print(f"inlet:{__name__}")
-    # print(f"inlet:body:{body}")
-    # print(f"inlet:user:{__user__}")
-    # return body
+    def hide_thought(self, text: str) -> str:
+        "put the thoughts in <details> tags"
+        match = self.pattern.search(text)
+        if not match:
+            return text
+        section = match.group()
+        section = self.start_thought.sub("<details>\n<summary>Reasonning</summary>\n\n", section)
+        section = self.stop_thought.sub("\n\n</details>", section)
+        newtext = text.replace(match.group(), section)
+        return newtext
+
+    def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
+        "reduce token count by removing thoughts in the previous messages"
+        for im, m in enumerate(body["messages"]):
+            if "content" in m:
+                if isinstance(m["content"], list):
+                    for im2, m2 in enumerate(m["content"]):
+                        if "content" in m2:
+                            body["messages"][im]["content"][im2]["content"] = self.remove_thought(m2["content"])
+                        elif "text" in m2:
+                            body["messages"][im]["content"][im2]["text"] = self.remove_thought(m2["text"])
+                else:
+                    body["messages"][im]["content"] = self.remove_thought(m["content"])
+        return body
 
     def p(self, message: str) -> None:
         "log message to logs"
