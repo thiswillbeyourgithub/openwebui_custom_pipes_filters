@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.3.0
+version: 1.4.0
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -249,7 +249,6 @@ class Pipe:
                 raise Exception(f"Error when creating requests: ") from e
             assert r.status_code == 200, f"Invalid status code: {r.status_code}"
 
-            discarded = ""
             yielded = ""
 
             if not title:
@@ -297,8 +296,12 @@ class Pipe:
 
                     match = self.pattern.search(buffer)
                     if match:  # Remove the thought block
-                        discarded += buffer[: match.start()] + buffer[match.end() :]
-                        buffer = buffer[: match.start()] + buffer[match.end() :]
+                        section = match.group()
+                        buffer = buffer.replace(section, "")
+                        section = self.start_thought.sub("<details>\n<summary>Reasonning</summary>\n\n", section)
+                        section = self.stop_thought.sub("\n\n</details>", section)
+                        yielded += section
+                        yield section
                         thought_removed += 1
                         await succ(f"Removed {thought_removed} thought block")
 
@@ -318,9 +321,15 @@ class Pipe:
                             yield to_yield
 
                 if buffer:  # Yield any remaining content with finish_reason "stop"
-                    if self.pattern.search(buffer):
-                        match = self.pattern.search(buffer)
-                        buffer = buffer[: match.start()] + buffer[match.end() :]
+                    match = self.pattern.search(buffer)
+                    if match:
+                        section = match.group()
+                        buffer = buffer.replace(section, "")
+                        section = self.start_thought.sub("<details>\n<summary>Reasonning</summary>\n\n", section)
+                        section = self.stop_thought.sub("\n\n</details>", section)
+                        yielded += section
+                        yield section
+
                         thought_removed += 1
                         yielded += buffer
                         yield buffer
@@ -346,11 +355,7 @@ class Pipe:
                 yielded += to_yield
                 yield to_yield
 
-            # if no text was shown, show the discarded text at least
-            if not yielded:
-                assert discarded, "No text discarded. Has the model returned nothing?"
-                yield discarded
-            assert yielded, "No text to show so showing what would have been discarded"
+            assert yielded, "No text to show"
 
             if clear_emitter:
                 await succ("")  # hides it
@@ -359,8 +364,6 @@ class Pipe:
         except Exception as e:
             if "err" in locals():
                 await err(f"Error: {e}")
-            if "discarded" in locals() and discarded:
-                yield f"An error has occured. Here's the discarded text anyway:\n---\n{discarded}\n---\nError was: '{e}'"
             else:
                 yield f"An error has occured:\n---\n{e}\n---"
             raise
