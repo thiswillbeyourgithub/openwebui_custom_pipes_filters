@@ -30,10 +30,10 @@ class Filter:
         self.p("Init:start")
 
         self.start_thought = re.compile(self.valves.start_thought + r"\s*", flags=re.DOTALL | re.MULTILINE)
-        self.end_thought = re.compile(r"\s*" + self.valves.end_thought, flags=re.DOTALL | re.MULTILINE)
+        self.stop_thought = re.compile(r"\s*" + self.valves.stop_thought, flags=re.DOTALL | re.MULTILINE)
 
         self.pattern = re.compile(
-            rf"{self.valves.start_thought}(.*?){self.valves.end_thought}",
+            rf"{self.valves.start_thought}(.*?){self.valves.stop_thought}",
             flags=re.DOTALL | re.MULTILINE,
         )
         self.converted_pattern = re.compile(r"<details>\s*<summary>Reasonning</summary>.*?</details>", flags=re.DOTALL | re.MULTILINE)
