@@ -2,7 +2,7 @@
 title: Thinking Filter
 author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 0.5
+version: 0.6
 description: the inlet removes thinking xml tags, the outlet makes sure they appear as a <details> xml tag
 """
 
