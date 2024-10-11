@@ -49,6 +49,9 @@ class Filter:
                 self.p(f"inlet: Regex for model does not think this model should be cached. Bypassing cachg. Model: '{model}'")
                 return body
 
+        if not any(m["role"] == "system" for m in body["messages"]):
+            raise Exception(self.p("No system message found in the chat."))
+
         self.p(f"inlet: Using anthropic's prompt caching for model {model}")
         modified = False
         for i, m in enumerate(body["messages"]):
@@ -83,8 +86,10 @@ class Filter:
         self.p("inlet:done")
         return body
 
-    def p(self, message: str) -> None:
+    def p(self, message: str) -> str:
         "log message to logs"
+        m = "AutomaticClaudeCachingFilter:outlet:" + str(message)
         if self.valves.verbose:
-            print("AutomaticClaudeCachingFilter:outlet:" + str(message))
+            print(m)
+        return m
 
