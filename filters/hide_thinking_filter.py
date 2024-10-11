@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filte
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 date: 2024-10-11
 version: 0.6
-description: the inlet removes thinking xml tags, the outlet makes sure they appear as a <details> xml tag
+description: the inlet removes thinking xml tags to reduce token count, the outlet turns the <thinking> xml tags into <details> takes to make them display nicely.
 """
 
 import re
