@@ -44,7 +44,7 @@ class Filter:
             return body
 
         if self.valves.regex_model:
-            model = __user__["model"]
+            model = body["model"]
             if not self.regex_model.match(model):
                 self.p(f"inlet: Regex for model does not think this model should be cached. Bypassing cachg. Model: '{model}'")
                 return body
