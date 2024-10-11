@@ -16,19 +16,21 @@ class Filter:
         verbose: bool = Field(
             default=True, description="Verbosity"
         )
-            default="^``` ?thinking", description="The start of thougt token."
         start_thought: str = Field(
+            default="<thinking>",
+            description="Start of a thought block. Note that any whitespace following the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE"
         )
-        end_thought: str = Field(
-            default="```", description="The end of thought token."
+        stop_thought: str = Field(
+            default="</thinking>",
+            description="End of thought block Note that any whitespace preceding the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE",
         )
 
     def __init__(self):
         self.valves = self.Valves()
         self.p("Init:start")
 
-        self.start_thought = re.compile(self.valves.start_thought)
-        self.end_thought = re.compile(self.valves.end_thought)
+        self.start_thought = re.compile(self.valves.start_thought + r"\s*", flags=re.DOTALL | re.MULTILINE)
+        self.end_thought = re.compile(r"\s*" + self.valves.end_thought, flags=re.DOTALL | re.MULTILINE)
 
         self.pattern = re.compile(
             rf"{self.valves.start_thought}(.*?){self.valves.end_thought}",
