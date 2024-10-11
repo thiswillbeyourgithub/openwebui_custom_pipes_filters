@@ -181,6 +181,8 @@ class Pipe:
                         sys_prompt = m["content"]["text"]
                     else:
                         raise Exception(f"Unexpected system message: '{m}'")
+
+                    pprint(f"Will use prompt caching for that message: '{sys_prompt}'")
                     body["messages"][i] = {
                         "role": "system",
                         "content": [
