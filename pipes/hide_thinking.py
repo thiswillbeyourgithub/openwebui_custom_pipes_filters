@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.4.1
+version: 1.4.2
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -39,9 +39,13 @@ class Pipe:
             description="Model to use to generate titles",
         )
         start_thought: str = Field(
-            default="``` ?thinking", description="Start of thought block"
+            default="``` ?thinking",
+            description="Start of a thought block. Note that any whitespace following the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE"
         )
-        stop_thought: str = Field(default="```", description="End of thought block")
+        stop_thought: str = Field(
+            default="```",
+            description="End of thought block Note that any whitespace preceding the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE",
+        )
         cache_system_prompt: bool = Field(
             default=True,
             description="Wether to cache the system prompt, if using a claude model",
@@ -63,8 +67,14 @@ class Pipe:
         # Initialize rate limits
         self.valves = self.Valves()
 
-        self.start_thought = re.compile(self.valves.start_thought)
-        self.stop_thought = re.compile(self.valves.stop_thought)
+        self.start_thought = re.compile(
+            self.valves.start_thought + r"\s*",
+            flags=re.DOTALL | re.MULTILINE,
+        )
+        self.stop_thought = re.compile(
+            "r\s*" + self.valves.stop_thought,
+            flags=re.DOTALL |re.MULTILINE
+        )
         self.pattern = re.compile(
             self.valves.start_thought + "(.*)?" + self.valves.stop_thought,
             flags=re.DOTALL | re.MULTILINE,
