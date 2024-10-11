@@ -46,10 +46,6 @@ class Pipe:
             default="</thinking>",
             description="End of thought block Note that any whitespace preceding the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE",
         )
-        cache_system_prompt: bool = Field(
-            default=True,
-            description="Wether to cache the system prompt, if using a claude model",
-        )
 
     class UserValves(BaseModel):
         remove_thoughts: bool = Field(
@@ -169,42 +165,6 @@ class Pipe:
                 title = True
                 model = self.valves.title_chat_model
                 user = f"titlecreator_{__user__['name']}_{__user__['email']}"
-
-            # claude prompt caching
-            can_be_cached = False
-            for w in ["anthropic", "claude", "haiku", "sonnet"]:
-                if w in model.lower():
-                    can_be_cached = True
-                    break
-            if self.valves.cache_system_prompt and can_be_cached:
-                pprint("Using anthropic's prompt caching")
-                for i, m in enumerate(body["messages"]):
-                    if m["role"] != "system":
-                        continue
-                    if isinstance(m["content"], str):
-                        sys_prompt = m["content"]
-                    elif isinstance(m["content"], list):
-                        sys_prompt = ""
-                        for ii, mm in enumerate(m["content"]):
-                            sys_prompt += mm["text"]
-                    elif isinstance(m["content"], dict):
-                        sys_prompt = m["content"]["text"]
-                    else:
-                        raise Exception(f"Unexpected system message: '{m}'")
-
-                    pprint(f"Will use prompt caching for that message: '{sys_prompt}'")
-                    body["messages"][i] = {
-                        "role": "system",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": sys_prompt,
-                                "cache_control": {"type": "ephemeral"},
-                            }
-                        ],
-                    }
-            else:
-                pprint("Anthropic caching will not be used for this call")
 
             # match the api key
             headers = {}
