@@ -16,10 +16,10 @@ class Filter:
         verbose: bool = Field(
             default=True, description="Verbosity"
         )
-        start_thought_token: str = Field(
             default="^``` ?thinking", description="The start of thougt token."
+        start_thought: str = Field(
         )
-        end_thought_token: str = Field(
+        end_thought: str = Field(
             default="```", description="The end of thought token."
         )
 
@@ -27,11 +27,11 @@ class Filter:
         self.valves = self.Valves()
         self.p("Init:start")
 
-        self.start_thought = re.compile(self.valves.start_thought_token)
-        self.end_thought = re.compile(self.valves.end_thought_token)
+        self.start_thought = re.compile(self.valves.start_thought)
+        self.end_thought = re.compile(self.valves.end_thought)
 
         self.pattern = re.compile(
-            rf"{self.valves.start_thought_token}(.*?){self.valves.end_thought_token}",
+            rf"{self.valves.start_thought}(.*?){self.valves.end_thought}",
             flags=re.DOTALL | re.MULTILINE,
         )
         self.converted_pattern = re.compile(r"<details>\s*<summary>Reasonning</summary>.*?</details>", flags=re.DOTALL | re.MULTILINE)
