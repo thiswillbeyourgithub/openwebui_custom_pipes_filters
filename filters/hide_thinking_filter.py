@@ -143,4 +143,4 @@ class Filter:
     def p(self, message: str) -> None:
         "log message to logs"
         if self.valves.verbose:
-            print("ThinkingFilter:outlet:" + message)
+            print("ThinkingFilter:outlet:" + str(message))
