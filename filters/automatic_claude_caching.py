@@ -35,7 +35,13 @@ class Filter:
         self.p("Init:done")
         pass
 
-    def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
+    def inlet(
+        self,
+        body: dict,
+        __user__: Optional[dict] = None,
+        # __task__: Optional[dict] = None,
+        # __task_body__: Optional[dict] = None,
+        ) -> dict:
         "reduce token count by removing thoughts in the previous messages"
         self.p("inlet:start")
 
@@ -48,6 +54,8 @@ class Filter:
             if not self.regex_model.match(model):
                 self.p(f"inlet: Regex for model does not think this model should be cached. Bypassing cachg. Model: '{model}'")
                 return body
+        # self.p(__task__)
+        # self.p(__task_body__)
 
         if not any(m["role"] == "system" for m in body["messages"]):
             raise Exception(self.p("No system message found in the chat."))
