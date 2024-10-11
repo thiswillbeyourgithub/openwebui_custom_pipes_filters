@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.4.0
+version: 1.4.1
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -297,7 +297,9 @@ class Pipe:
                     match = self.pattern.search(buffer)
                     if match:  # Remove the thought block
                         section = match.group()
-                        buffer = buffer.replace(section, "")
+                        bef, buffer = buffer.split(section, 1)
+                        yielded += bef
+                        yield bef
                         section = self.start_thought.sub("\n\n<details>\n<summary>Reasonning</summary>\n\n", section)
                         section = self.stop_thought.sub("\n\n</details>\n", section)
                         yielded += section
@@ -324,7 +326,9 @@ class Pipe:
                     match = self.pattern.search(buffer)
                     if match:
                         section = match.group()
-                        buffer = buffer.replace(section, "")
+                        bef, buffer = buffer.split(section, 1)
+                        yielded += bef
+                        yield bef
                         section = self.start_thought.sub("\n\n<details>\n<summary>Reasonning</summary>\n\n", section)
                         section = self.stop_thought.sub("\n\n</details>\n", section)
                         yielded += section
