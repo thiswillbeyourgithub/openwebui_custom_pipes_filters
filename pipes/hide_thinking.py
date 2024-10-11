@@ -4,7 +4,7 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-08-21
-version: 1.4.2
+version: 1.4.3
 license: GPLv3
 description: A pipe function remove thinking blocks
 """
@@ -39,11 +39,11 @@ class Pipe:
             description="Model to use to generate titles",
         )
         start_thought: str = Field(
-            default="``` ?thinking",
+            default="<thinking>",
             description="Start of a thought block. Note that any whitespace following the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE"
         )
         stop_thought: str = Field(
-            default="```",
+            default="</thinking>",
             description="End of thought block Note that any whitespace preceding the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE",
         )
         cache_system_prompt: bool = Field(
