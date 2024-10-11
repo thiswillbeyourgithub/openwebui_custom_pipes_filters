@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 date: 2024-10-11
 version: 1.4.3
 license: GPLv3
-description: A pipe function remove thinking blocks
+description: A pipe function that automatically replaces <thinking> xml tags to display as <details>
 """
 
 from typing import Union, Generator, Iterator, Callable, Any, Optional
