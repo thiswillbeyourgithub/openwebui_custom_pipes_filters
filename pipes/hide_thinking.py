@@ -3,7 +3,7 @@ title: RemoveThinkingPipe
 author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
-date: 2024-08-21
+date: 2024-10-11
 version: 1.4.3
 license: GPLv3
 description: A pipe function remove thinking blocks
