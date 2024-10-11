@@ -9,6 +9,7 @@ description: the inlet is used to automatically replace the system prompt by a c
 license: GPLv3
 """
 
+import re
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -22,10 +23,15 @@ class Filter:
             default=True,
             description="True to automatically cache the system prompt"
         )
+        regex_model: str = Field(
+            default="anthropic|claude|sonnet|haiku|opus",
+            description="If that regex matches the model name, we cache the system prompt. Regex flags are IGNORECASE and DOTALL. Leave empty to always try to cache.",
+        )
 
     def __init__(self):
         self.valves = self.Valves()
         self.p("Init:start")
+        self.regex_model = re.compile(self.valves.regex_model, flags=re.DOTALL|re.IGNORECASE)
         self.p("Init:done")
         pass
 
@@ -37,7 +43,13 @@ class Filter:
             self.p("inlet: disabled by valves")
             return body
 
-        self.p("inlet: Using anthropic's prompt caching")
+        if self.valves.regex_model:
+            model = __user__["model"]
+            if not self.regex_model.match(model):
+                self.p(f"inlet: Regex for model does not think this model should be cached. Bypassing cachg. Model: '{model}'")
+                return body
+
+        self.p(f"inlet: Using anthropic's prompt caching for model {model}")
         modified = False
         for i, m in enumerate(body["messages"]):
             if m["role"] != "system":
