@@ -3,7 +3,7 @@ title: AddMetadata
 author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
-version: 1.0.0
+version: 1.0.1
 date: 2024-08-29
 license: GPLv3
 description: A Filter that adds user and other type of metadata to the requests. Useful for langfuse or litellm
@@ -135,7 +135,29 @@ class Filter:
         # also add as langfuse metadata
         body["metadata"]["trace_metadata"] = body["metadata"].copy()
 
-        await log(json.dumps(body))
+        try:
+            await log(json.dumps(body))
+
+        # fix: some updates of openwebui can crash json dumping, so we filter out the culprit
+        except Exception as e:
+            if "Object of type " in str(e) and "is not JSON serializable" in str(e):
+                failed = []
+                for k in list(body.keys()):
+                    try:
+                        json.dumps(body[k])
+                    except Exception:
+                        failed.append(k)
+                assert failed, f"No culprit key found when json-dumping body: {body}"
+                body2 = body.copy()
+                for k in failed:
+                    body2[k] = str(body2[k])
+
+                await log(json.dumps(body2))
+                if self.valves.debug:
+                    await log(f"Failed to json dump the following body keys: {failed} with value '{body[k]}'")
+            else:
+                raise
+
         await emitter.success_update("")  # hides the emitter
         return body
 
