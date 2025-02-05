@@ -7,6 +7,7 @@ version: 1.0.1
 date: 2024-08-29
 license: GPLv3
 description: A Filter that adds user and other type of metadata to the requests. Useful for langfuse or litellm
+openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/addmetadata
 """
 
 from pydantic import BaseModel, Field
