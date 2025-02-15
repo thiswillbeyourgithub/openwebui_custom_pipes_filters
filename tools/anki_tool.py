@@ -16,7 +16,7 @@ import aiohttp
 
 
 
-def update_docstring(fields_description: str, style_request: str) -> str:
+def update_docstring(fields_description: str, style_request: str, cards_examples: str) -> str:
     print(f"AnkiTool: Updated the docstring with value '{fields_description}'")
     return f"""
     Create a single Anki flashcard with given field contents.
@@ -25,6 +25,9 @@ def update_docstring(fields_description: str, style_request: str) -> str:
     Here is the fields you must use: '{fields_description}'
     Each of its keys must correspond to one field of the note type.
     {style_request}
+
+    Examples:
+    {cards_examples}
 
     :param field_contents: Dictionary mapping field names to their string content. The expected keys are mentionned in the tool description.
     :return: ID of the created note, or None if failed
@@ -91,6 +94,10 @@ class Tools:
             default='Make high quality flashcards, use html formatting.',
             description="Description of specific style you want in your cards.",
         )
+        CARDS_EXAMPLES: str = Field(
+            default='Example 1: {"Front": "What is the capital of France?", "Back": "Paris"}\nExample 2: {"Front": "What is 2+2?", "Back": "4"}',
+            description="Examples of good flashcards to guide the format",
+        )
 
     # We need to use a setter property because that's the only way I could  find
     # to update the docstring of the tool depending on a valve.
@@ -105,6 +112,7 @@ class Tools:
         self.create_flashcard.__func__.__doc__ = update_docstring(
             fields_description=value.FIELDS_DESCRIPTION,
             style_request=value.STYLE_REQUEST,
+            cards_examples=value.CARDS_EXAMPLES,
         )
 
     def __init__(self):
