@@ -101,8 +101,6 @@ class Tools:
 
     @valves.setter
     def valves(self, value):
-        for i in range(10):
-            print("")
         self._valves = value
         self.create_flashcard.__func__.__doc__ = update_docstring(
             fields_description=value.FIELDS_DESCRIPTION,
