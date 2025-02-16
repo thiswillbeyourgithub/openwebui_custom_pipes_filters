@@ -169,8 +169,11 @@ class Tools:
             await emitter.progress_update("Syncing with AnkiWeb...")
             await _ankiconnect_request(self.valves.ANKI_HOST, self.valves.ANKI_PORT, "sync")
             
+            # Add the note ID to the fields and return formatted JSON
+            field_contents['note_id'] = result
+            formatted_output = json.dumps(field_contents, indent=2).replace('"', '')
             await emitter.success_update("Successfully created and synced flashcard")
-            return result
+            return formatted_output
 
         except Exception as e:
             await emitter.error_update(f"Failed to create flashcards: {str(e)}")
