@@ -26,8 +26,9 @@ def update_docstring(fields_description: str, style_request: str, cards_examples
     Each of its keys must correspond to one field of the note type.
     {style_request}
 
-    Examples:
+    <examples>
     {cards_examples}
+    </examples>
 
     :param field_contents: Dictionary mapping field names to their string content. The expected keys are mentionned in the tool description.
     :return: ID of the created note, or None if failed
@@ -95,7 +96,7 @@ class Tools:
             description="Description of specific style you want in your cards.",
         )
         CARDS_EXAMPLES: str = Field(
-            default='<examples>{"Front": "What is the capital of France?", "Back": "Paris"}\n{"Front": "What is 2+2?", "Back": "4"}</examples>',
+            default='{"Front": "What is the capital of France?", "Back": "Paris"}\n{"Front": "What is 2+2?", "Back": "4"}',
             description="Examples of good flashcards to guide the format",
         )
 
