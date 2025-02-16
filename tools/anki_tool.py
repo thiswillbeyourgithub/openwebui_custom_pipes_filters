@@ -2,6 +2,7 @@
 title: Anki Flashcard Creator
 author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub
+open_webui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/ankiflashcardcreator/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback.
 version: 0.0.1
