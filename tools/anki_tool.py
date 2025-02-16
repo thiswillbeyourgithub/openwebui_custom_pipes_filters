@@ -171,7 +171,9 @@ class Tools:
             
             # Add the note ID to the fields and return formatted JSON
             field_contents['note_id'] = result
-            formatted_output = json.dumps(field_contents, indent=2).replace('"', '')
+            formatted_output = json.dumps(field_contents, indent=2, ensure_ascii=False).replace('"', '')
+            # Remove the first and last lines which contain the curly braces
+            formatted_output = '\n'.join(formatted_output.split('\n')[1:-1])
             await emitter.success_update("Successfully created and synced flashcard")
             return formatted_output
 
