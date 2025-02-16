@@ -95,7 +95,7 @@ class Tools:
             description="Description of specific style you want in your cards.",
         )
         CARDS_EXAMPLES: str = Field(
-            default='<example>{"Front": "What is the capital of France?", "Back": "Paris"}</example>\n<example>{"Front": "What is 2+2?", "Back": "4"}</example>',
+            default='<examples>{"Front": "What is the capital of France?", "Back": "Paris"}\n{"Front": "What is 2+2?", "Back": "4"}</examples>',
             description="Examples of good flashcards to guide the format",
         )
 
