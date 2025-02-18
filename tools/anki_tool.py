@@ -20,20 +20,20 @@ import aiohttp
 def update_docstring(fields_description: str, style_request: str, cards_examples: str) -> str:
     print(f"AnkiTool: Updated the docstring with value '{fields_description}'")
     return f"""
-    Create a single Anki flashcard with given field contents.
-    If not otherwised specified, assume the flashcard language to be the one used in the user request.
-    All values of field_contents must be strings.
-    Here is the fields you must use: '{fields_description}'
-    Each of its keys must correspond to one field of the note type.
-    {style_request}
+Create a single Anki flashcard with given field contents.
+If not otherwised specified, assume the flashcard language to be the one used in the user request.
+All values of field_contents must be strings.
+Here is the fields you must use: '{fields_description}'
+Each of its keys must correspond to one field of the note type.
+{style_request}
 
-    <examples>
-    {cards_examples}
-    </examples>
+<examples>
+{cards_examples}
+</examples>
 
-    :param field_contents: Dictionary mapping field names to their string content. The expected keys are mentionned in the tool description.
-    :return: ID of the created note, or None if failed
-    """
+:param field_contents: Dictionary mapping field names to their string content. The expected keys are mentionned in the tool description.
+:return: ID of the created note, or None if failed
+""".strip()
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
