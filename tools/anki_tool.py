@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub
 open_webui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/ankiflashcardcreator/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback.
-version: 0.0.2
+version: 0.0.3
 """
 
 import json
@@ -19,16 +19,18 @@ import aiohttp
 
 def update_docstring(fields_description: str, style_request: str, cards_examples: str) -> str:
     print(f"AnkiTool: Updated the docstring with value '{fields_description}'")
+    examples = cards_examples
+    examples = examples.replace("<card>", "<card>\r")
+    examples = examples.replace("</card>", "\r</card>")
     return f"""
 Create a single Anki flashcard with given field contents.
 If not otherwised specified, assume the flashcard language to be the one used in the user request.
-All values of field_contents must be strings.
-Here is the fields you must use: '{fields_description}'
-Each of its keys must correspond to one field of the note type.
+Here are the text fields you can specify: '{fields_description}'
+Each keys of `field_contents` must be among those fields and all values must be strings.
 {style_request}
 
 <examples>
-{cards_examples}
+{examples}
 </examples>
 
 :param field_contents: Dictionary mapping field names to their string content. The expected keys are mentionned in the tool description.
