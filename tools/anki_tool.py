@@ -202,7 +202,7 @@ class Tools:
         for k, v in fields.items():
             if not isinstance(v, str):
                 try:
-                    fields[k] = str(v)
+                    fields[k] = str(v).replace("\n", "<br>").replace("\r", "<br>")
                 except Exception:
                     pass
         if not all(isinstance(value, str) for value in fields.values()):
@@ -284,7 +284,7 @@ class Tools:
             fields['note_id'] = result
             formatted_output = json.dumps(fields, indent=2, ensure_ascii=False).replace('"', '')
             # Remove the first and last lines which contain the curly braces
-            formatted_output = '\n'.join(formatted_output.split('\n')[1:-1])
+            formatted_output = '\r'.join(formatted_output.split('\n')[1:-1])
             await emitter.success_update("Successfully created and synced flashcard")
             return formatted_output
 
