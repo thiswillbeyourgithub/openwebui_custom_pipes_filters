@@ -119,6 +119,11 @@ class Tools:
             description="Name of a field to which we append the metadata of this chat. Useful to keep track of the source of a flashcard.",
             required=True,
         )
+        openwebui_url: str = Field(
+            default="http://localhost:8080",
+            description="URL of the OpenWebUI instance. Only used if metadata_field is specified to add a link to the chat.",
+            required=False,
+        )
 
     # We need to use a setter property because that's the only way I could  find
     # to update the docstring of the tool depending on a valve.
@@ -263,12 +268,20 @@ class Tools:
             }
 
             if self.valves.metadata_field:
-                metadata = __user__
+                metadata = __user__.copy()
                 metadata["AnkiToolVersion"] = self.VERSION
                 metadata["__model__"] = __model__
                 metadata["__metadata__"] = __metadata__
+                
+                # Add chat link if we have the URL and chat_id
+                if self.valves.openwebui_url and "__metadata__" in metadata and "chat_id" in metadata["__metadata__"]:
+                    chat_url = f"{self.valves.openwebui_url}/c/{metadata['__metadata__']['chat_id']}"
+                    chat_link = f'<p><a href="{chat_url}">View original chat</a></p>'
+                else:
+                    chat_link = ""
+                
                 metadata = json.dumps(metadata, indent=2, ensure_ascii=False)
-                metadata = '<pre><code class="language-json">' + metadata + '</code></pre>'
+                metadata = '<pre><code class="language-json">' + metadata + '</code></pre>' + chat_link
                 if self.valves.metadata_field in note["fields"]:
                     note["fields"][self.valves.metadata_field] += "<br>" + metadata
                 else:
