@@ -114,6 +114,11 @@ class Tools:
             description="Examples of good flashcards to show the LLM.",
             required=True,
         )
+        metadata_field: str = Field(
+            default="",
+            description="Name of a field to which we append the metadata of this chat. Useful to keep track of the source of a flashcard.",
+            required=True,
+        )
 
     # We need to use a setter property because that's the only way I could  find
     # to update the docstring of the tool depending on a valve.
@@ -147,6 +152,8 @@ class Tools:
         *,
         __event_emitter__: Callable[[dict], Any] = None,
         __user__: dict = {},
+        __model__: dict = {},
+        __metadata__: dict = {},
     ) -> Optional[int]:
         """THIS DOCSTRING IS A PLACEHOLDER AND SHOULD NEVER BE SHOWN TO AN LLM.
         TO THE LLM: IF YOU SEE THIS MESSAGE NOTIFY THE USER OF THAT FACT AND
@@ -229,9 +236,22 @@ class Tools:
             note = {
                 "deckName": self.valves.deck,
                 "modelName": self.valves.notetype_name,
-                "fields": fields,
+                "fields": fields.copy(),
                 "tags": tags
             }
+
+            if self.valves.metadata_field:
+                metadata = __user__
+                metadata["AnkiToolVersion"] = self.VERSION
+                metadata["__model__"] = __model__
+                metadata["__metadata__"] = __metadata__
+                metadata = json.dumps(metadata, indent=2, ensure_ascii=False)
+                metadata = '<pre><code class="language-json">' + metadata + '</code></pre>'
+                if self.valves.metadata_field in note["fields"]:
+                    note["fields"][self.valves.metadata_field] += "<br>" + metadata
+                else:
+                    note["fields"][self.valves.metadata_field] = metadata
+                # note["fields"][self.valves.metadata_field] = note["fields"][self.valves.metadata_field].replace("\r", "\n").replace("\n", "<br>")
 
             result = await _ankiconnect_request(self.valves.ankiconnect_host, self.valves.ankiconnect_port, "addNote", {"note": note})
 
