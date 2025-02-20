@@ -191,7 +191,7 @@ class Tools:
             return "No field contents provided"
 
         if not isinstance(fields, dict):
-            await emitter.error_update("Invalid format for `fields` param, it must be a dict, received '{fields}'")
+            await emitter.error_update(f"Invalid format for `fields` param, it must be a dict, received '{fields}'")
             return "No field contents provided or invalid format"
 
         tags = self.valves.tags
