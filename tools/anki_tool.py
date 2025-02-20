@@ -169,14 +169,14 @@ class Tools:
                 # remove anything before the first { and after the last }
                 start = -1
                 end = -1
-                for i, char in enumerate(s):
+                for i, char in enumerate(fields):
                     if char == '{' and start == -1:
                         start = i
                     if char == '}':
                         end = i
 
                 if start != -1 and end != -1:
-                    f = s[start:end+1]
+                    f = fields[start:end+1]
                 else:
                     f = ''
                 try:
