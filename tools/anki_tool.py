@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub
 open_webui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/ankiflashcardcreator/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback. Not: if you want a multi user multi anki setup (each user with its own anki) you want each user to add its own private tool with as host a local url to its host via reverse proxies like ngrok that allows a url to point to a local service on the client side.
-version: 1.0.1
+version: 1.0.2
 """
 # Note to dev: don't forget to update the version number inside the Tool class!
 
@@ -168,8 +168,12 @@ class Tools:
             except Exception as e:
                 print(f"AnkiTool: fields param was a str but couldn't be parsed as dict: '{e}'")
 
-        if not fields or not isinstance(fields, dict):
-            await emitter.error_update("No field contents provided or invalid format")
+        if not fields:
+            await emitter.error_update("No field contents provided")
+            return "No field contents provided"
+
+        if not isinstance(fields, dict):
+            await emitter.error_update("Invalid format for `fields` param, it must be a dict, received '{fields}'")
             return "No field contents provided or invalid format"
 
         tags = self.valves.tags
