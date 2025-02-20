@@ -166,7 +166,25 @@ class Tools:
                 fields_dict = json.loads(fields)
                 assert isinstance(fields_dict, dict), "Not a dict"
             except Exception as e:
-                print(f"AnkiTool: fields param was a str but couldn't be parsed as dict: '{e}'")
+                # remove anything before the first { and after the last }
+                start = -1
+                end = -1
+                for i, char in enumerate(s):
+                    if char == '{' and start == -1:
+                        start = i
+                    if char == '}':
+                        end = i
+
+                if start != -1 and end != -1:
+                    f = s[start:end+1]
+                else:
+                    f = ''
+                try:
+                    f = json.loads(f)
+                    assert isinstance(f, dict), "Not a dict"
+                    fields_dict = f
+                except Exception as e:
+                    print(f"AnkiTool: fields param was a str but couldn't be parsed as dict: '{e}'")
 
         if not fields:
             await emitter.error_update("No field contents provided")
