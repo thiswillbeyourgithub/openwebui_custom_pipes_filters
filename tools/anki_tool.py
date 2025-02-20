@@ -131,27 +131,6 @@ class Tools:
     def __init__(self):
         self.valves = self.Valves()
         self.fields_description = self.valves.fields_description
-        #
-        # # checks that all fields of the example are found in the fields_description
-        # try:
-        #     fd = json.loads(self.fields_description)
-        #     assert isinstance(fd, dict), f"Is not a dict but {type(fd)}"
-        #     for k, v in fd.items():
-        #         assert v.strip(), "Cannot contain empty values"
-        # except Exception as e:
-        #     raise Exception(f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'")
-        #
-        # try:
-        #     exs = json.loads(self.valves.examples)
-        #     assert isinstance(exs, list), f"It's not a list but {type(exs)}"
-        #     assert len(exs), "The list is empty"
-        #     assert all(isinstance(ex, dict) for ex in exs), "The list does not contain only dicts"
-        #     assert len(exs) == len(set([json.dumps(ex) for ex  in exs])), "The list contains duplicates"
-        # except Exception as e:
-        #     raise Exception(f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'")
-        # for ex in exs:
-        #     for k, v in ex.items():
-        #         assert k in fd, f"An example mentions a field '{k}' that was not defined in the fields_description."
 
         # check deck exists and model exists
         deck_list = _ankiconnect_request_sync(self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames")
