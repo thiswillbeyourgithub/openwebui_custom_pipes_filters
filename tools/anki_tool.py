@@ -281,7 +281,7 @@ class Tools:
                     chat_link = ""
                 
                 metadata = json.dumps(metadata, indent=2, ensure_ascii=False)
-                metadata = '<pre><code class="language-json">' + metadata + '</code></pre>' + chat_link
+                metadata = chat_link + "<br>" + '<pre><code class="language-json">' + metadata + '</code></pre>'
                 if self.valves.metadata_field in note["fields"]:
                     note["fields"][self.valves.metadata_field] += "<br>" + metadata
                 else:
