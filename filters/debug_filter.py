@@ -18,6 +18,15 @@ def p(message: str) -> None:
     print(f"DebugFilter: {message}")
 
 class Filter:
+    class Valves(BaseModel):
+        priority: int = Field(
+            default=0,
+            description="Priority level for the filter operations (default 0).",
+        )
+
+    def __init__(self):
+        self.valves = self.Valves()
+
     async def inlet(
         self,
         body: dict,
@@ -27,12 +36,13 @@ class Filter:
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         ) -> dict:
+        prio = self.valves.priority
         for arg in ["body", "__user__", "__metadata__", "__model__", "__files__", "__event_emitter__"]:
             try:
                 val = json.dumps(locals()["arg"], ensure_ascii=False, indent=2)
             except:
                 val = str(locals()[arg])
-            p(f"\nINLET: {arg}:\n{val}")
+            p(f"\nINLET_{prio}: {arg}:\n{val}")
         return body
 
     def outlet(
@@ -44,10 +54,11 @@ class Filter:
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         ) -> dict:
+        prio = self.valves.priority
         for arg in ["body", "__user__", "__metadata__", "__model__", "__files__", "__event_emitter__"]:
             try:
                 val = json.dumps(locals()["arg"], ensure_ascii=False, indent=2)
             except:
                 val = str(locals()[arg])
-            p(f"\nOUTLET: {arg}:\n{val}")
+            p(f"\nOUTLET_{prio}: {arg}:\n{val}")
         return body
