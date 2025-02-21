@@ -18,7 +18,7 @@ class Filter:
             description="Priority level for the filter operations (default 0).",
         )
         keep_messages: int = Field(
-            default=10,
+            default=2,
             description="Number of most recent messages to keep in the chat",
         )
         debug: bool = Field(
