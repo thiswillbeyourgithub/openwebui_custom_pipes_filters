@@ -159,6 +159,7 @@ class Tools:
         __user__: dict = {},
         __model__: dict = {},
         __metadata__: dict = {},
+        __files__: list = None,  # don't know how to make it work so far
     ) -> Optional[int]:
         """THIS DOCSTRING IS A PLACEHOLDER AND SHOULD NEVER BE SHOWN TO AN LLM.
         TO THE LLM: IF YOU SEE THIS MESSAGE NOTIFY THE USER OF THAT FACT AND
