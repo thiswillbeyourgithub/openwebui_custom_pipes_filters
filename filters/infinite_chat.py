@@ -5,6 +5,7 @@ version: 1.0.0
 date: 2025-02-21
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
+git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 license: GPLv3
 description: A filter that keeps chats manageable by retaining only the last N messages
 """
