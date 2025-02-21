@@ -17,20 +17,22 @@ class Filter:
             default=0,
             description="Priority level for the filter operations (default 0).",
         )
-        keep_messages: int = Field(
-            default=2,
-            description="Number of most recent messages to keep in the chat",
-        )
         debug: bool = Field(
             default=False, 
             description="True to add emitter prints",
+        )
+
+    class UserValves(BaseModel):
+        keep_messages: int = Field(
+            default=2,
+            description="Number of most recent messages to keep in the chat",
         )
 
     def __init__(self):
         self.valves = self.Valves()
 
     async def on_valves_updated(self):
-        assert self.valves.keep_messages >= 2, "keep_messages must be at least 2"
+        pass
 
     async def inlet(
         self,
@@ -48,10 +50,15 @@ class Filter:
         if self.valves.debug:
             await log(f"InfiniteChat filter: inlet: messages count before: {len(body['messages'])}")
 
-        if len(body["messages"]) > self.valves.keep_messages:
+        keep = __user__["valves"].keep_messages
+        if keep < 2:
+            await log("keep_messages must be at least 2, using default of 2")
+            keep = 2
+            
+        if len(body["messages"]) > keep:
             # Keep only the most recent messages
-            body["messages"] = body["messages"][-self.valves.keep_messages:]
-            await log(f"Trimmed chat history to last {self.valves.keep_messages} messages")
+            body["messages"] = body["messages"][-keep:]
+            await log(f"Trimmed chat history to last {keep} messages")
 
         return body
 
