@@ -11,6 +11,7 @@ A collection of pipes, filters and tools for OpenWebUI.
 - **warn_if_long_chat.py** - Adds soft and hard limits to the number of messages in a chat.
 - **hide_thinking_filter.py** - Removes thinking XML tags to reduce token count and converts them to HTML details tags. Not used anymore because ooen-webui now automatically wraps the thoughts.
 - **WIP_automatic_claude_caching.py**  - [WIP] Automatically replaces system prompts with cached versions. Unfinished project.
+- **WIP_langfuse filter.py**
 
 ### Pipes
 
