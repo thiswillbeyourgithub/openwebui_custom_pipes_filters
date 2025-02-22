@@ -269,16 +269,12 @@ class Tools:
             }
 
             if self.valves.metadata_field:
-                subuser = __user__.copy()
-                for k, v in subuser.items():
-                    try:
-                        json.dumps(v)
-                    except Exception:
-                        subuser[k] = str(v)
-                metadata = subuser
+                metadata = self.flatten_dict(__user__.copy())
+                if "valves" in metadata:
+                    del metadata["valves"]
                 metadata["AnkiToolVersion"] = self.VERSION
-                metadata["__model__"] = __model__
-                metadata["__metadata__"] = __metadata__
+                metadata["__model__"] = self.flatten_dict(__model__)
+                metadata["__metadata__"] = self.flatten_dict(__metadata__)
                 
                 # Add chat link if we have the URL and chat_id
                 if self.valves.openwebui_url and "__metadata__" in metadata and "chat_id" in metadata["__metadata__"]:
@@ -311,6 +307,34 @@ class Tools:
         except Exception as e:
             await emitter.error_update(f"Failed to create flashcards: {str(e)}")
             return f"Failed to create flashcards: {str(e)}"
+
+    def flatten_dict(self, input: dict) -> dict:
+        if not isinstance(input, dict):
+            return input
+        
+        result = input.copy()
+        while any(isinstance(v, dict) for v in result.values()):
+            dict_found = False
+            for k, v in list(result.items()):  # Create a list to avoid modification during iteration
+                if isinstance(v, dict):
+                    dict_found = True
+                    # Remove the current key-value pair
+                    del result[k]
+                    # Flatten and add the nested dictionary items
+                    for k2, v2 in v.items():
+                        new_key = f"{k}_{k2}"
+                        while new_key in result:
+                            new_key = new_key + "_"
+                        result[new_key] = v2
+                    break
+                else:
+                    # Handle non-dictionary values
+                    try:
+                        json.dumps(v)  # Just test if serializable
+                    except Exception:
+                        result[k] = str(v)
+
+        return result
 
 
 async def _ankiconnect_request(host: str, port: str, action: str, params: dict = None) -> Any:
