@@ -25,3 +25,4 @@ A collection of pipes, filters and tools for OpenWebUI.
 
 - **anki_tool.py** - Creates Anki flashcards through AnkiConnect with configurable settings.
 - **wdoc_tool.py** - Documentation tool requiring wdoc v2.5.7. (WIP)
+- **wdoc_parser.py** - tool to use wdoc as an url parser
