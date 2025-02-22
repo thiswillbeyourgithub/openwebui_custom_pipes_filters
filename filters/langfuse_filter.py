@@ -144,8 +144,6 @@ class Filter:
         model_parameters = self.flatten_dict(__model__)
         metadata["files"] = self.flatten_dict(__files__)
 
-        # await self.log(f"MODEL_INFO: {model_parameters}")
-
         with self.lock:
             content = BUFFER.read_text()
             try:
