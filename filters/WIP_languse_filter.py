@@ -4,7 +4,7 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 1.0.0
+version: 1.0.1
 date: 2025-02-21
 license: GPLv3
 description: A Filter that prints arguments as they go through it
@@ -32,7 +32,7 @@ with FileLock(LOCK_FILENAME, timeout=1):
         BUFFER.write_text("{}")
 
 class Filter:
-    VERSION="1.0.0"
+    VERSION="1.0.1"
 
     class Valves(BaseModel):
         priority: int = Field(
@@ -73,7 +73,7 @@ class Filter:
     async def __init_langfuse__(self):
         try:
             self.langfuse = Langfuse(
-                host=self.valves.langfuse_host,
+                host="http://" + self.valves.langfuse_host if not self.valves.langfuse_host.startswith("http") else self.valves.langfuse_host,
                 public_key=self.valves.langfuse_public_key,
                 secret_key=self.valves.langfuse_secret_key,
                 # debug=self.valves.debug,  # a bit too verbose
@@ -144,7 +144,7 @@ class Filter:
         model_parameters = self.flatten_dict(__model__)
         metadata["files"] = self.flatten_dict(__files__)
 
-        await self.log(f"MODEL_INFO: {model_parameters}")
+        # await self.log(f"MODEL_INFO: {model_parameters}")
 
         with self.lock:
             content = BUFFER.read_text()
@@ -165,21 +165,21 @@ class Filter:
             # source: https://langfuse.com/docs/sdk/python/low-level-sdk
 
             trace = self.langfuse.trace(
-                id=chat_id,
+                # id=chat_id,
                 # name="OpenWebuiLangfuseFilter",
                 name = "open-webui_chat-trace",
-                # name=messages[-1]["content"][:100],
                 input=body["messages"][:-1],
                 output=body["messages"][-1],
                 metadata=metadata,
                 user_id=__user__["name"],
-                session_id=__metadata__["session_id"],
+                # session_id=__metadata__["session_id"],
+                session_id=chat_id,
                 version=self.VERSION,
                 tags=["open-webui", "langfuse_filter"],
                 public=False,
             )
             span = trace.span(
-                id= __metadata__["message_id"],
+                # id=__metadata__["message_id"],
                 start_time=t_start,
                 end_time=t_end,
                 name="open-webui-chat-trace-span",
@@ -189,7 +189,8 @@ class Filter:
                 version=self.VERSION,
             )
             generation = span.generation(
-                id= __metadata__["message_id"],
+                # id=__metadata__["message_id"],
+                name=messages[-1]["content"][:100],
                 start_time=t_start,
                 end_time=t_end,
                 model= __model__['info']["base_model_id"],
@@ -213,26 +214,36 @@ class Filter:
     def flatten_dict(self, input: dict) -> dict:
         if not isinstance(input, dict):
             return input
-        input = input.copy()
-        while any(isinstance(mp, dict) for mp in input):
-            for k, v in input.items():
+        
+        result = input.copy()
+        while any(isinstance(v, dict) for v in result.values()):
+            dict_found = False
+            for k, v in list(result.items()):  # Create a list to avoid modification during iteration
                 if isinstance(v, dict):
+                    dict_found = True
+                    # Remove the current key-value pair
+                    del result[k]
+                    # Flatten and add the nested dictionary items
+                    for k2, v2 in v.items():
+                        new_key = f"{k}_{k2}"
+                        while new_key in result:
+                            new_key = new_key + "_"
+                        result[new_key] = v2
                     break
                 else:
-                    try:
-                        vj = json.dumps(v)
-                    except Exception:
-                        input[k] = str(v)
-            del input[k]
-            for k2, v2 in v.copy().items():
-                if k2 in input:
-                    k3 = f"{k}_{k2}"
-                    while k3 in input:
-                        k3 = k3 + "_"
-                    input[k3] = v2
-                else:
-                    input[k2] = v2
-        return input
+                    # Handle non-dictionary values
+                    if isinstance(v, list):
+                        try:
+                            result[k] = json.dumps(v)  # langfuse hates lists
+                        except Exception:
+                            result[k] = str(v)
+                    else:
+                        try:
+                            json.dumps(v)  # Just test if serializable
+                        except Exception:
+                            result[k] = str(v)
+
+        return result
 
 
 class EventEmitter:
