@@ -15,16 +15,15 @@ requirements: langfuse>=2.59.3
 """
 
 import os
+import time
+import json
 from pydantic import BaseModel, Field
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, List
 from langfuse.decorators import observe, langfuse_context
+from datetime import datetime
 
 def p(message: str) -> None:
     print(f"LangfuseFilter: {message}")
-
-def waiter(**kwargs):
-    while True:
-        time.sleep(1)
 
 class Singleton:
     _instance = None
@@ -48,6 +47,8 @@ class Singleton:
 holder = Singleton()
 
 class Filter:
+    VERSION="1.0.0"
+
     class Valves(BaseModel):
         priority: int = Field(
             default=10,
@@ -89,10 +90,28 @@ class Filter:
         if chat_id in holder.buffer:
             self.log(f"INLET ERROR: holder already contains chat_id '{chat_id}': '{holder.buffer[chat_id]}'", force=True)
 
-        dec = observe(as_type="generation")
-        self.log(f"Entered context for chat_id {chat_id}")
-        holder.buffer[chat_id] = context
+        self.log(f"Started timer for chat_id {chat_id}")
+        holder.buffer[chat_id] = datetime.now()
         return body
+
+    def flatten_dict(self, input: dict) -> dict:
+        input = input.copy()
+        while any(isinstance(mp, dict) for mp in input):
+            to_add = {}
+            for k, v in input.items():
+                if isinstance(v, dict):
+                    to_add.update(v)
+                    break
+            del input[k]
+            for k2, v2 in to_add.items():
+                if k2 in input:
+                    k3 = f"{k}_{k2}"
+                    while k3 in input:
+                        k3 = k3 + "_"
+                    input[k3] = v2
+                else:
+                    input[k2] = v2
+        return input
 
     def outlet(
         self,
@@ -103,15 +122,70 @@ class Filter:
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         ) -> dict:
+        t_end = datetime.now()
         self.emitter = EventEmitter(__event_emitter__)
         chat_id = __metadata__["chat_id"]
         if chat_id not in holder.buffer:
             self.log(f"OUTLET ERROR: holder is missing chat_id '{chat_id}'", force=True)
+            t_start = None
         else:
-            context = holder.buffer[chat_id]
-            context.__exit__(None, None, None)
+            t_start = holder.buffer[chat_id]
+
+        metadata={
+            "ow_message_id": __metadata__["message_id"],
+            "ow_session_id":__metadata__["session_id"],
+            "ow_user_id": __user__["id"],
+            "ow_user_name": __user__["name"],
+            "ow_user_mail": __user__["email"],
+            "ow_model_name": __model__['info']["id"],
+            "ow_base_model_id": __model__['info']["base_model_id"],
+        }
+        flat_metadata = self.flatten_dict(__metadata__)
+        for k, v in flat_metadata.items():
+            if v not in metadata.values():
+                metadata["ow_" + k] = v
+
+        model_parameters = self.flatten_dict(___model___)
+        files = self.flatten_dict(__files__)
+
+        # source: https://langfuse.com/docs/sdk/python/low-level-sdk
+
+        @observe(as_type="generation")
+        def the_call(messages: List[dict]):
+            langfuse_context.update_current_trace(
+                # name="OpenWebuiLangfuseFilter",
+                name=messages[-1]["content"][:100],
+
+                id= __metadata__["message_id"],
+                session_id=__metadata__["session_id"],
+                chat_id=chat_id,
+                user_id=__user__["name"],
+                model= __model__['info']["base_model_id"],
+                input=messages,
+                output=body["messages"][-1],
+
+                model_parameters=model_parameters,
+                metadata=metadata,
+
+                tags=["open-webui", "langfuse_filter"],
+
+                public=False,
+                version=self.VERSION,
+
+
+                start_time=t_start,
+                end_time=t_end,
+            )
+            # return the assistant messsage
+            return body["messages"][-1]
+
+        # send every messages except the assisttant answer
+        the_call(body["messages"][:-1])
+
+        if chat_id in holder.buffer and holder.buffer[chat_id] == t_start:
             del holder.buffer[chat_id]
-        self.log(f"Exited context for chat_id {chat_id}")
+
+        self.log(f"Done with langfuse with chat_id {chat_id}")
         return body
 
 
