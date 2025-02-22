@@ -20,12 +20,16 @@ import time
 import json
 from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any, List
-from langfuse.decorators import observe, langfuse_context
+from langfuse import Langfuse
 from datetime import datetime
-from filelock import Timeout, FileLock
+from filelock import FileLock
 
-LOCK_FILENAME="./langfuse_filter.lock"
-BUFFER=Path("./langfuse_filter.buffer")
+LOCK_FILENAME = "./langfuse_filter.lock"
+BUFFER = Path("./langfuse_filter.buffer")
+with FileLock(LOCK_FILENAME, timeout=1):
+    BUFFER.touch()
+    if BUFFER.read_text() == "":
+        BUFFER.write_text("{}")
 
 class Filter:
     VERSION="1.0.0"
@@ -39,12 +43,26 @@ class Filter:
             default=True,
             description="True to print debug statements",
         )
+        langfuse_host: str = Field(
+            default='',
+            description="langfuse_host",
+            required=True,
+        )
+        langfuse_public_key: str = Field(
+            default='',
+            description="langfuse_public_key",
+            required=True,
+        )
+        langfuse_secret_key: str = Field(
+            default='',
+            description="langfuse_secret_key",
+            required=True,
+        )
 
     def __init__(self):
         self.valves = self.Valves()
         self.debug = self.valves.debug
-        self.lock = FileLock(LOCK_FILENAME,timeout=1)
-
+        self.lock = FileLock(LOCK_FILENAME, timeout=5)
 
     async def log(self, message: str, force: bool = False) -> None:
         if self.valves.debug or force:
@@ -52,42 +70,33 @@ class Filter:
         if force:
             await self.emitter.error_update(f"LangfuseFilter: {message}")
 
-    def flatten_dict(self, input: dict) -> dict:
-        input = input.copy()
-        while any(isinstance(mp, dict) for mp in input):
-            to_add = {}
-            for k, v in input.items():
-                if isinstance(v, dict):
-                    to_add.update(v)
-                    break
-            del input[k]
-            for k2, v2 in to_add.items():
-                if k2 in input:
-                    k3 = f"{k}_{k2}"
-                    while k3 in input:
-                        k3 = k3 + "_"
-                    input[k3] = v2
-                else:
-                    input[k2] = v2
-        return input
-
+    async def __init_langfuse__(self):
+        try:
+            self.langfuse = Langfuse(
+                host=self.valves.langfuse_host,
+                public_key=self.valves.langfuse_public_key,
+                secret_key=self.valves.langfuse_secret_key,
+                # debug=self.valves.debug,  # a bit too verbose
+            )
+        except Exception as e:
+            await self.log(f"Failed to init langfuse: '{e}'", force=True)
+            raise Exception(f"Failed to init langfuse: '{e}'", force=True)
 
     async def inlet(
         self,
         body: dict,
+        __metadata__: Optional[dict] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
-        if not "LANGFUSE_HOST" in os.environ:
-            self.log("INLET ERROR: LANGFUSE_HOST not in env", force=True)
-        if not "LANGFUSE_PUBLIC_KEY" in os.environ:
-            self.log("INLET ERROR: LANGFUSE_PUBLIC_KEY not in env", force=True)
-        if not "LANGFUSE_SECRET_KEY" in os.environ:
-            self.log("INLET ERROR: LANGFUSE_SECRET_KEY not in env", force=True)
+
+        if not hasattr(self, "langfuse"):
+            await self.__init_langfuse__()
+
         chat_id = __metadata__["chat_id"]
         with self.lock:
+            content = BUFFER.read_text()
             try:
-                content = BUFFER.read_text()
                 buffer = json.loads(content)
                 assert isinstance(buffer, dict), f"Not a dict but {type(buffer)}"
             except Exception as e:
@@ -96,14 +105,14 @@ class Filter:
                 buffer = {}
 
             if chat_id in buffer:
-                self.log(f"INLET ERROR: holder already contains chat_id '{chat_id}': '{holder.buffer[chat_id]}'", force=True)
+                self.log(f"INLET ERROR: buffer already contains chat_id '{chat_id}': '{buffer[chat_id]}'", force=True)
 
             self.log(f"Started timer for chat_id {chat_id}")
             buffer[chat_id] = time.time()
             BUFFER.write_text(json.dumps(buffer))
         return body
 
-    def outlet(
+    async def outlet(
         self,
         body: dict,
         __user__: Optional[dict] = None,
@@ -115,6 +124,8 @@ class Filter:
         t_end = datetime.now()
         self.emitter = EventEmitter(__event_emitter__)
         chat_id = __metadata__["chat_id"]
+        if not hasattr(self, "langfuse"):
+            await self.__init_langfuse__()
 
         metadata={
             "ow_message_id": __metadata__["message_id"],
@@ -130,67 +141,98 @@ class Filter:
             if v not in metadata.values():
                 metadata["ow_" + k] = v
 
-        model_parameters = self.flatten_dict(___model___)
-        files = self.flatten_dict(__files__)
+        model_parameters = self.flatten_dict(__model__)
+        metadata["files"] = self.flatten_dict(__files__)
+
+        await self.log(f"MODEL_INFO: {model_parameters}")
 
         with self.lock:
+            content = BUFFER.read_text()
             try:
-                content = BUFFER.read_text()
                 buffer = json.loads(content)
                 assert isinstance(buffer, dict), f"Not a dict but {type(buffer)}"
             except Exception as e:
-                self.log(f"LangfuseFilterOutlet: Error when loading json: '{e}'\nBuffer: {content}")
+                await self.log(f"LangfuseFilterOutlet: Error when loading json: '{e}'\nBuffer: {content}")
                 await self.emitter.error_update(f"LangfuseFilterOutlet: Error when loading json: '{e}'\nBuffer: {content}")
                 buffer = {}
 
             if chat_id not in buffer:
-                self.log(f"OUTLET ERROR: holder is missing chat_id '{chat_id}'", force=True)
+                await self.log(f"OUTLET ERROR: buffer is missing chat_id '{chat_id}'", force=True)
                 t_start = None
             else:
                 t_start = datetime.fromtimestamp(float(buffer[chat_id]))
 
-            @observe(as_type="generation")
-            def the_call(messages: List[dict]):
-                """
-                source: https://langfuse.com/docs/sdk/python/low-level-sdk
-                """
-                langfuse_context.update_current_trace(
-                    # name="OpenWebuiLangfuseFilter",
-                    name=messages[-1]["content"][:100],
+            # source: https://langfuse.com/docs/sdk/python/low-level-sdk
 
-                    id= __metadata__["message_id"],
-                    session_id=__metadata__["session_id"],
-                    chat_id=chat_id,
-                    user_id=__user__["name"],
-                    model= __model__['info']["base_model_id"],
-                    input=messages,
-                    output=body["messages"][-1],
+            trace = self.langfuse.trace(
+                id=chat_id,
+                # name="OpenWebuiLangfuseFilter",
+                name = "open-webui_chat-trace",
+                # name=messages[-1]["content"][:100],
+                input=body["messages"][:-1],
+                output=body["messages"][-1],
+                metadata=metadata,
+                user_id=__user__["name"],
+                session_id=__metadata__["session_id"],
+                version=self.VERSION,
+                tags=["open-webui", "langfuse_filter"],
+                public=False,
+            )
+            span = trace.span(
+                id= __metadata__["message_id"],
+                start_time=t_start,
+                end_time=t_end,
+                name="open-webui-chat-trace-span",
+                metadata=metadata,
+                input=body["messages"][:-1],
+                output=body["messages"][-1],
+                version=self.VERSION,
+            )
+            generation = span.generation(
+                id= __metadata__["message_id"],
+                start_time=t_start,
+                end_time=t_end,
+                model= __model__['info']["base_model_id"],
+                model_parameters=model_parameters,
+                input=body["messages"][:-1],
+                output=body["messages"][-1],
+                metadata=metadata,
+                version=self.VERSION,
+            )
 
-                    model_parameters=model_parameters,
-                    metadata=metadata,
-
-                    tags=["open-webui", "langfuse_filter"],
-
-                    public=False,
-                    version=self.VERSION,
-
-
-                    start_time=t_start,
-                    end_time=t_end,
-                )
-                # return the assistant messsage
-                return body["messages"][-1]
-
-            # send every messages except the assisstant answer
-            the_call(body["messages"][:-1])
+            self.langfuse.flush()
 
             if chat_id in buffer and buffer[chat_id] == t_start:
                 del buffer[chat_id]
 
             BUFFER.write_text(json.dumps(buffer))
 
-        self.log(f"Done with langfuse with chat_id {chat_id}")
+        await self.log(f"Done with langfuse with chat_id {chat_id}")
         return body
+
+    def flatten_dict(self, input: dict) -> dict:
+        if not isinstance(input, dict):
+            return input
+        input = input.copy()
+        while any(isinstance(mp, dict) for mp in input):
+            for k, v in input.items():
+                if isinstance(v, dict):
+                    break
+                else:
+                    try:
+                        vj = json.dumps(v)
+                    except Exception:
+                        input[k] = str(v)
+            del input[k]
+            for k2, v2 in v.copy().items():
+                if k2 in input:
+                    k3 = f"{k}_{k2}"
+                    while k3 in input:
+                        k3 = k3 + "_"
+                    input[k3] = v2
+                else:
+                    input[k2] = v2
+        return input
 
 
 class EventEmitter:
