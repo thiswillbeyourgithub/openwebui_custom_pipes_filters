@@ -269,7 +269,13 @@ class Tools:
             }
 
             if self.valves.metadata_field:
-                metadata = __user__.copy()
+                subuser = __user__.copy()
+                for k, v in subuser.items():
+                    try:
+                        json.dumps(v)
+                    except Exception:
+                        subuser[k] = str(v)
+                metadata = subuser
                 metadata["AnkiToolVersion"] = self.VERSION
                 metadata["__model__"] = __model__
                 metadata["__metadata__"] = __metadata__
