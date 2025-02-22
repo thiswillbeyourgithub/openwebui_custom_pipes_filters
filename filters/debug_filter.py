@@ -11,7 +11,7 @@ description: A Filter that prints arguments as they go through it
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/debug_filter
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any
 
 def p(message: str) -> None:
