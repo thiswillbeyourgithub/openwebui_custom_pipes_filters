@@ -7,7 +7,7 @@ git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 2.0.0
 date: 2025-02-21
 license: GPLv3
-description: A Filter that prints arguments as they go through it
+description: Filter that prints argument as they pass through it. You can use it multiple times to debug another filter.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/debug_filter
 """
 
