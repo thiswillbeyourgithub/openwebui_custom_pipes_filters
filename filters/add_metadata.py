@@ -125,11 +125,11 @@ class Filter:
 
         tags = load_json_list(self.valves.extra_tags)
         if tags:
-            if "tags" in body:
-                body["tags"] += tags
+            if "tags" in body["metadata"]:
+                body["metadata"]["tags"] += tags
                 await log("Updated tags")
             else:
-                body["tags"] = tags
+                body["metadata"]["tags"] = tags
                 await log("Set tags")
         else:
             await log("No tags specified")
