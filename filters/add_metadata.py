@@ -106,6 +106,8 @@ class Filter:
             body["metadata"]["tags"] = list(set(body['metadata']['tags']))
         else:
             await log("No tags specified")
+
+        # I don't understand how to make tags work so trying all ways
         body["metadata"]["trace_tags"] = body["metadata"]["tags"]
         body["metadata"]["langfuse_tags"] = body["metadata"]["tags"]
 
