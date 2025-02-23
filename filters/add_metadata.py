@@ -92,6 +92,7 @@ class Filter:
             body["metadata"]["trace_user_id"] = __user__
 
         # metadata
+        body["metadata"]["trace_session_id"] = __metadata__["chat_id"]
         metadata = load_json_dict(self.valves.extra_metadata)
         if metadata:
             if "metadata" in body:
