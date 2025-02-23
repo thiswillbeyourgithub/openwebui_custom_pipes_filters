@@ -25,16 +25,6 @@ def load_json_dict(user_value: str) -> dict:
     assert isinstance(loaded, dict), f"json is not a dict but '{type(loaded)}'"
     return loaded
 
-@cache
-def load_json_list(user_value: str) -> list:
-    user_value = user_value.strip()
-    if not user_value:
-        return []
-    loaded = json.loads(user_value)
-    assert isinstance(loaded, list), f"json is not a list but '{type(loaded)}'"
-    assert all(isinstance(elem, str) for elem in loaded), f"List contained non strings elements: '{loaded}'"
-    return loaded
-
 
 class Filter:
     class Valves(BaseModel):
@@ -50,9 +40,9 @@ class Filter:
             default='{"source": "open-webui"}',
             description="String that when passed through json.loads is a dict that will be added to the request. If a the value is a list or a value of the metadata is already set then we will append the new value to the list.",
         )
-        extra_tags: str = Field(
-            default='["open-webui"]',
-            description="String that when passed through json.loads is a list that will be added as tags to the request.",
+        extra_tags: list = Field(
+            default=["open-webui", "add_metadata_filter"],
+            description="List added as tags to the request.",
         )
         debug: bool = Field(
             default=False, description="True to add emitter prints",
@@ -63,7 +53,6 @@ class Filter:
 
     async def on_valves_updated(self):
         load_json_dict(self.valves.extra_metadata)
-        load_json_list(self.valves.extra_tags)
 
     async def inlet(
         self,
@@ -123,7 +112,7 @@ class Filter:
         else:
             await log("No metadata specified")
 
-        tags = load_json_list(self.valves.extra_tags)
+        tags = self.valves.extra_tags
         if tags:
             if "tags" in body["metadata"]:
                 body["metadata"]["tags"] += tags
