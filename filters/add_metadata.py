@@ -108,13 +108,13 @@ class Filter:
         else:
             await log("No tags specified")
 
-        # I don't understand how to make tags work so trying all ways
-        body["metadata"]["trace_tags"] = body["metadata"]["tags"]
-        body["metadata"]["trace_metadata"] = {"tags": body["metadata"]["tags"]}
-        body["metadata"]["update_trace_tags"] = body["metadata"]["tags"]
-        body["metadata"]["existing_trace_tags"] = body["metadata"]["tags"]
-        body["metadata"]["existing_tags"] = body["metadata"]["tags"]
-        body["tags"] = body["metadata"]['tags']
+        # # I don't understand how to make tags work so trying all ways
+        # body["metadata"]["trace_tags"] = body["metadata"]["tags"]
+        # body["metadata"]["trace_metadata"] = {"tags": body["metadata"]["tags"]}
+        # body["metadata"]["update_trace_tags"] = body["metadata"]["tags"]
+        # body["metadata"]["existing_trace_tags"] = body["metadata"]["tags"]
+        # body["metadata"]["existing_tags"] = body["metadata"]["tags"]
+        # body["tags"] = body["metadata"]['tags']
 
         # metadata
         # useful reference: https://docs.litellm.ai/docs/observability/langfuse_integration
