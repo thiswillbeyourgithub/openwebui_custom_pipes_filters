@@ -28,7 +28,7 @@ class Filter:
     class UserValves(BaseModel):
         keep_messages: int = Field(
             default=2,
-            description="Number of most recent messages to keep in the chat",
+            description="Number of most recent messages to keep in the chat. This does not count the system message.",
         )
 
     def __init__(self):
@@ -50,18 +50,21 @@ class Filter:
                 print(f"InfiniteChat filter: inlet: {message}")
             await emitter.progress_update(message)
 
-        if self.valves.debug:
-            await log(f"InfiniteChat filter: inlet: messages count before: {len(body['messages'])}")
-
         keep = __user__["valves"].keep_messages
         if keep < 2:
             await log("keep_messages must be at least 2, using default of 2")
             keep = 2
-            
-        if len(body["messages"]) > keep:
-            # Keep only the most recent messages
-            body["messages"] = body["messages"][-keep:]
-            await log(f"Trimmed chat history to last {keep} messages")
+
+        sys_message = [m for m in body["messages"] if "role" in m and m["role"] == "system"]
+
+        if self.valves.debug:
+            await log(f"InfiniteChat filter: inlet: messages count before: {len(body['messages'])}, including {len(sys_message)} system message(s)")
+
+        body["messages"] = [m for m in body["messages"] if ("role" not in m) or (m["role"] != "system")]
+        body["messages"] = sys_message + body["messages"][-keep:]
+
+        if self.valves.debug:
+            await log(f"InfiniteChat filter: inlet: messages count after: {len(body['messages'])}")
 
         return body
 
