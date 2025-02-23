@@ -4,7 +4,7 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 2.0.0
+version: 2.1.0
 date: 2025-02-21
 license: GPLv3
 description: Filter that prints argument as they pass through it. You can use it multiple times to debug another filter.
@@ -19,6 +19,7 @@ def p(message: str) -> None:
     print(f"DebugFilter: {message}")
 
 class Filter:
+    VERSION: 2.1.0
     class Valves(BaseModel):
         priority: int = Field(
             default=0,
