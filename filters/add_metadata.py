@@ -43,10 +43,10 @@ class Filter:
         )
         extra_tags: list = Field(
             default=["open-webui", "add_metadata_filter"],
-            description="List added as tags to the request.",
+            description="List as comma separated string that is added as tags to the request.",
         )
         debug: bool = Field(
-            default=False, description="True to add emitter prints",
+            default=False, description="True to add emitter prints and set debug_langfuse metadata to True",
         )
 
     def __init__(self):
@@ -60,9 +60,16 @@ class Filter:
         body: dict,
         __user__: Optional[dict] = None,
         __event_emitter__: Callable[[dict], Any] = None,
+        __metadata__: Optional[dict] = None,
+        __files__: Optional[dict] = None,
+        __model__: Optional[dict] = None,
         ) -> dict:
         # printer
         emitter = EventEmitter(__event_emitter__)
+        if __metadata__ is None:
+            __metadata__ = {}
+        if __model__ is None:
+            __model__ = {}
         async def log(message: str):
             if self.valves.debug:
                 print(f"AddMetadata filter: inlet: {message}")
@@ -73,10 +80,6 @@ class Filter:
 
         if "metadata" not in body:
             body["metadata"] = {}
-
-        if self.valves.debug:
-            await log(f"AddMetadata filter: inlet: __user__ {__user__}")
-            await log(f"AddMetadata filter: inlet: body {body}")
 
         # user
         if self.valves.add_userinfo:
@@ -89,31 +92,9 @@ class Filter:
             await log(f"Added user metadata '{new_value}'")
 
             body["metadata"]["open-webui_userinfo"] = __user__
-            body["metadata"]["trace_user_id"] = __user__
+            body["metadata"]["trace_user_id"] = new_value
 
-        # metadata
-        body["metadata"]["trace_session_id"] = __metadata__["chat_id"]
-        metadata = load_json_dict(self.valves.extra_metadata)
-        if metadata:
-            if "metadata" in body:
-                for k, v in metadata.items():
-                    if k in body["metadata"]:
-                        if isinstance(v, list) and isinstance(body["metadata"][k], list):
-                            body["metadata"][k].extend(v)
-                        elif isinstance(body["metadata"][k], list):
-                            body["metadata"][k].append(v)
-                        elif isinstance(v, list):
-                            body["metadata"][k] = [body["metadata"][k]] + v
-                    else:
-                        body["metadata"][k] = v
-                        # await log(f"Extra_metadata of key '{k}' was already present in request. Value before: '{body['metadata'][k]}', value after: '{v}'")
-                await log("Updated metadata")
-            else:
-                body["metadata"] = metadata
-                await log("Set metadata")
-        else:
-            await log("No metadata specified")
-
+        # tags
         tags = self.valves.extra_tags
         if tags:
             if "tags" in body["metadata"]:
@@ -122,8 +103,39 @@ class Filter:
             else:
                 body["metadata"]["tags"] = tags
                 await log("Set tags")
+            body["metadata"]["tags"] = list(set(body['metadata']['tags']))
         else:
             await log("No tags specified")
+        body["metadata"]["trace_tags"] = body["metadata"]["tags"]
+        body["metadata"]["langfuse_tags"] = body["metadata"]["tags"]
+
+        # metadata
+        # useful reference: https://docs.litellm.ai/docs/observability/langfuse_integration
+        body["metadata"]["session_id"] = __metadata__["chat_id"]
+        body["metadata"]["generation_name"] = body["messages"][-1]["content"][:100]
+        body["metadata"]["generation_id"] = __metadata__["message_id"]
+        body["metadata"]["trace_name"] = body["messages"][-1]["content"][:100]
+        body["metadata"]["version"] = self.VERSION
+        if self.valves.debug:
+            body["metadata"]["debug_langfuse"] = True
+
+        metadata = __metadata__.copy()
+        metadata.update(load_json_dict(self.valves.extra_metadata))
+        for k, v in metadata.items():
+            if k in body["metadata"]:
+                if isinstance(v, list) and isinstance(body["metadata"][k], list):
+                    body["metadata"][k].extend(v)
+                elif isinstance(body["metadata"][k], list):
+                    body["metadata"][k].append(v)
+                elif isinstance(v, list):
+                    body["metadata"][k] = [body["metadata"][k]] + v
+            else:
+                body["metadata"][k] = v
+                # await log(f"Extra_metadata of key '{k}' was already present in request. Value before: '{body['metadata'][k]}', value after: '{v}'")
+        if not metadata:
+            await log("No metadata specified")
+        else:
+            await log("Updated metadata")
 
         # also add as langfuse metadata
         body["metadata"]["trace_metadata"] = body["metadata"].copy()
@@ -153,10 +165,6 @@ class Filter:
 
         await log("Done")
         return body
-
-    # def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
-    #     return body
-
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
