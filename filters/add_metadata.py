@@ -71,6 +71,8 @@ class Filter:
             else:
                 await emitter.progress_update("")
 
+        if "metadata" not in body:
+            body["metadata"] = {}
 
         if self.valves.debug:
             await log(f"AddMetadata filter: inlet: __user__ {__user__}")
@@ -86,10 +88,7 @@ class Filter:
             body["user"] = new_value
             await log(f"Added user metadata '{new_value}'")
 
-            if "metadata" in body:
-                body["metadata"]["open-webui_userinfo"] = __user__
-            else:
-                body["metadata"] = {"open-webui_userinfo": __user__}
+            body["metadata"]["open-webui_userinfo"] = __user__
 
         # metadata
         metadata = load_json_dict(self.valves.extra_metadata)
