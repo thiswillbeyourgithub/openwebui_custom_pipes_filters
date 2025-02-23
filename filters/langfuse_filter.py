@@ -188,7 +188,7 @@ class Filter:
             )
             generation = span.generation(
                 # id=__metadata__["message_id"],
-                name=messages[-1]["content"][:100],
+                name=body["messages"][-1]["content"][:100],
                 start_time=t_start,
                 end_time=t_end,
                 model= __model__['info']["base_model_id"],
