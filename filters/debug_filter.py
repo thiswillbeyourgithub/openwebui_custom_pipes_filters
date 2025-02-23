@@ -48,6 +48,10 @@ class Filter:
             default=False,
             description="Print the event emitter",
         )
+        direction: str = Field(
+            default="both",
+            description="When to print debug info: 'inlet', 'outlet', or 'both'",
+        )
 
     def __init__(self):
         self.valves = self.Valves()
@@ -71,13 +75,14 @@ class Filter:
             "__event_emitter__": self.valves.print_emitter,
         }
         
-        for arg, should_print in args_to_print.items():
-            if should_print:
-                try:
-                    val = json.dumps(locals()[arg], ensure_ascii=False, indent=2)
-                except:
-                    val = str(locals()[arg])
-                p(f"\nINLET_{prio}: {arg}:\n{val}")
+        if self.valves.direction in ["inlet", "both"]:
+            for arg, should_print in args_to_print.items():
+                if should_print:
+                    try:
+                        val = json.dumps(locals()[arg], ensure_ascii=False, indent=2)
+                    except:
+                        val = str(locals()[arg])
+                    p(f"\nINLET_{prio}: {arg}:\n{val}")
         return body
 
     def outlet(
@@ -99,11 +104,12 @@ class Filter:
             "__event_emitter__": self.valves.print_emitter,
         }
         
-        for arg, should_print in args_to_print.items():
-            if should_print:
-                try:
-                    val = json.dumps(locals()[arg], ensure_ascii=False, indent=2)
-                except:
-                    val = str(locals()[arg])
-                p(f"\nOUTLET_{prio}: {arg}:\n{val}")
+        if self.valves.direction in ["outlet", "both"]:
+            for arg, should_print in args_to_print.items():
+                if should_print:
+                    try:
+                        val = json.dumps(locals()[arg], ensure_ascii=False, indent=2)
+                    except:
+                        val = str(locals()[arg])
+                    p(f"\nOUTLET_{prio}: {arg}:\n{val}")
         return body
