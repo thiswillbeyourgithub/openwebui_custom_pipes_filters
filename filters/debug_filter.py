@@ -32,7 +32,7 @@ class Filter:
             default=False,
             description="Print the user info",
         )
-        print_meta bool = Field(
+        print_meta: bool = Field(
             default=False,
             description="Print the metadata",
         )
