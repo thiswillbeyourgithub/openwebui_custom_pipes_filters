@@ -65,9 +65,6 @@ class Filter:
 
         return body
 
-    def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
-        return body
-
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
