@@ -24,7 +24,7 @@ A collection of pipes, filters and tools for OpenWebUI.
 ### Pipes
 
 - **hide_thinking.py** - Pipe version of the hide_thinking filter functionality.
-    - Not used anymore because ooen-webui now automatically wraps the thoughts.
+    - Not used anymore because open-webui now automatically wraps the thoughts.
     - Includes an untested anthropic caching.
 - **costtrackingpipe.py** - Tracks user costs and removes thinking blocks (deprecated in favor of langfuse).
 
