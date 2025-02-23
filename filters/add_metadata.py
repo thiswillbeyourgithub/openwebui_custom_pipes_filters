@@ -104,12 +104,17 @@ class Filter:
                 body["metadata"]["tags"] = tags
                 await log("Set tags")
             body["metadata"]["tags"] = list(set(body['metadata']['tags']))
+            await log(f"Tags are now '{body['metadata']['tags']}'")
         else:
             await log("No tags specified")
 
         # I don't understand how to make tags work so trying all ways
         body["metadata"]["trace_tags"] = body["metadata"]["tags"]
-        body["metadata"]["langfuse_tags"] = body["metadata"]["tags"]
+        body["metadata"]["trace_metadata"] = {"tags": body["metadata"]["tags"]}
+        body["metadata"]["update_trace_tags"] = body["metadata"]["tags"]
+        body["metadata"]["existing_trace_tags"] = body["metadata"]["tags"]
+        body["metadata"]["existing_tags"] = body["metadata"]["tags"]
+        body["tags"] = body["metadata"]['tags']
 
         # metadata
         # useful reference: https://docs.litellm.ai/docs/observability/langfuse_integration
@@ -123,26 +128,17 @@ class Filter:
 
         metadata = __metadata__.copy()
         metadata.update(load_json_dict(self.valves.extra_metadata))
-        for k, v in metadata.items():
-            if k in body["metadata"]:
-                if isinstance(v, list) and isinstance(body["metadata"][k], list):
-                    body["metadata"][k].extend(v)
-                elif isinstance(body["metadata"][k], list):
-                    body["metadata"][k].append(v)
-                elif isinstance(v, list):
-                    body["metadata"][k] = [body["metadata"][k]] + v
-            else:
-                body["metadata"][k] = v
-                # await log(f"Extra_metadata of key '{k}' was already present in request. Value before: '{body['metadata'][k]}', value after: '{v}'")
         if not metadata:
             await log("No metadata specified")
         else:
+            body["metadata"].update(metadata)
             await log("Updated metadata")
 
         # also add as langfuse metadata
         body["metadata"]["trace_metadata"] = body["metadata"].copy()
 
         try:
+            await log("Metadata at the end of the inlet filter:")
             await log(json.dumps(body))
 
         # fix: some updates of openwebui can crash json dumping, so we filter out the culprit
