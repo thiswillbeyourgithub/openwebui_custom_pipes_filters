@@ -19,7 +19,7 @@ def p(message: str) -> None:
     print(f"DebugFilter: {message}")
 
 class Filter:
-    VERSION: 2.1.0
+    VERSION: "2.1.0"
     class Valves(BaseModel):
         priority: int = Field(
             default=0,
@@ -33,7 +33,7 @@ class Filter:
             default=False,
             description="Print the user info",
         )
-        print_meta: bool = Field(
+        print_metadata: bool = Field(
             default=False,
             description="Print the metadata",
         )
