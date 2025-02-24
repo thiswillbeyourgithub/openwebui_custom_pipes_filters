@@ -75,8 +75,6 @@ class Filter:
                 print(f"AddMetadata filter: inlet: {message}")
             if self.valves.debug:
                 await emitter.progress_update(message)
-            else:
-                await emitter.progress_update("")
 
         if "metadata" not in body:
             body["metadata"] = {}
@@ -161,7 +159,8 @@ class Filter:
             else:
                 raise
 
-        await log("Done")
+        if self.valves.debug:
+            await emitter.success_update("Done")
         return body
 
 class EventEmitter:
