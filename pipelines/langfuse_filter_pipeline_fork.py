@@ -1,11 +1,14 @@
 """
 title: Langfuse Filter Pipeline
-author: open-webui
-date: 2025-02-20
-version: 1.5
+author: thiswillbeyourightub
+author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
+funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
+git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
+version: 1.6.0
+date: 2025-02-25
 license: MIT
-description: A filter pipeline that uses Langfuse.
-requirements: langfuse
+description: A filter pipeline that uses Langfuse to track conversations and metrics.
+requirements: langfuse>=2.59.3
 """
 
 from typing import List, Optional
@@ -34,6 +37,7 @@ class Pipeline:
         public_key: str
         host: str
         debug: bool = False
+        tags: List[str] = ["openwebui", "langfuse_filter_pipeline"]
 
     def __init__(self):
         self.type = "filter"
@@ -46,6 +50,7 @@ class Pipeline:
                 "public_key": os.getenv("LANGFUSE_PUBLIC_KEY", "your-public-key-here"),
                 "host": os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
                 "debug": os.getenv("DEBUG_MODE", "false").lower() == "true",
+                "tags": ["openwebui", "langfuse_filter_pipeline"],
             }
         )
 
@@ -158,6 +163,7 @@ class Pipeline:
                 "user_id": user_email,
                 "metadata": {"chat_id": chat_id},
                 "session_id": chat_id,
+                "tags": self.valves.tags,
             }
 
             if self.valves.debug:
