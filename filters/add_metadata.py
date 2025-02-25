@@ -107,18 +107,18 @@ class Filter:
             else:
                 body["metadata"]["tags"] = tags
                 await log("Set tags")
-            body["metadata"]["tags"] = list(set(body['metadata']['tags']))
+            body["metadata"]["tags"] = list(set(body["metadata"]["tags"]))
             await log(f"Tags are now '{body['metadata']['tags']}'")
         else:
             await log("No tags specified")
 
         # # I don't understand how to make tags work so trying all ways
-        # body["metadata"]["trace_tags"] = body["metadata"]["tags"]
-        # body["metadata"]["trace_metadata"] = {"tags": body["metadata"]["tags"]}
-        # body["metadata"]["update_trace_tags"] = body["metadata"]["tags"]
-        # body["metadata"]["existing_trace_tags"] = body["metadata"]["tags"]
-        # body["metadata"]["existing_tags"] = body["metadata"]["tags"]
-        # body["tags"] = body["metadata"]['tags']
+        body["metadata"]["trace_tags"] = body["metadata"]["tags"]
+        body["metadata"]["trace_metadata"] = {"tags": body["metadata"]["tags"]}
+        body["metadata"]["update_trace_tags"] = body["metadata"]["tags"]
+        body["metadata"]["existing_trace_tags"] = body["metadata"]["tags"]
+        body["metadata"]["existing_tags"] = body["metadata"]["tags"]
+        body["tags"] = body["metadata"]["tags"]
 
         # metadata
         # useful reference: https://docs.litellm.ai/docs/observability/langfuse_integration
@@ -166,6 +166,8 @@ class Filter:
                     )
             else:
                 raise
+
+        body["extra_body"] = {"metadata": body["metadata"]}
 
         if self.valves.debug:
             await emitter.success_update("Done")
