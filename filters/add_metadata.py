@@ -16,6 +16,7 @@ from typing import Optional, Callable, Any
 import json
 from functools import cache
 
+
 @cache
 def load_json_dict(user_value: str) -> dict:
     user_value = user_value.strip()
@@ -28,6 +29,7 @@ def load_json_dict(user_value: str) -> dict:
 
 class Filter:
     VERSION: str = "1.1.1"
+
     class Valves(BaseModel):
         priority: int = Field(
             default=0,
@@ -46,7 +48,8 @@ class Filter:
             description="List as comma separated string that is added as tags to the request.",
         )
         debug: bool = Field(
-            default=False, description="True to add emitter prints and set debug_langfuse metadata to True",
+            default=False,
+            description="True to add emitter prints and set debug_langfuse metadata to True",
         )
 
     def __init__(self):
@@ -63,13 +66,14 @@ class Filter:
         __metadata__: Optional[dict] = None,
         __files__: Optional[dict] = None,
         __model__: Optional[dict] = None,
-        ) -> dict:
+    ) -> dict:
         # printer
         emitter = EventEmitter(__event_emitter__)
         if __metadata__ is None:
             __metadata__ = {}
         if __model__ is None:
             __model__ = {}
+
         async def log(message: str):
             if self.valves.debug:
                 print(f"AddMetadata filter: inlet: {message}")
@@ -84,7 +88,9 @@ class Filter:
             if "user" in body:
                 await log(f"User key already found in body: '{body['user']}'")
                 if body["user"] != __user__["name"]:
-                    await log(f"User key different than expected: '{body['user']}' vs '{__user__['name']}'")
+                    await log(
+                        f"User key different than expected: '{body['user']}' vs '{__user__['name']}'"
+                    )
             new_value = f"{__user__['name']}_{__user__['email']}"
             body["user"] = new_value
             await log(f"Added user metadata '{new_value}'")
@@ -155,13 +161,16 @@ class Filter:
 
                 await log(json.dumps(body2))
                 if self.valves.debug:
-                    await log(f"Failed to json dump the following body keys: {failed} with value '{body[k]}'")
+                    await log(
+                        f"Failed to json dump the following body keys: {failed} with value '{body[k]}'"
+                    )
             else:
                 raise
 
         if self.valves.debug:
             await emitter.success_update("Done")
         return body
+
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
