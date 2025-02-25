@@ -206,7 +206,7 @@ class Pipeline:
 
         return body
 
-    async def outlet(self, body: dict, user: Optional[dict] = None) -> dict:
+    async def outlet(self, body: dict, user: Optional[dict] = None, **kwargs) -> dict:
         """
         Outlet handles the response body (usually the assistant message).
         It will finalize/end the generation created for the user request.
@@ -222,6 +222,11 @@ class Pipeline:
 
         trace = self.chat_traces[chat_id]
         generation = self.chat_generations[chat_id]
+
+        print("HEEEEEEEEEEEEEEEEERE")
+        print(body)
+        print(user)
+        print(kwargs)
 
         # Get the last assistant message from the conversation
         assistant_message = get_last_assistant_message(body["messages"])
