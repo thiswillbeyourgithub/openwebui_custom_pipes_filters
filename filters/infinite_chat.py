@@ -1,7 +1,7 @@
 """
 title: InfiniteChat
 author: thiswillbeyourgithub
-version: 1.1.0
+version: 1.2.0
 date: 2025-02-21
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
@@ -15,7 +15,7 @@ from typing import Optional, Callable, Any
 
 
 class Filter:
-    VERSION: str = "1.1.0"
+    VERSION: str = "1.2.0"
     class Valves(BaseModel):
         priority: int = Field(
             default=0,
