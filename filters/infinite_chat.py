@@ -79,12 +79,13 @@ class Filter:
             keep = 2
 
         sys_message_count = len([m for m in body["messages"] if "role" in m and m["role"] == "system"])
-        expected_count = keep + sys_message_count
+        expected_count = keep + sys_message_count + 1
 
-        if len(body["messages"]) != expected_count:
+        if len(body["messages"]) > expected_count:
+
             await emitter.error_update(
                 f"InfiniteChat filter: outlet: Expected {expected_count} messages "
-                f"(keep={keep} + {sys_message_count} system), but got {len(body['messages'])}"
+                f"({sys_message_count} system + {keep} kept messages + 1 reply), but got {len(body['messages'])}"
             )
 
         return body
