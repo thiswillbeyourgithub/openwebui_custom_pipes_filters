@@ -67,29 +67,6 @@ class Filter:
 
         return body
 
-    async def outlet(
-        self,
-        body: dict,
-        __user__: Optional[dict] = None,
-        __event_emitter__: Callable[[dict], Any] = None,
-        ) -> dict:
-        emitter = EventEmitter(__event_emitter__)
-        keep = self.valves.keep_messages
-        if keep < 2:
-            keep = 2
-
-        sys_message_count = len([m for m in body["messages"] if "role" in m and m["role"] == "system"])
-        expected_count = keep + sys_message_count + 1
-
-        if len(body["messages"]) > expected_count:
-
-            await emitter.error_update(
-                f"InfiniteChat filter: outlet: Expected {expected_count} messages "
-                f"({sys_message_count} system + {keep} kept messages + 1 reply), but got {len(body['messages'])}"
-            )
-
-        return body
-
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
