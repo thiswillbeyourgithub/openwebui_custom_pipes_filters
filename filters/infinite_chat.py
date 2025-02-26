@@ -7,7 +7,7 @@ author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filte
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 license: GPLv3
-description: A filter that keeps chats manageable by retaining only the last N messages. Seems broken as of 0.5.16 because even if I remove messages of the body they are readded automatically.
+description: A filter that keeps chats manageable by retaining only the last N messages.
 """
 
 from pydantic import BaseModel, Field
