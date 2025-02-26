@@ -99,6 +99,7 @@ class EventEmitter:
         await self.emit(description)
 
     async def error_update(self, description):
+        print(description)
         await self.emit(description, "error", True)
 
     async def success_update(self, description):
