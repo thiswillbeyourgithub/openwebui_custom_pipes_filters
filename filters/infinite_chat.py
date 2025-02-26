@@ -25,8 +25,6 @@ class Filter:
             default=False, 
             description="True to add emitter prints",
         )
-
-    class UserValves(BaseModel):
         keep_messages: int = Field(
             default=2,
             description="Number of most recent messages to keep in the chat. This does not count the system message.",
@@ -51,7 +49,7 @@ class Filter:
                 print(f"InfiniteChat filter: inlet: {message}")
             await emitter.progress_update(message)
 
-        keep = __user__["valves"].keep_messages
+        keep = self.valves.keep_messages
         if keep < 2:
             await log("keep_messages must be at least 2, using default of 2")
             keep = 2
@@ -76,7 +74,7 @@ class Filter:
         __event_emitter__: Callable[[dict], Any] = None,
         ) -> dict:
         emitter = EventEmitter(__event_emitter__)
-        keep = __user__["valves"].keep_messages
+        keep = self.valves.keep_messages
         if keep < 2:
             keep = 2
 
