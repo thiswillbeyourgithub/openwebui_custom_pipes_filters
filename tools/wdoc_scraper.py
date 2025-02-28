@@ -29,36 +29,6 @@ from pydantic import BaseModel, Field
 
 from wdoc import wdoc
 
-
-class EventEmitter:
-    def __init__(self, event_emitter: Callable[[dict], Any] = None):
-        self.event_emitter = event_emitter
-
-    async def progress_update(self, description):
-        await self.emit(description)
-
-    async def error_update(self, description):
-        await self.emit(description, "error", True)
-        raise Exception(description)
-
-    async def success_update(self, description):
-        await self.emit(description, "success", True)
-
-    async def emit(self, description="Unknown State", status="in_progress", done=False):
-        print(f"wdocParser: {description}")
-        if self.event_emitter:
-            await self.event_emitter(
-                {
-                    "type": "status",
-                    "data": {
-                        "status": status,
-                        "description": description,
-                        "done": done,
-                    },
-                }
-            )
-
-
 class Tools:
     class Valves(BaseModel):
         CITATION: bool = Field(
@@ -118,3 +88,33 @@ class Tools:
             f"Successfully Scraped {title if title else url}"
         )
         return content
+
+
+class EventEmitter:
+    def __init__(self, event_emitter: Callable[[dict], Any] = None):
+        self.event_emitter = event_emitter
+
+    async def progress_update(self, description):
+        await self.emit(description)
+
+    async def error_update(self, description):
+        await self.emit(description, "error", True)
+        raise Exception(description)
+
+    async def success_update(self, description):
+        await self.emit(description, "success", True)
+
+    async def emit(self, description="Unknown State", status="in_progress", done=False):
+        print(f"wdocParser: {description}")
+        if self.event_emitter:
+            await self.event_emitter(
+                {
+                    "type": "status",
+                    "data": {
+                        "status": status,
+                        "description": description,
+                        "done": done,
+                    },
+                }
+            )
+
