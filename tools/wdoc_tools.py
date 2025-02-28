@@ -18,10 +18,13 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 # - add a way to query data
 # - leverage open-webui's citations for the sources
 
+import os
 import requests
 from typing import Callable, Any
 import re
 from pydantic import BaseModel, Field
+import importlib
+
 
 # install wdoc
 import sys
@@ -34,7 +37,8 @@ subprocess.check_call([
     "wdoc>=2.6.5",
     "--system"
 ])
-from wdoc import wdoc
+
+
 
 class Tools:
     VERSION: str = "2.6.5"
@@ -46,6 +50,10 @@ class Tools:
     def __init__(self):
         self.valves = self.Valves()
         self.citation = self.valves.CITATION
+        if "wdoc" in sys.modules:
+            importlib.reload(wdoc)
+        else:
+            import wdoc
 
     async def parse_url(
         self,
@@ -66,7 +74,7 @@ class Tools:
         await emitter.progress_update(f"Parsing '{url}'")
 
         try:
-            parsed = wdoc.parse_file(
+            parsed = wdoc.wdoc.parse_file(
                 path=url,
                 filetype="auto",
                 format="langchain_dict",
@@ -74,7 +82,7 @@ class Tools:
         except Exception as e:
             url2 = re.sub(r"\((http[^)]+)\)", "", url)
             try:
-                parsed = wdoc.parse_file(
+                parsed = wdoc.wdoc.parse_file(
                     path=url2,
                     filetype="auto",
                     format="langchain_dict",
@@ -121,7 +129,7 @@ class Tools:
         await emitter.progress_update(f"Summarizing '{url}'")
 
         try:
-            instance = wdoc(
+            instance = wdoc.wdoc(
                 path=url,
                 task="summarize",
                 filetype="auto",
@@ -129,7 +137,7 @@ class Tools:
         except Exception as e:
             url2 = re.sub(r"\((http[^)]+)\)", "", url)
             try:
-                instance = wdoc(
+                instance = wdoc.wdoc(
                     path=url2,
                     task="summarize",
                     filetype="auto",
