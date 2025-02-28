@@ -54,16 +54,16 @@ class Tools:
         __user__: dict = {},
     ) -> str:
         """
-        Scrape and process a url using the wdoc rag library. After being parsed,
-        the content will be shown to the user so DO NOT repeat the parsing
+        Parse a url using the wdoc rag library. After being parsed,
+        the content will be shown to the user so DO NOT repeat this tool's
         output yourself and instead just tell the user that it went successfuly.
 
         :param url: The URL of the online data to parse.
-        :return: The scraped and processed webpage content, or an error message.
+        :return: The parsed data as text, or an error message.
         """
         emitter = EventEmitter(__event_emitter__)
 
-        await emitter.progress_update(f"Scraping '{url}'")
+        await emitter.progress_update(f"Parsing '{url}'")
 
         try:
             parsed = wdoc.parse_file(
@@ -98,7 +98,7 @@ class Tools:
             content = f"Success.\n\n## Parsing of {url}\n\n{content}\n\n---\n\n"
 
         await emitter.success_update(
-            f"Successfully Scraped {title if title else url}"
+            f"Successfully parsed '{title if title else url}'"
         )
         return content
 
