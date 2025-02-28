@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 from typing import Literal, Optional
 import importlib
 import sys
+from pathlib import Path
 
 
 # install wdoc
