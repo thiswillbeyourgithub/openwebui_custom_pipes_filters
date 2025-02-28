@@ -8,10 +8,19 @@ description: Use wdoc to parse urls and files
 funding_url: https://github.com/open-webui
 version: 0.0.1
 license: GPLv3
----
-requirements: wdoc>=2.6.0
----
+# requirements: wdoc>=2.6.5  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
 """
+
+# install wdoc here
+import sys
+import subprocess
+subprocess.check_call([
+    sys.executable, "-m", "uv", "pip",
+    "install",
+    "--overrides", "/app/backend/requirements.txt",
+    "wdoc>=2.6.5",
+    "--system"
+])
 
 import requests
 from typing import Callable, Any
