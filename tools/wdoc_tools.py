@@ -30,16 +30,16 @@ import importlib
 
 # install wdoc
 import sys
-import subprocess
-subprocess.check_call([
-    sys.executable, "-m", "uv", "pip",
-    "install",
-    "-U",
-    "--overrides", "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-    "wdoc>=2.6.5",
-    "--system"
-])
-import wdoc
+if Path('/app/backend/requirements.txt').exists():  # for debug
+    import subprocess
+    subprocess.check_call([
+        sys.executable, "-m", "uv", "pip",
+        "install",
+        "-U",
+        "--overrides", "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
+        "wdoc>=2.6.5",
+        "--system"
+    ])
 
 
 
