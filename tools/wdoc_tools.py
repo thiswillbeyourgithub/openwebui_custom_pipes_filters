@@ -43,7 +43,9 @@ if Path('/app/backend/requirements.txt').exists():  # for debug
 
 
 class Tools:
+
     VERSION: str = "2.6.5"
+
     class Valves(BaseModel):
         WDOC_TYPECHECKING: Literal["disabled", "warn", "crash"] = Field(
             default="warn",
@@ -314,12 +316,15 @@ def deep_reload(module_name):
     package_modules = [m for m in all_modules if m == module_name or m.startswith(module_name + '.')]
     
     # Remove all matching modules from sys.modules
-    for module in package_modules:
-        if module in sys.modules:
-            try:
+    try:
+        for module in package_modules:
+            if module in sys.modules.keys():
                 del sys.modules[module]
-            except Exception:
-                pass
+    except Exception:
+        pass
     
     # Reimport the base package
-    return importlib.import_module(module_name)
+    try:
+        importlib.import_module(module_name)
+    except Exception:
+        import wdoc
