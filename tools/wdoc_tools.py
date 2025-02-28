@@ -26,10 +26,10 @@ from pydantic import BaseModel, Field
 from pydantic import BaseModel, Field
 from typing import Literal, Optional
 import importlib
+import sys
 
 
 # install wdoc
-import sys
 if Path('/app/backend/requirements.txt').exists():  # for debug
     import subprocess
     subprocess.check_call([
@@ -160,6 +160,7 @@ class Tools:
             if val and  val != self.Valves.model_fields[attr].default:
                 print(f"Overloading {attr} to '{val}'")
                 os.environ[attr] = str(val)
+        deep_reload("wdoc")
 
     async def parse_url(
         self,
@@ -303,3 +304,23 @@ class EventEmitter:
                 }
             )
 
+
+def deep_reload(module_name):
+    """Deep reload a package and all its submodules."""
+    
+    # Get all loaded modules
+    all_modules = list(sys.modules.keys())
+    
+    # Find all modules that belong to the package
+    package_modules = [m for m in all_modules if m == module_name or m.startswith(module_name + '.')]
+    
+    # Remove all matching modules from sys.modules
+    for module in package_modules:
+        if module in sys.modules:
+            try:
+                del sys.modules[module]
+            except Exception:
+                pass
+    
+    # Reimport the base package
+    return importlib.import_module(module_name)
