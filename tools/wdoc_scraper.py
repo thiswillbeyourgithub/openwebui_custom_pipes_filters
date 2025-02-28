@@ -11,22 +11,21 @@ license: GPLv3
 # requirements: wdoc>=2.6.5  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
 """
 
-# install wdoc here
-import sys
-import subprocess
-subprocess.check_call([
-    sys.executable, "-m", "uv", "pip",
-    "install",
-    "--overrides", "/app/backend/requirements.txt",
-    "wdoc>=2.6.5",
-    "--system"
-])
-
 import requests
 from typing import Callable, Any
 import re
 from pydantic import BaseModel, Field
 
+# install wdoc
+import sys
+import subprocess
+subprocess.check_call([
+    sys.executable, "-m", "uv", "pip",
+    "install",
+    "--overrides", "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
+    "wdoc>=2.6.5",
+    "--system"
+])
 from wdoc import wdoc
 
 class Tools:
