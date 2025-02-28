@@ -12,6 +12,12 @@ license: GPLv3
 description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things!
 """
 
+# TODO:
+# - add valves to set the parameters for wdoc
+# - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
+# - add a way to query data
+# - leverage open-webui's citations for the sources
+
 import requests
 from typing import Callable, Any
 import re
