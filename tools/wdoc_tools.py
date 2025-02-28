@@ -102,6 +102,61 @@ class Tools:
         )
         return content
 
+    async def summarize_url(
+        self,
+        url: str,
+        __event_emitter__: Callable[[dict], Any] = None,
+        __user__: dict = {},
+    ) -> str:
+        """
+        Get back a summary of the data at a given url using the wdoc rag library.
+        The summary will be directly shown to the user so DO NOT repeat this tool's
+        output yourself and instead just tell the user that the summary went successfuly.
+
+        :param url: The URL of the online data to summarize.
+        :return: The summary as text, or an error message.
+        """
+        emitter = EventEmitter(__event_emitter__)
+
+        await emitter.progress_update(f"Summarizing '{url}'")
+
+        try:
+            instance = wdoc(
+                path=url,
+                task="summarize",
+                filetype="auto",
+            )
+        except Exception as e:
+            url2 = re.sub(r"\((http[^)]+)\)", "", url)
+            try:
+                instance = wdoc(
+                    path=url2,
+                    task="summarize",
+                    filetype="auto",
+                )
+                url = url2
+            except Exception as e2:
+                error_message=f"Error when summarizing:\nFirst error: {e}\nSecond error: {e2}"
+                await emitter.error_update(error_message)
+
+        results: dict = instance.summary_results
+        summary = results['summary']
+        output = f"""
+
+# Summary
+{url}
+
+{summary}
+
+- Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f})
+- Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
+"""
+
+        await emitter.success_update(
+            f"Successfully summarized {url}"
+        )
+        return output
+
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
