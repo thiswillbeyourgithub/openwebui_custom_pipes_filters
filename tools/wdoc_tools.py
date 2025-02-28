@@ -79,6 +79,7 @@ class Tools:
                     filetype="auto",
                     format="langchain_dict",
                 )
+                url = url2
             except Exception as e2:
                 error_message=f"Error when parsing:\nFirst error: {e}\nSecond error: {e2}"
                 await emitter.error_update(error_message)
@@ -91,8 +92,10 @@ class Tools:
         title = None
         try:
             title = parsed[0]["metadata"]["title"]
+            content = f"Success.\n\n## Parsing of {title}\n\n{content}\n\n---\n\n"
         except Exception as e:
             await emitter.progress_update(f"Error when getting title: '{e}'")
+            content = f"Success.\n\n## Parsing of {url}\n\n{content}\n\n---\n\n"
 
         await emitter.success_update(
             f"Successfully Scraped {title if title else url}"
