@@ -13,7 +13,7 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 """
 
 # TODO:
-# - add valves to set the parameters for wdoc
+# - add a decorator to overload the env variable only temporarily, otherwise we can't have different valueas for different users
 # - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
 # - add a way to query data
 # - leverage open-webui's citations for the sources
