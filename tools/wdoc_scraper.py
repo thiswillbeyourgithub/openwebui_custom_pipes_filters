@@ -27,17 +27,7 @@ from typing import Callable, Any
 import re
 from pydantic import BaseModel, Field
 
-import unittest
 from wdoc import wdoc
-
-def clean_urls(text) -> str:
-    """
-    Cleans URLs from a string containing structured text.
-
-    :param text: The input string containing the URLs.
-    :return: The cleaned string with URLs removed.
-    """
-    return re.sub(r"\((http[^)]+)\)", "", text)
 
 
 class EventEmitter:
@@ -102,7 +92,7 @@ class Tools:
                 format="langchain_dict",
             )
         except Exception as e:
-            url2 = re.sub(r"\((http[^)]+)\)", "", text)
+            url2 = re.sub(r"\((http[^)]+)\)", "", url)
             try:
                 parsed = wdoc.parse_file(
                     path=url2,
