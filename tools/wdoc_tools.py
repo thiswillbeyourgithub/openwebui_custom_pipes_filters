@@ -155,7 +155,9 @@ class Tools:
         self.valves = self.Valves()
         for attr in dir(self.valves):
             if attr.startswith("WDOC_"):
-                os.environ[attr] = getattr(self.valves, attr)
+                val = getattr(self.valves, attr)
+                if val:
+                    os.environ[attr] = str(val)
         if "wdoc" in sys.modules:
             importlib.reload(wdoc)
         else:
