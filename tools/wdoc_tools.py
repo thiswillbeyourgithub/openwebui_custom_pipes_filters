@@ -48,9 +48,11 @@ class Tools:
         __user__: dict = {},
     ) -> str:
         """
-        Scrape and process a web page using wdoc
+        Scrape and process a url using the wdoc rag library. After being parsed,
+        the content will be shown to the user so DO NOT repeat the parsing
+        output yourself and instead just tell the user that it went successfuly.
 
-        :param url: The URL of the web page to scrape.
+        :param url: The URL of the online data to parse.
         :return: The scraped and processed webpage content, or an error message.
         """
         emitter = EventEmitter(__event_emitter__)
