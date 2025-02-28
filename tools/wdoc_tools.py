@@ -159,9 +159,11 @@ class Tools:
                 if val:
                     os.environ[attr] = str(val)
         if "wdoc" in sys.modules:
-            importlib.reload(wdoc)
-        else:
-            import wdoc
+            try:
+                importlib.reload(wdoc)
+            except Exception:
+                pass
+        import wdoc
 
     async def parse_url(
         self,
