@@ -43,13 +43,10 @@ subprocess.check_call([
 class Tools:
     VERSION: str = "2.6.5"
     class Valves(BaseModel):
-        CITATION: bool = Field(
-            default="True", description="True or false for citation"
         )
 
     def __init__(self):
         self.valves = self.Valves()
-        self.citation = self.valves.CITATION
         if "wdoc" in sys.modules:
             importlib.reload(wdoc)
         else:
