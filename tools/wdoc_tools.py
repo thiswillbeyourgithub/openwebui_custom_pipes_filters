@@ -41,6 +41,7 @@ if Path('/app/backend/requirements.txt').exists():  # for debug
         "--system"
     ])
 
+import wdoc
 
 
 class Tools:
@@ -162,7 +163,7 @@ class Tools:
             if val and  val != self.Valves.model_fields[attr].default:
                 print(f"Overloading {attr} to '{val}'")
                 os.environ[attr] = str(val)
-        deep_reload("wdoc")
+        nuclear_reload("wdoc")
 
     async def parse_url(
         self,
@@ -307,25 +308,12 @@ class EventEmitter:
             )
 
 
-def deep_reload(module_name):
-    """Deep reload a package and all its submodules."""
-    
-    # Get all loaded modules
-    all_modules = list(sys.modules.keys())
-    
-    # Find all modules that belong to the package
-    package_modules = [m for m in all_modules if m == module_name or m.startswith(module_name + '.')]
-    
-    # Remove all matching modules from sys.modules
-    try:
-        for module in package_modules:
-            if module in sys.modules.keys():
-                del sys.modules[module]
-    except Exception:
-        pass
-    
-    # Reimport the base package
-    try:
-        importlib.import_module(module_name)
-    except Exception:
-        import wdoc
+def nuclear_reload(package_name):
+    """The most aggressive reload possible."""
+    # Unload the package and all its dependencies
+    to_remove = [m for m in sys.modules if m == package_name or m.startswith(package_name + '.')]
+    for module in to_remove:
+        if str(module) in sys.modules:
+            del sys.modules[module]
+
+    importlib.import_module("wdoc")
