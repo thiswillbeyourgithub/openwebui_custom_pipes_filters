@@ -19,7 +19,7 @@ A collection of pipes, filters and tools for OpenWebUI.
 ### Tools
 
 - **anki_tool.py** - Creates Anki flashcards through AnkiConnect with configurable settings. Pairs nicely with **infinite_chat.py**.
-- **wdoc_parser.py** - (WIP) tool to use wdoc as an url parser, but might break open-webui because of [the way open-webui does pip install](https://github.com/open-webui/open-webui/pull/10591)
+- **wdoc_tool.py** - tool to use wdoc as an url parser or summarizer
 
 ### Pipes
 
