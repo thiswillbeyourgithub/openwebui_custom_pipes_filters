@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 description: Use wdoc to parse urls and files
 funding_url: https://github.com/open-webui
-version: 0.0.1
+version: 1.0.0
 license: GPLv3
 # requirements: wdoc>=2.6.5  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
 """
@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 from wdoc import wdoc
 
 class Tools:
+    VERSION: str = "1.0.0"
     class Valves(BaseModel):
         CITATION: bool = Field(
             default="True", description="True or false for citation"
