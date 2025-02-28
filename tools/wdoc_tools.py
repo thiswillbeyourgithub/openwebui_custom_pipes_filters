@@ -154,16 +154,12 @@ class Tools:
     def on_valves_updated(self) -> None:
         self.valves = self.Valves()
         for attr in dir(self.valves):
-            if attr.startswith("WDOC_"):
-                val = getattr(self.valves, attr)
-                if val:
-                    os.environ[attr] = str(val)
-        if "wdoc" in sys.modules:
-            try:
-                importlib.reload(wdoc)
-            except Exception:
-                pass
-        import wdoc
+            if not attr.startswith("WDOC_"):
+                continue
+            val = getattr(self.valves, attr)
+            if val and  val != self.Valves.model_fields[attr].default:
+                print(f"Overloading {attr} to '{val}'")
+                os.environ[attr] = str(val)
 
     async def parse_url(
         self,
