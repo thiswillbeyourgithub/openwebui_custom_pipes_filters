@@ -39,6 +39,7 @@ subprocess.check_call([
     "wdoc>=2.6.5",
     "--system"
 ])
+import wdoc
 
 
 
