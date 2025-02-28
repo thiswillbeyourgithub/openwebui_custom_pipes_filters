@@ -15,16 +15,14 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 # TODO:
 # - add a decorator to overload the env variable only temporarily, otherwise we can't have different valueas for different users
 # - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
-# - add a way to query data
-# - leverage open-webui's citations for the sources
+# - add a tool to query data
+# - leverage open-webui's citations for the sources of queries
 
 import os
 import requests
-from typing import Callable, Any
+from typing import Callable, Any, Literal, Optional
 import re
 from pydantic import BaseModel, Field
-from pydantic import BaseModel, Field
-from typing import Literal, Optional
 import importlib
 import sys
 from pathlib import Path
