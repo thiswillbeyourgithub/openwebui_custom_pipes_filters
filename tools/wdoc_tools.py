@@ -149,18 +149,19 @@ class Tools:
             default=None,
             description="Host address for Langfuse integration."
         )
-
+        ANTHROPIC_API_KEY: str = Field(default=None, description="Anthropic API key.")
 
     def __init__(self):
+        self.citation = True
         self.on_valves_updated()
 
     def on_valves_updated(self) -> None:
         self.valves = self.Valves()
         for attr in dir(self.valves):
-            if not attr.startswith("WDOC_"):
+            if not attr.startswith("WDOC_") and not attr.endswith("_API_KEY"):
                 continue
             val = getattr(self.valves, attr)
-            if val and  val != self.Valves.model_fields[attr].default:
+            if val and  val != self.valves.model_fields[attr].default:
                 print(f"Overloading {attr} to '{val}'")
                 os.environ[attr] = str(val)
         nuclear_reload("wdoc")
@@ -241,29 +242,25 @@ class Tools:
 
         await emitter.progress_update(f"Summarizing '{url}'")
 
+        instance = None
+        error_message = ""
+
         try:
             instance = wdoc.wdoc(
                 path=url,
                 task="summarize",
                 filetype="auto",
             )
+
         except Exception as e:
-            url2 = re.sub(r"\((http[^)]+)\)", "", url)
-            try:
-                instance = wdoc.wdoc(
-                    path=url2,
-                    task="summarize",
-                    filetype="auto",
-                )
-                url = url2
-            except Exception as e2:
-                error_message=f"Error when summarizing:\nFirst error: {e}\nSecond error: {e2}"
-                await emitter.error_update(error_message)
+            error_message = f"Error when summarizing: {e}"
+            await emitter.progress_update(error_message)
 
-        results: dict = instance.summary_results
-        summary = results['summary']
-        output = f"""
-
+        output = ""
+        if instance:
+            results: dict = instance.summary_results
+            summary = results["summary"]
+            output = f"""
 # Summary
 {url}
 
@@ -271,13 +268,15 @@ class Tools:
 
 - Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f})
 - Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
+
+Just echo the full Summary above verbatim, do not abridge, process or analyze in any form.
 """
+            await emitter.success_update(f"Successfully summarized {url}")
+        else:
+            output = error_message
+            await emitter.error_update(f"Error summarizing {url}")
 
-        await emitter.success_update(
-            f"Successfully summarized {url}"
-        )
         return output
-
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
@@ -288,7 +287,7 @@ class EventEmitter:
 
     async def error_update(self, description):
         await self.emit(description, "error", True)
-        raise Exception(description)
+        # raise Exception(description)
 
     async def success_update(self, description):
         await self.emit(description, "success", True)
