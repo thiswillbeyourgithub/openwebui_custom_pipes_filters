@@ -77,6 +77,30 @@ class Tools:
             except json.JSONDecodeError:
                 raise ValueError("Must be valid JSON")
 
+    class UserValves(BaseModel):
+        override_summary_kwargs: str = Field(
+            default="{}",
+            description="JSON string of kwargs to pass to wdoc when summarizing. This will be applied after the Valves."
+        )
+        override_parse_kwargs: str = Field(
+            default="{}",
+            description="JSON string of kwargs to pass to wdoc when parsing. This will be applied after the Valves."
+        )
+        override_env_variables_as_dict: str = Field(
+            default="{}",
+            description="JSON string of environment variables to set when using wdoc. Keys will be uppercased. This will be applied after the Valves."
+        )
+
+        @validator('summary_kwargs', 'parse_kwargs', 'env_variables_as_dict')
+        def validate_json_dict(cls, v):
+            try:
+                parsed = json.loads(v)
+                if not isinstance(parsed, dict):
+                    raise ValueError("Must be a JSON dictionary")
+                return v
+            except json.JSONDecodeError:
+                raise ValueError("Must be valid JSON")
+
 
     def __init__(self):
         self.on_valves_updated()
