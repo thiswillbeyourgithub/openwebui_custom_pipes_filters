@@ -123,18 +123,23 @@ class Tools:
             assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
 
         parse_kwargs = self.parse_kwargs.copy()
-        override_parse_kwargs = json.loads(uvalves.get("override_parse_kwargs", "{}"))
+        override_parse_kwargs = uvalves.get("override_parse_kwargs", "{}")
+        if isinstance(override_parse_kwargs, str):
+            override_parse_kwargs = json.loads(override_parse_kwargs)
         assert isinstance(override_parse_kwargs, dict), "override_parse_kwargs must be a JSON dictionary"
         parse_kwargs.update(override_parse_kwargs)
         env_variables = self.env_variables.copy()
-        override_env_variables_as_dict = json.loads(uvalves.get("override_env_variables_as_dict", "{}"))
+        override_env_variables_as_dict = uvalves.get("override_env_variables_as_dict", "{}")
+        if isinstance(override_env_variables_as_dict, str):
+            override_env_variables_as_dict = json.loads(override_env_variables_as_dict)
         assert isinstance(override_env_variables_as_dict, dict), "override_env_variables_as_dict must be a JSON dictionary"
         for k, v in override_env_variables_as_dict.items():
-            if isinstance(v, str) and "$USER" in v:
-                override_env_variables_as_dict[k] = v.replace("$USER", __user__.get("name", "Unknown"))
             if "WDOC_PRIVATE_MODE" == k:
                 raise Exception(f"Cannot set WDOC_PRIVATE_MODE from a user valve. Just to be safe.")
         env_variables.update(override_env_variables_as_dict)
+        for k, v in env_variables.items():
+            if isinstance(v, str) and "$USER" in v:
+                env_variables[k] = v.replace("$USER", __user__.get("name", "Unknown"))
 
         with EnvVarContext(env_variables):
             try:
@@ -201,18 +206,23 @@ class Tools:
             assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
 
         summary_kwargs = self.summary_kwargs.copy()
-        override_summary_kwargs = json.loads(uvalves.get("override_summary_kwargs", "{}"))
+        override_summary_kwargs = uvalves.get("override_summary_kwargs", "{}")
+        if isinstance(override_summary_kwargs, str):
+            override_summary_kwargs = json.loads(override_summary_kwargs)
         assert isinstance(override_summary_kwargs, dict), "override_summary_kwargs must be a JSON dictionary"
         summary_kwargs.update(override_summary_kwargs)
         env_variables = self.env_variables.copy()
-        override_env_variables_as_dict = json.loads(uvalves.get("override_env_variables_as_dict", "{}"))
+        override_env_variables_as_dict = uvalves.get("override_env_variables_as_dict", "{}")
+        if isinstance(override_env_variables_as_dict, str):
+            override_env_variables_as_dict = json.loads(override_env_variables_as_dict)
         assert isinstance(override_env_variables_as_dict, dict), "override_env_variables_as_dict must be a JSON dictionary"
         for k, v in override_env_variables_as_dict.items():
-            if isinstance(v, str) and "$USER" in v:
-                override_env_variables_as_dict[k] = v.replace("$USER", __user__.get("name", "Unknown"))
             if "WDOC_PRIVATE_MODE" == k:
                 raise Exception(f"Cannot set WDOC_PRIVATE_MODE from a user valve. Just to be safe.")
         env_variables.update(override_env_variables_as_dict)
+        for k, v in env_variables.items():
+            if isinstance(v, str) and "$USER" in v:
+                env_variables[k] = v.replace("$USER", __user__.get("name", "Unknown"))
 
         with EnvVarContext(env_variables):
             try:
