@@ -63,8 +63,8 @@ class Tools:
             description="JSON string of kwargs to pass to wdoc when parsing"
         )
         env_variables_as_dict: str = Field(
-            default="{'WDOC_LITELLM_TAGS': 'open-webui', 'WDOC_STRICT_DOCDICT': 'False'}",
-            description="JSON string of environment variables to set when using wdoc. Keys will be uppercased."
+            default="{'WDOC_LITELLM_USER': '$USER', WDOC_LITELLM_TAGS': 'open-webui', 'WDOC_STRICT_DOCDICT': 'False'}",
+            description="JSON string of environment variables to set when using wdoc. Keys will be uppercased. If '$USER' is used in a value it will be replaced by the name of the open-webui user."
         )
 
         @validator('summary_kwargs', 'parse_kwargs', 'env_variables_as_dict')
@@ -141,6 +141,9 @@ class Tools:
         parse_kwargs.update(override_parse_kwargs)
         env_variables = self.env_variables.copy()
         override_env_variables_as_dict = uvalves.get("override_env_variables_as_dict", {})
+        for k, v in override_env_variables_as_dict.items():
+            if isinstance(v, str) and "$USER" in v:
+                override_env_variables_as_dict[k] = v.replace("$USER", __user__.get("name", "Unknown"))
         env_variables.update(override_env_variables_as_dict)
 
         with EnvVarContext(env_variables):
@@ -212,6 +215,9 @@ class Tools:
         summary_kwargs.update(override_summary_kwargs)
         env_variables = self.env_variables.copy()
         override_env_variables_as_dict = uvalves.get("override_env_variables_as_dict", {})
+        for k, v in override_env_variables_as_dict.items():
+            if isinstance(v, str) and "$USER" in v:
+                override_env_variables_as_dict[k] = v.replace("$USER", __user__.get("name", "Unknown"))
         env_variables.update(override_env_variables_as_dict)
 
         with EnvVarContext(env_variables):
