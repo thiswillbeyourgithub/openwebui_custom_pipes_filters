@@ -117,7 +117,7 @@ class Tools:
 
         await emitter.progress_update(f"Parsing '{url}'")
 
-        uvalves = __user__.get("valves", {})
+        uvalves = dict(__user__.get("valves", {}))
         if uvalves and not self.allow_user_valves_override:
             await emitter.error_update("You are trying to use a UserValve but the Valves of WdocTool don't allow it.")
             assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
@@ -200,7 +200,7 @@ class Tools:
 
         await emitter.progress_update(f"Summarizing '{url}'")
 
-        uvalves = __user__.get("valves", {})
+        uvalves = dict(__user__.get("valves", {}))
         if uvalves and not self.allow_user_valves_override:
             await emitter.error_update("You are trying to use a UserValve but the Valves of WdocTool don't allow it.")
             assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
