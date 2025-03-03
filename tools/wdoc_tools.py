@@ -142,6 +142,8 @@ class Tools:
         for k, v in override_env_variables_as_dict.items():
             if isinstance(v, str) and "$USER" in v:
                 override_env_variables_as_dict[k] = v.replace("$USER", __user__.get("name", "Unknown"))
+            if "WDOC_PRIVATE_MODE" == k:
+                raise Exception(f"Cannot set WDOC_PRIVATE_MODE from a user valve. Just to be safe.")
         env_variables.update(override_env_variables_as_dict)
 
         with EnvVarContext(env_variables):
@@ -216,6 +218,8 @@ class Tools:
         for k, v in override_env_variables_as_dict.items():
             if isinstance(v, str) and "$USER" in v:
                 override_env_variables_as_dict[k] = v.replace("$USER", __user__.get("name", "Unknown"))
+            if "WDOC_PRIVATE_MODE" == k:
+                raise Exception(f"Cannot set WDOC_PRIVATE_MODE from a user valve. Just to be safe.")
         env_variables.update(override_env_variables_as_dict)
 
         with EnvVarContext(env_variables):
