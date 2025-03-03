@@ -241,7 +241,7 @@ class Tools:
         self.on_valves_updated()
 
         await emitter.progress_update(f"Summarizing '{url}'")
-
+        os.environ["ANTHROPIC_API_KEY"] = str(self.Valves().model_fields["ANTHROPIC_API_KEY"])
         instance = None
         error_message = ""
 
