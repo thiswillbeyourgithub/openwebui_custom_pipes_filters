@@ -49,102 +49,6 @@ class Tools:
     VERSION: str = "2.6.5"
 
     class Valves(BaseModel):
-        WDOC_TYPECHECKING: Literal["disabled", "warn", "crash"] = Field(
-            default="warn",
-            description="Type checking behavior for the Whisper Doc service."
-        )
-        WDOC_NO_MODELNAME_MATCHING: bool = Field(
-            default=True,
-            description="Whether to disable model name matching."
-        )
-        WDOC_ALLOW_NO_PRICE: bool = Field(
-            default=False,
-            description="Whether to allow documents without a price."
-        )
-        WDOC_OPEN_ANKI: bool = Field(
-            default=False,
-            description="Whether to open Anki for document processing."
-        )
-        WDOC_STRICT_DOCDICT: bool = Field(
-            default=False,
-            description="Whether to enforce strict dictionary checking for documents."
-        )
-        WDOC_MAX_LOADER_TIMEOUT: int = Field(
-            default=-1,
-            description="Maximum timeout for the document loader in milliseconds."
-        )
-        WDOC_MAX_PDF_LOADER_TIMEOUT: int = Field(
-            default=-1,
-            description="Maximum timeout for the PDF loader in milliseconds. Disabled by default."
-        )
-        WDOC_PRIVATE_MODE: bool = Field(
-            default=False,
-            description="Whether to enable private mode for document processing."
-        )
-        WDOC_DEBUGGER: bool = Field(
-            default=False,
-            description="Whether to enable debugging mode."
-        )
-        WDOC_EXPIRE_CACHE_DAYS: int = Field(
-            default=0,
-            description="Number of days before cache expires."
-        )
-        WDOC_EMPTY_LOADER: bool = Field(
-            default=False,
-            description="Whether to allow empty content in the loader."
-        )
-        WDOC_BEHAVIOR_EXCL_INCL_USELESS: Literal["warn", "crash"] = Field(
-            default="warn",
-            description="Behavior for including or excluding useless data."
-        )
-        WDOC_IMPORT_TYPE: Literal["native", "lazy", "thread", "both"] = Field(
-            default="thread",
-            description="Type of import to use for document processing."
-        )
-        WDOC_MOD_FAISS_SCORE_FN: bool = Field(
-            default=False,
-            description="Whether to modify the FAISS score function."
-        )
-        WDOC_LLM_MAX_CONCURRENCY: int = Field(
-            default=15,
-            description="Maximum number of concurrent LLM requests."
-        )
-        WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE: int = Field(
-            default=1000,
-            description="Maximum token size for semantic batch processing."
-        )
-        WDOC_MAX_CHUNK_SIZE: int = Field(
-            default=16_000,
-            description="Maximum chunk size for document processing."
-        )
-        WDOC_DEFAULT_MODEL: str = Field(
-            default="anthropic/claude-3-7-sonnet-20250219",
-            description="Default model to use for document processing."
-        )
-        WDOC_DEFAULT_EMBED_MODEL: str = Field(
-            default="openai/text-embedding-3-small",
-            description="Default embedding model to use."
-        )
-        WDOC_DEFAULT_EMBED_DIMENSION: Optional[int] = Field(
-            default=None,
-            description="Default dimension for embeddings."
-        )
-        WDOC_EMBED_TESTING: bool = Field(
-            default=True,
-            description="Whether to enable embedding testing."
-        )
-        WDOC_DEFAULT_QUERY_EVAL_MODEL: str = Field(
-            default="anthropic/claude-3-5-haiku-20241022",
-            description="Default model for query evaluation."
-        )
-        WDOC_LANGFUSE_PUBLIC_KEY: Optional[str] = Field(
-            default=None,
-            description="Public key for Langfuse integration."
-        )
-        WDOC_LANGFUSE_SECRET_KEY: Optional[str] = Field(
-            default=None,
-            description="Secret key for Langfuse integration."
-        )
         WDOC_LANGFUSE_HOST: Optional[str] = Field(
             default=None,
             description="Host address for Langfuse integration."
@@ -156,14 +60,6 @@ class Tools:
 
     def on_valves_updated(self) -> None:
         self.valves = self.Valves()
-        for attr in dir(self.valves):
-            if not attr.startswith("WDOC_"):
-                continue
-            val = getattr(self.valves, attr)
-            if val and  val != self.Valves.model_fields[attr].default:
-                print(f"Overloading {attr} to '{val}'")
-                os.environ[attr] = str(val)
-        nuclear_reload("wdoc")
 
     async def parse_url(
         self,
@@ -180,7 +76,6 @@ class Tools:
         :return: The parsed data as text, or an error message.
         """
         emitter = EventEmitter(__event_emitter__)
-        self.on_valves_updated()
 
         await emitter.progress_update(f"Parsing '{url}'")
 
@@ -237,7 +132,6 @@ class Tools:
         :return: The summary as text, or an error message.
         """
         emitter = EventEmitter(__event_emitter__)
-        self.on_valves_updated()
 
         await emitter.progress_update(f"Summarizing '{url}'")
 
@@ -306,14 +200,3 @@ class EventEmitter:
                     },
                 }
             )
-
-
-def nuclear_reload(package_name):
-    """The most aggressive reload possible."""
-    # Unload the package and all its dependencies
-    to_remove = [m for m in sys.modules if m == package_name or m.startswith(package_name + '.')]
-    for module in to_remove:
-        if str(module) in sys.modules:
-            del sys.modules[module]
-
-    importlib.import_module("wdoc")
