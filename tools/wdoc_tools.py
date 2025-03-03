@@ -63,10 +63,10 @@ class Tools:
             description="JSON string of kwargs to pass to wdoc when parsing"
         )
         env_variables_as_dict: str = Field(
-            default="{'WDOC_LITELLM_TAGS': 'open-webui'}",
+            default="{'WDOC_LITELLM_TAGS': 'open-webui', 'WDOC_STRICT_DOCDICT': 'False'}",
             description="JSON string of environment variables to set when using wdoc. Keys will be uppercased."
         )
-        
+
         @validator('summary_kwargs', 'parse_kwargs', 'env_variables_as_dict')
         def validate_json_dict(cls, v):
             try:
