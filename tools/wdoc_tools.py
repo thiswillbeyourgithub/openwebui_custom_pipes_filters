@@ -48,7 +48,7 @@ class Tools:
     VERSION: str = "2.6.6"
 
     class Valves(BaseModel):
-        allow_user_valves_overrides: bool = Field(
+        allow_user_valves_override: bool = Field(
             default=True,
             description="If True then we allow user valves to override the Valves dicts. If False UserValves raise an exeception."
         )
