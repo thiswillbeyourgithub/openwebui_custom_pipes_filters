@@ -13,10 +13,8 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 """
 
 # TODO:
-# - append the user name to wdoc's user identifier for langfuse
-# - add a decorator to overload the env variable only temporarily, otherwise we can't have different values for different users
-# - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
 # - add a tool to query data
+# - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
 # - leverage open-webui's citations for the sources of queries
 
 import os
