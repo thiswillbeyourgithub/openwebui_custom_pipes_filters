@@ -21,9 +21,10 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 
 import os
 import requests
+import json
 from typing import Callable, Any, Literal, Optional
 import re
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 import importlib
 import sys
 from pathlib import Path
@@ -49,10 +50,24 @@ class Tools:
     VERSION: str = "2.6.5"
 
     class Valves(BaseModel):
-        WDOC_LANGFUSE_HOST: Optional[str] = Field(
-            default=None,
-            description="Host address for Langfuse integration."
+        summary_kwargs: str = Field(
+            default="{}",
+            description="JSON string of kwargs to pass to wdoc when summarizing"
         )
+        parse_kwargs: str = Field(
+            default="{}",
+            description="JSON string of kwargs to pass to wdoc when parsing"
+        )
+        
+        @validator('summary_kwargs', 'parse_kwargs')
+        def validate_json_dict(cls, v):
+            try:
+                parsed = json.loads(v)
+                if not isinstance(parsed, dict):
+                    raise ValueError("Must be a JSON dictionary")
+                return v
+            except json.JSONDecodeError:
+                raise ValueError("Must be valid JSON")
 
 
     def __init__(self):
@@ -60,6 +75,9 @@ class Tools:
 
     def on_valves_updated(self) -> None:
         self.valves = self.Valves()
+        # Validate that the kwargs are valid JSON dictionaries
+        self.summary_kwargs = json.loads(self.valves.summary_kwargs)
+        self.parse_kwargs = json.loads(self.valves.parse_kwargs)
 
     async def parse_url(
         self,
@@ -84,6 +102,7 @@ class Tools:
                 path=url,
                 filetype="auto",
                 format="langchain_dict",
+                **self.parse_kwargs
             )
         except Exception as e:
             url2 = re.sub(r"\((http[^)]+)\)", "", url)
@@ -92,6 +111,7 @@ class Tools:
                     path=url2,
                     filetype="auto",
                     format="langchain_dict",
+                    **self.parse_kwargs
                 )
                 url = url2
             except Exception as e2:
@@ -140,6 +160,7 @@ class Tools:
                 path=url,
                 task="summarize",
                 filetype="auto",
+                **self.summary_kwargs
             )
         except Exception as e:
             url2 = re.sub(r"\((http[^)]+)\)", "", url)
@@ -148,6 +169,7 @@ class Tools:
                     path=url2,
                     task="summarize",
                     filetype="auto",
+                    **self.summary_kwargs
                 )
                 url = url2
             except Exception as e2:
