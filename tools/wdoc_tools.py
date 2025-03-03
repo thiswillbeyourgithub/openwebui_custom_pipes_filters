@@ -63,7 +63,7 @@ class Tools:
             description="JSON string of kwargs to pass to wdoc when parsing"
         )
         env_variables_as_dict: str = Field(
-            default="{}",
+            default="{'WDOC_LITELLM_TAGS': 'open-webui'}",
             description="JSON string of environment variables to set when using wdoc. Keys will be uppercased."
         )
         
