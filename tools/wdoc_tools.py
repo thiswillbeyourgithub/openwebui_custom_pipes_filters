@@ -50,6 +50,10 @@ class Tools:
     VERSION: str = "2.6.5"
 
     class Valves(BaseModel):
+        allow_user_valves_overrides: bool = Field(
+            default=False,
+            description="If True then we allow user valves to override the Valves dicts"
+        )
         summary_kwargs: str = Field(
             default="{}",
             description="JSON string of kwargs to pass to wdoc when summarizing"
@@ -83,39 +87,6 @@ class Tools:
         self.summary_kwargs = json.loads(self.valves.summary_kwargs)
         self.parse_kwargs = json.loads(self.valves.parse_kwargs)
         self.env_variables = json.loads(self.valves.env_variables_as_dict)
-
-class EnvVarContext:
-    """Context manager for temporarily setting environment variables."""
-    
-    def __init__(self, env_vars: dict):
-        """
-        Initialize with a dictionary of environment variables to set.
-        
-        Args:
-            env_vars: Dictionary where keys are environment variable names 
-                     and values are their values. Keys will be uppercased.
-        """
-        self.env_vars = {k.upper(): str(v) for k, v in env_vars.items()}
-        self.original_values = {}
-        
-    def __enter__(self):
-        # Store original values and set new values
-        for key, value in self.env_vars.items():
-            if key in os.environ:
-                self.original_values[key] = os.environ[key]
-            else:
-                self.original_values[key] = None
-            os.environ[key] = value
-        return self
-        
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # Restore original environment
-        for key in self.env_vars:
-            if self.original_values[key] is None:
-                if key in os.environ:
-                    del os.environ[key]
-            else:
-                os.environ[key] = self.original_values[key]
 
     async def parse_url(
         self,
@@ -233,6 +204,39 @@ class EnvVarContext:
             f"Successfully summarized {url}"
         )
         return output
+
+class EnvVarContext:
+    """Context manager for temporarily setting environment variables."""
+    
+    def __init__(self, env_vars: dict):
+        """
+        Initialize with a dictionary of environment variables to set.
+        
+        Args:
+            env_vars: Dictionary where keys are environment variable names 
+                     and values are their values. Keys will be uppercased.
+        """
+        self.env_vars = {k.upper(): str(v) for k, v in env_vars.items()}
+        self.original_values = {}
+        
+    def __enter__(self):
+        # Store original values and set new values
+        for key, value in self.env_vars.items():
+            if key in os.environ:
+                self.original_values[key] = os.environ[key]
+            else:
+                self.original_values[key] = None
+            os.environ[key] = value
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Restore original environment
+        for key in self.env_vars:
+            if self.original_values[key] is None:
+                if key in os.environ:
+                    del os.environ[key]
+            else:
+                os.environ[key] = self.original_values[key]
 
 
 class EventEmitter:
