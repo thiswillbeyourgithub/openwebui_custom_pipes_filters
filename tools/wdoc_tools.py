@@ -123,12 +123,12 @@ class Tools:
             assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
 
         parse_kwargs = self.parse_kwargs.copy()
-        assert isinstance(uvalves.get("override_parse_kwargs", {}), dict), "override_parse_kwargs must be a JSON dictionary"
-        override_parse_kwargs = dict(uvalves.get("override_parse_kwargs", {}))
+        override_parse_kwargs = json.loads(uvalves.get("override_parse_kwargs", "{}"))
+        assert isinstance(override_parse_kwargs, dict), "override_parse_kwargs must be a JSON dictionary"
         parse_kwargs.update(override_parse_kwargs)
         env_variables = self.env_variables.copy()
-        assert isinstance(uvalves.get("override_env_variables_as_dict", {}) dict), "override_env_variables_as_dict must be a JSON dictionary"
-        override_env_variables_as_dict = dict(uvalves.get("override_env_variables_as_dict", {}))
+        override_env_variables_as_dict = json.loads(uvalves.get("override_env_variables_as_dict", "{}"))
+        assert isinstance(override_env_variables_as_dict, dict), "override_env_variables_as_dict must be a JSON dictionary"
         for k, v in override_env_variables_as_dict.items():
             if isinstance(v, str) and "$USER" in v:
                 override_env_variables_as_dict[k] = v.replace("$USER", __user__.get("name", "Unknown"))
@@ -201,12 +201,12 @@ class Tools:
             assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
 
         summary_kwargs = self.summary_kwargs.copy()
-        assert isinstance(uvalves.get("override_summary_kwargs", {}), dict), "override_summary_kwargs must be a JSON dictionary"
-        override_summary_kwargs = dict(uvalves.get("override_summary_kwargs", {}))
+        override_summary_kwargs = json.loads(uvalves.get("override_summary_kwargs", "{}"))
+        assert isinstance(override_summary_kwargs, dict), "override_summary_kwargs must be a JSON dictionary"
         summary_kwargs.update(override_summary_kwargs)
         env_variables = self.env_variables.copy()
-        assert isinstance(uvalves.get("override_env_variables_as_dict", {}) dict), "override_env_variables_as_dict must be a JSON dictionary"
-        override_env_variables_as_dict = dict(uvalves.get("override_env_variables_as_dict", {}))
+        override_env_variables_as_dict = json.loads(uvalves.get("override_env_variables_as_dict", "{}"))
+        assert isinstance(override_env_variables_as_dict, dict), "override_env_variables_as_dict must be a JSON dictionary"
         for k, v in override_env_variables_as_dict.items():
             if isinstance(v, str) and "$USER" in v:
                 override_env_variables_as_dict[k] = v.replace("$USER", __user__.get("name", "Unknown"))
