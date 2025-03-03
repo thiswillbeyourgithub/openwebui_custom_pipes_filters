@@ -91,7 +91,7 @@ class Tools:
             description="JSON string of environment variables to set when using wdoc. Keys will be uppercased. This will be applied after the Valves."
         )
 
-        @validator('summary_kwargs', 'parse_kwargs', 'env_variables_as_dict')
+        @validator('override_summary_kwargs', 'override_parse_kwargs', 'override_env_variables_as_dict')
         def validate_json_dict(cls, v):
             try:
                 parsed = json.loads(v)
@@ -111,6 +111,7 @@ class Tools:
         self.summary_kwargs = json.loads(self.valves.summary_kwargs)
         self.parse_kwargs = json.loads(self.valves.parse_kwargs)
         self.env_variables = json.loads(self.valves.env_variables_as_dict)
+        self.allow_user_valves_override = self.valves.allow_user_valves_override
 
     async def parse_url(
         self,
@@ -130,13 +131,25 @@ class Tools:
 
         await emitter.progress_update(f"Parsing '{url}'")
 
-        with EnvVarContext(self.env_variables):
+        uvalves = __user__.get("valves", {})
+        if uvalves:
+            await emitter.error_update("You are trying to use a UserValve but the Valves of WdocTool don't allow it.")
+            assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
+
+        parse_kwargs = self.parse_kwargs.copy()
+        override_parse_kwargs = uvalves.get("override_parse_kwargs", {})
+        parse_kwargs.update(override_parse_kwargs)
+        env_variables = self.env_variables.copy()
+        override_env_variables_as_dict = uvalves.get("override_env_variables_as_dict", {})
+        env_variables.update(override_env_variables_as_dict)
+
+        with EnvVarContext(env_variables):
             try:
                 parsed = wdoc.wdoc.parse_file(
                     path=url,
                     filetype="auto",
                     format="langchain_dict",
-                    **self.parse_kwargs
+                    **parse_kwargs,
                 )
             except Exception as e:
                 url2 = re.sub(r"\((http[^)]+)\)", "", url)
@@ -145,7 +158,7 @@ class Tools:
                         path=url2,
                         filetype="auto",
                         format="langchain_dict",
-                        **self.parse_kwargs
+                        **parse_kwargs,
                     )
                     url = url2
                 except Exception as e2:
@@ -189,13 +202,25 @@ class Tools:
 
         await emitter.progress_update(f"Summarizing '{url}'")
 
-        with EnvVarContext(self.env_variables):
+        uvalves = __user__.get("valves", {})
+        if uvalves:
+            await emitter.error_update("You are trying to use a UserValve but the Valves of WdocTool don't allow it.")
+            assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
+
+        summary_kwargs = self.summary_kwargs.copy()
+        override_summary_kwargs = uvalves.get("override_summary_kwargs", {})
+        summary_kwargs.update(override_summary_kwargs)
+        env_variables = self.env_variables.copy()
+        override_env_variables_as_dict = uvalves.get("override_env_variables_as_dict", {})
+        env_variables.update(override_env_variables_as_dict)
+
+        with EnvVarContext(env_variables):
             try:
                 instance = wdoc.wdoc(
                     path=url,
                     task="summarize",
                     filetype="auto",
-                    **self.summary_kwargs
+                    **summary_kwargs
                 )
             except Exception as e:
                 url2 = re.sub(r"\((http[^)]+)\)", "", url)
@@ -204,7 +229,7 @@ class Tools:
                         path=url2,
                         task="summarize",
                         filetype="auto",
-                        **self.summary_kwargs
+                        **summary_kwargs
                     )
                     url = url2
                 except Exception as e2:
