@@ -117,6 +117,7 @@ class Tools:
         :return: The parsed data as text, or an error message.
         """
         emitter = EventEmitter(__event_emitter__)
+        self.on_valves_updated()
 
         await emitter.progress_update(f"Parsing '{url}'")
 
@@ -203,6 +204,7 @@ class Tools:
         :return: The summary as text, or an error message.
         """
         emitter = EventEmitter(__event_emitter__)
+        self.on_valves_updated()
 
         await emitter.progress_update(f"Summarizing '{url}'")
 
