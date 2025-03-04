@@ -95,7 +95,7 @@ class Filter:
             body["user"] = new_value
             await log(f"Added user metadata '{new_value}'")
 
-            body["metadata"]["open-webui_userinfo"] = __user__
+            body["metadata"]["open-webui_userinfo"] = dict(__user__)
             body["metadata"]["trace_user_id"] = new_value
 
         # tags
