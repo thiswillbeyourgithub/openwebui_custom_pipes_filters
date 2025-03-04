@@ -8,7 +8,7 @@ description: Use wdoc to parse urls and files
 funding_url: https://github.com/open-webui
 version: 2.6.6
 license: GPLv3
-# requirements: wdoc>=2.6.5  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
+# requirements: wdoc>=2.6.6  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
 description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things!
 """
 
