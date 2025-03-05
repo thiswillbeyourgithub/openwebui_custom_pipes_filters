@@ -39,8 +39,22 @@ if Path('/app/backend/requirements.txt').exists():  # for debug
         "wdoc>=2.6.7",
         "--system"
     ])
+    subprocess.check_call([
+        sys.executable, "-m", "uv", "pip",
+        "install",
+        "-U",
+        "torch==2.0.1",
+        "--system"
+    ])
+    subprocess.check_call([
+        sys.executable, "-m", "uv", "pip",
+        "install",
+        "-U",
+        "torchaudio==2.0.1",
+        "--system"
+    ])
 
-os.environ["LD_LIBRARY_PATH"] += ":/usr/local/lib/python3.11/site-packages/torchaudio/lib"
+# os.environ["LD_LIBRARY_PATH"] += ":/usr/local/lib/python3.11/site-packages/torchaudio/lib"
 
 try:
     import wdoc
