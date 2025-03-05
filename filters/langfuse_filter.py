@@ -23,6 +23,8 @@ from typing import Optional, Callable, Any, List
 from langfuse import Langfuse
 from datetime import datetime
 from filelock import FileLock
+from loguru import logger
+
 
 LOCK_FILENAME = "./langfuse_filter.lock"
 BUFFER = Path("./langfuse_filter.buffer")
@@ -66,7 +68,7 @@ class Filter:
 
     async def log(self, message: str, force: bool = False) -> None:
         if self.valves.debug or force:
-            print(f"LangfuseFilter: {message}")
+            logger.info(f"LangfuseFilter: {message}")
         if force:
             await self.emitter.error_update(f"LangfuseFilter: {message}")
 
