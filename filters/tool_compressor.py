@@ -15,6 +15,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any
 import html
 import re
+from loguru import logger
+
 
 
 class Filter:
@@ -41,7 +43,7 @@ class Filter:
 
     def log(self, message: str):
         if self.valves.debug:
-            print(f"ToolCompressor: {message}")
+            logger.info(f"ToolCompressor: {message}")
 
     def compress_tool_calls(self, text: str) -> str:
         orig_text = text
