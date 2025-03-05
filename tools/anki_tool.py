@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Callable, Any, List, Optional, Dict
 from pydantic import BaseModel, Field, model_validator
 import aiohttp
+from loguru import logger
 
 
 DEFAULT_ANKICONNECT_HOST="http://localhost"
@@ -66,7 +67,7 @@ Each keys of the param `fields` must be among those fields and all values must b
 :param fields: Dictionary mapping the flashcard's field names to their string content. Refer to the tool description for details.
 :return: A string to show to the user
 """.strip()
-    print(f"AnkiTool: Updated the docstring with this value:\n---\n{docstring}\n---")
+    logger.info(f"AnkiTool: Updated the docstring with this value:\n---\n{docstring}\n---")
     return docstring
 
 class Tools:
@@ -190,7 +191,7 @@ class Tools:
                     assert isinstance(f, dict), "Not a dict"
                     fields_dict = f
                 except Exception as e:
-                    print(f"AnkiTool: fields param was a str but couldn't be parsed as dict: '{e}'")
+                    logger.info(f"AnkiTool: fields param was a str but couldn't be parsed as dict: '{e}'")
 
         if not fields:
             await emitter.error_update("No field contents provided")
@@ -389,16 +390,16 @@ class EventEmitter:
         self.event_emitter = event_emitter
 
     async def progress_update(self, description):
-        print(f"AnkiTool: {description}")
+        logger.info(f"AnkiTool: {description}")
         await self.emit(description)
 
     async def error_update(self, description):
-        print(f"AnkiTool: ERROR - {description}")
+        logger.info(f"AnkiTool: ERROR - {description}")
         await self.emit(description, "error", True)
         raise Exception(description)
 
     async def success_update(self, description):
-        print(f"AnkiTool: {description}")
+        logger.info(f"AnkiTool: {description}")
         await self.emit(description, "success", True)
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
