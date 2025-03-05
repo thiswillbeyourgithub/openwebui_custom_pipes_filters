@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any
 import json
 from functools import cache
+from loguru import logger
 
 
 @cache
@@ -76,7 +77,7 @@ class Filter:
 
         async def log(message: str):
             if self.valves.debug:
-                print(f"AddMetadata filter: inlet: {message}")
+                logger.info(f"AddMetadata filter: inlet: {message}")
             if self.valves.debug:
                 await emitter.progress_update(message)
 
