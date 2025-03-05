@@ -12,6 +12,7 @@ description: A filter that keeps chats manageable by retaining only the last N m
 
 from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any
+from loguru import logger
 
 
 class Filter:
@@ -46,7 +47,7 @@ class Filter:
         emitter = EventEmitter(__event_emitter__)
         async def log(message: str):
             if self.valves.debug:
-                print(f"InfiniteChat filter: inlet: {message}")
+                logger.info(f"InfiniteChat filter: inlet: {message}")
             await emitter.progress_update(message)
 
         keep = self.valves.keep_messages
@@ -76,7 +77,7 @@ class EventEmitter:
         await self.emit(description)
 
     async def error_update(self, description):
-        print(description)
+        logger.info(description)
         await self.emit(description, "error", True)
 
     async def success_update(self, description):
