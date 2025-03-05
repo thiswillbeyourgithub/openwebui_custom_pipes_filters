@@ -14,9 +14,10 @@ openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/debug_filter
 import json
 from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any
+from loguru import logger
 
 def p(message: str) -> None:
-    print(f"DebugFilter: {message}")
+    logger.info(f"DebugFilter: {message}")
 
 class Filter:
     VERSION: "2.1.0"
