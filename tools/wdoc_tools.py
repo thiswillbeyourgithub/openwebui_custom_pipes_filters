@@ -42,7 +42,6 @@ if Path('/app/backend/requirements.txt').exists():  # for debug
 
 try:
     import wdoc
-    del sys.modules['wdoc']
 except Exception as e:
     raise Exception(f"Couldn't import wdoc: '{e}'")
 
@@ -147,7 +146,7 @@ class Tools:
                 env_variables[k] = v.replace("$USER", __user__.get("name", "Unknown"))
 
         with EnvVarContext(env_variables):
-            wdoc = import_wdoc()
+            wdoc = reimport_wdoc(wdoc)
             try:
                 parsed = wdoc.wdoc.parse_file(
                     path=url,
@@ -168,8 +167,6 @@ class Tools:
                 except Exception as e2:
                     error_message=f"Error when parsing:\nFirst error: {e}\nSecond error: {e2}"
                     await emitter.error_update(error_message)
-            finally:
-                un_import_wdoc()
 
         if len(parsed) == 1:
             content = parsed[0]["page_content"]
@@ -234,7 +231,7 @@ class Tools:
                 env_variables[k] = v.replace("$USER", __user__.get("name", "Unknown"))
 
         with EnvVarContext(env_variables):
-            wdoc = import_wdoc()
+            wdoc = reimport_wdoc(wdoc)
             try:
                 instance = wdoc.wdoc(
                     path=url,
@@ -255,8 +252,6 @@ class Tools:
                 except Exception as e2:
                     error_message=f"Error when summarizing:\nFirst error: {e}\nSecond error: {e2}"
                     await emitter.error_update(error_message)
-            finally:
-                un_import_wdoc()
 
         results: dict = instance.summary_results
         summary = results['summary']
@@ -338,10 +333,6 @@ class EventEmitter:
                 }
             )
 
-def import_wdoc():
+def reimport_wdoc(wdoc):
     importlib.invalidate_caches()
-    return importlib.import_module('wdoc')  # Reimport
-
-def un_import_wdoc():
-    del sys.modules['wdoc']
-    importlib.invalidate_caches()
+    return importlib.reload(wdoc)
