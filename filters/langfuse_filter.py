@@ -4,7 +4,7 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 1.0.1
+version: 1.0.2
 date: 2025-02-21
 license: GPLv3
 description: A Filter that prints arguments as they go through it. Still a WIP because having issues with token counting, prices etc.
@@ -34,7 +34,7 @@ with FileLock(LOCK_FILENAME, timeout=1):
         BUFFER.write_text("{}")
 
 class Filter:
-    VERSION="1.0.1"
+    VERSION="1.0.2"
 
     class Valves(BaseModel):
         priority: int = Field(
