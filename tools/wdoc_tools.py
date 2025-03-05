@@ -35,7 +35,7 @@ if Path('/app/backend/requirements.txt').exists():  # for debug
         sys.executable, "-m", "uv", "pip",
         "install",
         "-U",
-        "--overrides", "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
+        "--constraints", "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
         "wdoc>=2.6.7",
         "--system"
     ])
