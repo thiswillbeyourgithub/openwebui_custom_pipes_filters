@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field, validator
 import importlib
 import sys
 from pathlib import Path
+from loguru import logger
 
 # install wdoc
 if Path('/app/backend/requirements.txt').exists():  # for debug
@@ -324,7 +325,7 @@ class EventEmitter:
         await self.emit(description, "success", True)
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
-        print(f"wdoctool: {description}")
+        logger.info(f"wdoctool: {description}")
         if self.event_emitter:
             await self.event_emitter(
                 {
