@@ -40,11 +40,11 @@ if Path('/app/backend/requirements.txt').exists():  # for debug
         "--system"
     ])
 
-try:
-    import wdoc
-    del sys.modules['wdoc']
-except Exception as e:
-    raise Exception(f"Couldn't import wdoc: '{e}'")
+# try:
+#     import wdoc
+#     del sys.modules['wdoc']
+# except Exception as e:
+#     raise Exception(f"Couldn't import wdoc: '{e}'")
 
 
 class Tools:
