@@ -40,11 +40,13 @@ if Path('/app/backend/requirements.txt').exists():  # for debug
         "--system"
     ])
 
-# try:
-#     import wdoc
-#     del sys.modules['wdoc']
-# except Exception as e:
-#     raise Exception(f"Couldn't import wdoc: '{e}'")
+os.environ["LD_LIBRARY_PATH"] += ":/usr/local/lib/python3.11/site-packages/torchaudio/lib"
+
+try:
+    import wdoc
+    del sys.modules['wdoc']
+except Exception as e:
+    raise Exception(f"Couldn't import wdoc: '{e}'")
 
 
 class Tools:
@@ -145,7 +147,6 @@ class Tools:
         for k, v in env_variables.items():
             if isinstance(v, str) and "$USER" in v:
                 env_variables[k] = v.replace("$USER", __user__.get("name", "Unknown"))
-        env_variables["LD_LIBRARY_PATH"] = None
 
         with EnvVarContext(env_variables):
             wdoc = import_wdoc()
@@ -233,7 +234,6 @@ class Tools:
         for k, v in env_variables.items():
             if isinstance(v, str) and "$USER" in v:
                 env_variables[k] = v.replace("$USER", __user__.get("name", "Unknown"))
-        env_variables["LD_LIBRARY_PATH"] = None
 
         with EnvVarContext(env_variables):
             wdoc = import_wdoc()
