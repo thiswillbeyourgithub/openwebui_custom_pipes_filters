@@ -171,18 +171,8 @@ class Tools:
                     **parse_kwargs,
                 )
             except Exception as e:
-                url2 = re.sub(r"\((http[^)]+)\)", "", url)
-                try:
-                    parsed = wdoc.wdoc.parse_file(
-                        path=url2,
-                        filetype="auto",
-                        format="langchain_dict",
-                        **parse_kwargs,
-                    )
-                    url = url2
-                except Exception as e2:
-                    error_message=f"Error when parsing:\nFirst error: {e}\nSecond error: {e2}"
-                    await emitter.error_update(error_message)
+                error_message=f"Error when parsing:\{e}"
+                await emitter.error_update(error_message)
             finally:
                 un_import_wdoc()
 
@@ -258,18 +248,8 @@ class Tools:
                     **summary_kwargs
                 )
             except Exception as e:
-                url2 = re.sub(r"\((http[^)]+)\)", "", url)
-                try:
-                    instance = wdoc.wdoc(
-                        path=url2,
-                        task="summarize",
-                        filetype="auto",
-                        **summary_kwargs
-                    )
-                    url = url2
-                except Exception as e2:
-                    error_message=f"Error when summarizing:\nFirst error: {e}\nSecond error: {e2}"
-                    await emitter.error_update(error_message)
+                error_message=f"Error when summarizing:\n{e}"
+                await emitter.error_update(error_message)
             finally:
                 un_import_wdoc()
 
