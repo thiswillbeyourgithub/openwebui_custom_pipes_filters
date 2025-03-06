@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 description: Use wdoc to parse urls and files
 funding_url: https://github.com/open-webui
-version: 2.6.9.0
+version: 2.6.10.0
 license: GPLv3
 # requirements: wdoc>=2.6.7  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
 description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things!
@@ -37,9 +37,7 @@ try:
     import wdoc
 except ImportError as e:
     logger.info("wdoc needs to be installed")
-    if not Path('/app/backend/requirements.txt').exists():
-        raise e
-    # for debug
+if Path('/app/backend/requirements.txt').exists():
     subprocess.check_call([
         sys.executable,
         "-m",
@@ -50,21 +48,21 @@ except ImportError as e:
         "--reinstall",
         "--overrides",
         "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-        "wdoc>=2.6.9",
+        "wdoc>=2.6.10",
         "--system"
     ])
 
 
-# try:
-#     import wdoc
-#     del sys.modules['wdoc']
-# except Exception as e:
-#     raise Exception(f"Couldn't import wdoc: '{e}'")
+try:
+    import wdoc
+    del sys.modules['wdoc']
+except Exception as e:
+    raise Exception(f"Couldn't import wdoc: '{e}'")
 
 
 class Tools:
 
-    VERSION: str = "2.6.9.0"
+    VERSION: str = "2.6.10.0"
 
     class Valves(BaseModel):
         allow_user_valves_override: bool = Field(
