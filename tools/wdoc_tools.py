@@ -319,7 +319,6 @@ class EventEmitter:
 
     async def error_update(self, description):
         await self.emit(description, "error", True)
-        raise Exception(description)
 
     async def success_update(self, description):
         await self.emit(description, "success", True)
