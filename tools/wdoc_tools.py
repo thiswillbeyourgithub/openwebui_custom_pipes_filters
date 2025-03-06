@@ -83,6 +83,7 @@ class Tools:
             default='{"WDOC_LITELLM_USER": "$USER", "WDOC_LITELLM_TAGS": "open-webui", "WDOC_STRICT_DOCDICT": "False"}',
             description="JSON string of environment variables to set when using wdoc. Keys will be uppercased. If '$USER' is used in a value it will be replaced by the name of the open-webui user."
         )
+        pass
 
 
     class UserValves(BaseModel):
@@ -98,14 +99,15 @@ class Tools:
             default="{}",
             description="JSON string of environment variables to set when using wdoc. Keys will be uppercased. This will be applied after the Valves."
         )
+        pass
 
 
 
     def __init__(self):
+        self.valves = self.Valves()
         self.on_valves_updated()
 
     def on_valves_updated(self) -> None:
-        self.valves = self.Valves()
         # Validate that the kwargs are valid JSON dictionaries
         self.summary_kwargs = json.loads(self.valves.summary_kwargs)
         assert isinstance(self.summary_kwargs, dict), "summary_kwargs must be a JSON dictionary"
