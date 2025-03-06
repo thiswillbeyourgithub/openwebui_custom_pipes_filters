@@ -13,6 +13,8 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 """
 
 # TODO:
+# - fix the valve to allow user valves or not
+# - figure out how to avoid having the model needing to echo out the output
 # - add a tool to query data
 # - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
 # - leverage open-webui's citations for the sources of queries: https://docs.openwebui.com/features/plugin/tools/
