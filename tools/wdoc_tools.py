@@ -176,6 +176,8 @@ class Tools:
             except Exception as e:
                 error_message=f"Error when parsing:\nArguments were: '{parse_kwargs}'\n{e}"
                 await emitter.error_update(error_message)
+                if not str(e):  # to make sure to have an error message
+                    raise
             finally:
                 un_import_wdoc()
 
@@ -255,6 +257,8 @@ class Tools:
             except Exception as e:
                 error_message=f"Error when summarizing:\nArguments were: '{summary_kwargs}'\n{e}"
                 await emitter.error_update(error_message)
+                if not str(e):  # to make sure to have an error message
+                    raise
             finally:
                 un_import_wdoc()
 
