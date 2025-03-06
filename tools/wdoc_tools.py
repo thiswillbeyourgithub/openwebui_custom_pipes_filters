@@ -29,9 +29,8 @@ import sys
 from pathlib import Path
 from loguru import logger
 
-if "USE_CUDA_DOCKER" in os.environ:
-    if not str(os.environ["USE_CUDA_DOCKER"]).lower() == "false":
-        logger.info("USE_CUDA_DOCKER is not false, this might cause issue when importing wdoc")
+# disable import tricks
+os.environ["WDOC_IMPORT_TYPE"] = "native"
 
 # install wdoc if not present already
 try:
