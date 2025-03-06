@@ -248,7 +248,6 @@ class Tools:
                     path=url,
                     task="summarize",
                     filetype="auto",
-                    import_mode=True,
                     **summary_kwargs
                 )
             except Exception as e:
