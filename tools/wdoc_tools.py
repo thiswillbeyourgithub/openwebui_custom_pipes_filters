@@ -139,8 +139,8 @@ class Tools:
 
         uvalves = dict(__user__.get("valves", {}))
         if uvalves and not self.allow_user_valves_override:
-            await emitter.error_update("You are trying to use a UserValve but the Valves of WdocTool don't allow it.")
-            assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
+            await emitter.error_update(f"You are trying to use a UserValve but the Valves of WdocTool don't allow it.\n{uvalves}")
+            assert self.allow_user_valves_override, f"You are trying to use a UserValve but the Valves of WdocTool don't allow it.\n{uvalves}"
 
         parse_kwargs = self.parse_kwargs.copy()
         override_parse_kwargs = uvalves.get("override_parse_kwargs", "{}")
@@ -217,10 +217,9 @@ class Tools:
 
         await emitter.progress_update(f"Summarizing '{url}'")
 
-        uvalves = dict(__user__.get("valves", {}))
         if uvalves and not self.allow_user_valves_override:
-            await emitter.error_update("You are trying to use a UserValve but the Valves of WdocTool don't allow it.")
-            assert self.allow_user_valves_override, "You are trying to use a UserValve but the Valves of WdocTool don't allow it."
+            await emitter.error_update(f"You are trying to use a UserValve but the Valves of WdocTool don't allow it.\n{uvalves}")
+            assert self.allow_user_valves_override, f"You are trying to use a UserValve but the Valves of WdocTool don't allow it.\n{uvalves}"
 
         summary_kwargs = self.summary_kwargs.copy()
         override_summary_kwargs = uvalves.get("override_summary_kwargs", "{}")
