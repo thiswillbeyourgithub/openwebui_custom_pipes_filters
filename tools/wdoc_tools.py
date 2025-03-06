@@ -174,7 +174,7 @@ class Tools:
                     **parse_kwargs,
                 )
             except Exception as e:
-                error_message=f"Error when parsing:\{e}"
+                error_message=f"Error when parsing:\nArguments were: '{parse_kwargs}'\n{e}\n{dict(self.valves)}"
                 await emitter.error_update(error_message)
             finally:
                 un_import_wdoc()
@@ -253,7 +253,7 @@ class Tools:
                     **summary_kwargs
                 )
             except Exception as e:
-                error_message=f"Error when summarizing:\n{e}"
+                error_message=f"Error when summarizing:\nArguments were: '{summary_kwargs}'\n{e}\n{dict(self.valves)}"
                 await emitter.error_update(error_message)
             finally:
                 un_import_wdoc()
