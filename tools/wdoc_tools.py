@@ -29,18 +29,15 @@ import sys
 from pathlib import Path
 from loguru import logger
 
-# prefix for the logger
-pr = "wdocTools "
-
 if "USE_CUDA_DOCKER" in os.environ:
     if not str(os.environ["USE_CUDA_DOCKER"]).lower() == "false":
-        logger.info(f"{pr}USE_CUDA_DOCKER is not false, this might cause issue when importing wdoc")
+        logger.info("USE_CUDA_DOCKER is not false, this might cause issue when importing wdoc")
 
 # install wdoc if not present already
 try:
     import wdoc
 except ImportError as e:
-    logger.info(f"{pr}wdoc needs to be installed")
+    logger.info("wdoc needs to be installed")
     if not Path('/app/backend/requirements.txt').exists():
         raise e
     # for debug
