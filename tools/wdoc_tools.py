@@ -18,6 +18,7 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 # - leverage open-webui's citations for the sources of queries
 
 import os
+import subprocess
 import requests
 import json
 from typing import Callable, Any, Literal, Optional
@@ -28,9 +29,21 @@ import sys
 from pathlib import Path
 from loguru import logger
 
-# install wdoc
-if Path('/app/backend/requirements.txt').exists():  # for debug
-    import subprocess
+# prefix for the logger
+pr = "wdocTools "
+
+if "USE_CUDA_DOCKER" in os.environ:
+    if not str(os.environ["USE_CUDA_DOCKER"]).lower() == "false":
+        logger.info(f"{pr}USE_CUDA_DOCKER is not false, this might cause issue when importing wdoc")
+
+# install wdoc if not present already
+try:
+    import wdoc
+except ImportError as e:
+    logger.info(f"{pr}wdoc needs to be installed")
+    if not Path('/app/backend/requirements.txt').exists():
+        raise e
+    # for debug
     subprocess.check_call([
         sys.executable, "-m", "uv", "pip",
         "install",
@@ -39,22 +52,6 @@ if Path('/app/backend/requirements.txt').exists():  # for debug
         "wdoc>=2.6.7",
         "--system"
     ])
-    subprocess.check_call([
-        sys.executable, "-m", "uv", "pip",
-        "install",
-        "-U",
-        "torch==2.0.1",
-        "--system"
-    ])
-    subprocess.check_call([
-        sys.executable, "-m", "uv", "pip",
-        "install",
-        "-U",
-        "torchaudio==2.0.1",
-        "--system"
-    ])
-
-# os.environ["LD_LIBRARY_PATH"] += ":/usr/local/lib/python3.11/site-packages/torchaudio/lib"
 
 try:
     import wdoc
