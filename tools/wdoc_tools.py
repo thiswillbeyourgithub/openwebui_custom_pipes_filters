@@ -168,6 +168,7 @@ class Tools:
             try:
                 parsed = wdoc.wdoc.parse_file(
                     path=url,
+                    debug=True,
                     filetype="auto",
                     format="langchain_dict",
                     **parse_kwargs,
@@ -245,6 +246,7 @@ class Tools:
             try:
                 instance = wdoc.wdoc(
                     path=url,
+                    debug=True,
                     task="summarize",
                     filetype="auto",
                     **summary_kwargs
