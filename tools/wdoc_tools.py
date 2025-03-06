@@ -15,7 +15,7 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 # TODO:
 # - add a tool to query data
 # - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
-# - leverage open-webui's citations for the sources of queries
+# - leverage open-webui's citations for the sources of queries: https://docs.openwebui.com/features/plugin/tools/
 
 import os
 import subprocess
