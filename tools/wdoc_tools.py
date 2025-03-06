@@ -34,7 +34,6 @@ if "USE_CUDA_DOCKER" in os.environ:
         logger.info("USE_CUDA_DOCKER is not false, this might cause issue when importing wdoc")
 
 # install wdoc if not present already
-logger.error(str(dict(os.environ)))
 try:
     import wdoc
 except ImportError as e:
