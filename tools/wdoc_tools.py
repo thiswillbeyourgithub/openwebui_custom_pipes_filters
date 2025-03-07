@@ -79,6 +79,10 @@ class Tools:
             default=False,
             description="If True, use the citation system for summaries instead of outputting the text directly."
         )
+        use_citations_for_parse: bool = Field(
+            default=False,
+            description="If True, use the citation system for parsed content instead of outputting the text directly."
+        )
         summary_kwargs: str = Field(
             default="{}",
             description="JSON string of kwargs to pass to wdoc when summarizing"
@@ -135,6 +139,7 @@ class Tools:
         self.always_unimport_wdoc = self.valves.always_unimport_wdoc
         
         assert isinstance(self.valves.use_citations, bool), f"use_citations must be a boolean, got {type(self.valves.use_citations)}"
+        assert isinstance(self.valves.use_citations_for_parse, bool), f"use_citations_for_parse must be a boolean, got {type(self.valves.use_citations_for_parse)}"
 
     async def parse_url(
         self,
@@ -212,7 +217,16 @@ class Tools:
         await emitter.success_update(
             f"Successfully parsed '{title if title else url}'"
         )
-        return content
+        
+        if self.valves.use_citations_for_parse:
+            await emitter.cite(
+                doc_content=content,
+                title=title if title else "Parsed Content",
+                url=url,
+            )
+            return "Parsing completed successfully. Please check the citations panel to view the results."
+        else:
+            return content
 
     async def summarize_url(
         self,
