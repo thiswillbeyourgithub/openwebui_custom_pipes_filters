@@ -63,6 +63,7 @@ except Exception as e:
 class Tools:
 
     VERSION: str = "1.0.0"
+    MINIMUM_WDOC_VERSION: str = "2.6.10"
 
     class Valves(BaseModel):
         allow_user_valves_override: bool = Field(
