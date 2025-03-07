@@ -47,52 +47,56 @@ class Filter:
             logger.info(f"ToolCompressor: {message}")
 
     def compress_tool_calls(self, text: str) -> str:
-        details = re.findall(r'<details type="tool_calls" done="true" .*?</details>', text, flags=re.DOTALL|re.MULTILINE)
-        if not details:
+        # Check if there are any tool_calls details tags
+        if "<details type=\"tool_calls\"" not in text:
             self.log("No tool_calls in message")
             return text
 
-        if len(details) > 1:
-            compressed_details = [self.compress_tool_calls(text=detail) for detail in details]
-            n = len(details)
-            for idet, (comp, det) in enumerate(zip(compressed_details, details)):
-                assert det in text, f"Couldn't find detail tag #{idet}/{n}: '{det}'"
-                text = text.replace(det, comp)
-            return text
-
-        # Use BeautifulSoup to parse and modify the details tag
-        soup = BeautifulSoup(f"<div>{details[0]}</div>", 'html.parser')
-        details_tag = soup.find('details')
+        # Parse the entire text with BeautifulSoup
+        soup = BeautifulSoup(text, 'html.parser')
         
-        if not details_tag:
-            self.log("Could not parse details tag with BeautifulSoup")
+        # Find all details tags with type="tool_calls"
+        details_tags = soup.find_all('details', attrs={"type": "tool_calls"})
+        
+        if not details_tags:
+            self.log("No tool_calls details tags found after parsing")
             return text
             
+        self.log(f"Found {len(details_tags)} tool_calls details tags")
+        
+        # Process each details tag
+        for details_tag in details_tags:
+            # Process this tag and any nested details tags
+            self._process_details_tag(details_tag)
+            
+        # Return the modified HTML
+        return str(soup)
+    
+    def _process_details_tag(self, details_tag):
+        """Process a single details tag and its nested details tags recursively."""
+        # First process any nested details tags
+        nested_details = details_tag.find_all('details', recursive=False)
+        for nested_tag in nested_details:
+            self._process_details_tag(nested_tag)
+        
         # Store content and results if needed
         content_value = details_tag.get('content', '')
         results_value = details_tag.get('results', '')
         
-        # Remove the attributes
-        if self.valves.remove_content:
+        # Remove the attributes if configured to do so
+        if self.valves.remove_content and 'content' in details_tag.attrs:
             del details_tag['content']
-        if self.valves.remove_results:
+        if self.valves.remove_results and 'results' in details_tag.attrs:
             del details_tag['results']
             
         # Add content and results as text if needed
-        details_tag.append("\n")
         if not self.valves.remove_content and content_value:
-            content_p = soup.new_tag("p")
-            content_p.string = f"Content: {content_value}"
+            content_p = BeautifulSoup(f"<p>Content: {content_value}</p>", 'html.parser').p
             details_tag.append(content_p)
             
         if not self.valves.remove_results and results_value:
-            results_p = soup.new_tag("p")
-            results_p.string = f"Results: {results_value}"
+            results_p = BeautifulSoup(f"<p>Results: {results_value}</p>", 'html.parser').p
             details_tag.append(results_p)
-            
-        # Replace the original details tag with the modified one
-        modified_details = str(details_tag)
-        return text.replace(details[0], modified_details)
 
     async def inlet(
         self,
