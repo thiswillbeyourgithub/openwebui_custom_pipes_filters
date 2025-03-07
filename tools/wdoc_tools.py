@@ -28,6 +28,7 @@ import importlib
 import sys
 from pathlib import Path
 from loguru import logger
+from datetime import datetime
 
 # disable import tricks
 os.environ["WDOC_IMPORT_TYPE"] = "native"
@@ -108,6 +109,7 @@ class Tools:
 
     def __init__(self):
         self.valves = self.Valves()
+        self.citation = False  # to make my own citations
         self.on_valves_updated()
 
     def on_valves_updated(self) -> None:
@@ -286,7 +288,13 @@ class Tools:
         await emitter.success_update(
             f"Successfully summarized {url}"
         )
-        return output
+        await emitter.cite(
+            doc_content=output,
+            title="Summary",
+            url=url,
+        )
+
+        # return output
 
 class EnvVarContext:
     """Context manager for temporarily setting environment variables."""
@@ -348,6 +356,24 @@ class EventEmitter:
                     },
                 }
             )
+
+    async def cite(self, doc_content: str, title: str, url: str):
+        if self.event_emitter:
+            await self.event_emitter(
+            {
+                "type": "citation",
+                "data": {
+                    "document": [doc_content],
+                    "metadata": [
+                        {
+                            "date_accessed": datetime.now().isoformat(),
+                            "source": title,
+                        }
+                    ],
+                    "source": {"name": "Summary", "url": url},
+                },
+            }
+        )
 
 def import_wdoc():
     importlib.invalidate_caches()
