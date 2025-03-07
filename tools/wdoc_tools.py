@@ -169,6 +169,13 @@ class Tools:
         if isinstance(override_parse_kwargs, str):
             override_parse_kwargs = json.loads(override_parse_kwargs)
         assert isinstance(override_parse_kwargs, dict), "override_parse_kwargs must be a JSON dictionary"
+        
+        # Check for import_mode in kwargs
+        if "import_mode" in parse_kwargs or "import_mode" in override_parse_kwargs:
+            error_message = "The 'import_mode' argument is not allowed when using the parse_url tool for security reasons."
+            await emitter.error_update(error_message)
+            raise ValueError(error_message)
+            
         parse_kwargs.update(override_parse_kwargs)
         env_variables = self.env_variables.copy()
         override_env_variables_as_dict = uvalves.get("override_env_variables_as_dict", "{}")
@@ -259,6 +266,13 @@ class Tools:
         if isinstance(override_summary_kwargs, str):
             override_summary_kwargs = json.loads(override_summary_kwargs)
         assert isinstance(override_summary_kwargs, dict), "override_summary_kwargs must be a JSON dictionary"
+        
+        # Check for import_mode in kwargs
+        if "import_mode" in summary_kwargs or "import_mode" in override_summary_kwargs:
+            error_message = "The 'import_mode' argument is not allowed when using the summarize_url tool for security reasons."
+            await emitter.error_update(error_message)
+            raise ValueError(error_message)
+            
         summary_kwargs.update(override_summary_kwargs)
         env_variables = self.env_variables.copy()
         override_env_variables_as_dict = uvalves.get("override_env_variables_as_dict", "{}")
