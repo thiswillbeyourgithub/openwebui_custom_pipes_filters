@@ -350,16 +350,21 @@ class Tools:
         else:
             cache_mess = ""
         metadata=f"(Saved you {round(results['doc_reading_length'])} minutes for ${results['doc_total_cost']:.5f} ({results['doc_total_tokens']} tokens{cache_mess})"
+        # we close the details tag of the tool call to wrap our own answer
         output = f"""
 
---- 
+</details>
 
-# Summary
-{url}
+<details>
+
+<summary>Summary of {url}</summary>
+
 
 {metadata}
 
 {summary}
+
+</details>
 
 --- 
 
