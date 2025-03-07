@@ -295,12 +295,12 @@ class Tools:
         metadata=f"(Saved you {round(results['doc_reading_length'])} minutes for ${results['doc_total_cost']:.5f} ({results['doc_total_tokens']} tokens)"
         output = f"""
 
+--- 
+
 # Summary
 {url}
 
 {metadata}
-
---- 
 
 {summary}
 
