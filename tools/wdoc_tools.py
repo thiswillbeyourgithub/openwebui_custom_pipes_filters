@@ -112,15 +112,19 @@ class Tools:
     def on_valves_updated(self) -> None:
         # Validate that the kwargs are valid JSON dictionaries
         self.summary_kwargs = json.loads(self.valves.summary_kwargs)
-        assert isinstance(self.summary_kwargs, dict), "summary_kwargs must be a JSON dictionary"
+        assert isinstance(self.summary_kwargs, dict), f"summary_kwargs must be a dictionary, got {type(self.summary_kwargs)}"
         
         self.parse_kwargs = json.loads(self.valves.parse_kwargs)
-        assert isinstance(self.parse_kwargs, dict), "parse_kwargs must be a JSON dictionary"
+        assert isinstance(self.parse_kwargs, dict), f"parse_kwargs must be a dictionary, got {type(self.parse_kwargs)}"
         
         self.env_variables = json.loads(self.valves.env_variables_as_dict)
-        assert isinstance(self.env_variables, dict), "env_variables_as_dict must be a JSON dictionary"
+        assert isinstance(self.env_variables, dict), f"env_variables_as_dict must be a dictionary, got {type(self.env_variables)}"
         
+        # Check types of boolean valves
+        assert isinstance(self.valves.allow_user_valves_override, bool), f"allow_user_valves_override must be a boolean, got {type(self.valves.allow_user_valves_override)}"
         self.allow_user_valves_override = self.valves.allow_user_valves_override
+        
+        assert isinstance(self.valves.ALWAYS_UNIMPORT_WDOC, bool), f"ALWAYS_UNIMPORT_WDOC must be a boolean, got {type(self.valves.ALWAYS_UNIMPORT_WDOC)}"
         self.always_unimport_wdoc = self.valves.ALWAYS_UNIMPORT_WDOC
 
     async def parse_url(
