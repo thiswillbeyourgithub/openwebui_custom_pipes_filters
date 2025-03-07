@@ -75,7 +75,7 @@ class Tools:
             default=False,
             description="If False, wdoc will be unimported after each use. If True, wdoc will remain imported."
         )
-        use_citations: bool = Field(
+        use_citations_for_summary: bool = Field(
             default=False,
             description="If True, use the citation system for summaries instead of outputting the text directly."
         )
@@ -138,7 +138,7 @@ class Tools:
         assert isinstance(self.valves.always_unimport_wdoc, bool), f"always_unimport_wdoc must be a boolean, got {type(self.valves.always_unimport_wdoc)}"
         self.always_unimport_wdoc = self.valves.always_unimport_wdoc
         
-        assert isinstance(self.valves.use_citations, bool), f"use_citations must be a boolean, got {type(self.valves.use_citations)}"
+        assert isinstance(self.valves.use_citations_for_summary, bool), f"use_citations_for_summary must be a boolean, got {type(self.valves.use_citations)}"
         assert isinstance(self.valves.use_citations_for_parse, bool), f"use_citations_for_parse must be a boolean, got {type(self.valves.use_citations_for_parse)}"
 
     async def parse_url(
@@ -308,7 +308,7 @@ class Tools:
         await emitter.success_update(
             f"Successfully summarized {url}"
         )
-        if self.valves.use_citations:
+        if self.valves.use_citations_for_summary:
             await emitter.cite(
                 doc_content=output,
                 title="Summary",
