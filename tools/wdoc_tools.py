@@ -303,6 +303,8 @@ class Tools:
 
 {summary}
 
+--- 
+
 """
 
         await emitter.success_update(
