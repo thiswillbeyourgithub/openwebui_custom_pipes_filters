@@ -70,7 +70,7 @@ class Tools:
             default=True,
             description="If True then we allow user valves to override the Valves dicts. If False UserValves raise an exeception."
         )
-        ALWAYS_UNIMPORT_WDOC: bool = Field(
+        always_unimport_wdoc: bool = Field(
             default=False,
             description="If False, wdoc will be unimported after each use. If True, wdoc will remain imported."
         )
@@ -125,8 +125,8 @@ class Tools:
         assert isinstance(self.valves.allow_user_valves_override, bool), f"allow_user_valves_override must be a boolean, got {type(self.valves.allow_user_valves_override)}"
         self.allow_user_valves_override = self.valves.allow_user_valves_override
         
-        assert isinstance(self.valves.ALWAYS_UNIMPORT_WDOC, bool), f"ALWAYS_UNIMPORT_WDOC must be a boolean, got {type(self.valves.ALWAYS_UNIMPORT_WDOC)}"
-        self.always_unimport_wdoc = self.valves.ALWAYS_UNIMPORT_WDOC
+        assert isinstance(self.valves.always_unimport_wdoc, bool), f"always_unimport_wdoc must be a boolean, got {type(self.valves.always_unimport_wdoc)}"
+        self.always_unimport_wdoc = self.valves.always_unimport_wdoc
 
     async def parse_url(
         self,
