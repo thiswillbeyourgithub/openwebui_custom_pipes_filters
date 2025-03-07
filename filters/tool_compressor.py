@@ -9,6 +9,7 @@ date: 2025-02-21
 license: GPLv3
 description: A Filter that makes more compact the tool calls (turn the <details> escaped html (token expensive!) into regular unescaped html, or even removed.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/tool_compressor
+requirements: bs4
 """
 
 from pydantic import BaseModel, Field
@@ -52,51 +53,30 @@ class Filter:
             self.log("No tool_calls in message")
             return text
 
-        # Parse the entire text with BeautifulSoup
-        soup = BeautifulSoup(text, 'html.parser')
+        # Use regex to find and modify details tags
+        pattern = r'<details\s+([^>]*?)type="tool_calls"([^>]*?)>'
         
-        # Find all details tags with type="tool_calls"
-        details_tags = soup.find_all('details', attrs={"type": "tool_calls"})
-        
-        if not details_tags:
-            self.log("No tool_calls details tags found after parsing")
-            return text
+        def replace_attributes(match):
+            attrs = match.group(1) + match.group(2)
+            modified_attrs = attrs
             
-        self.log(f"Found {len(details_tags)} tool_calls details tags")
-        
-        # Process each details tag
-        for details_tag in details_tags:
-            # Process this tag and any nested details tags
-            self._process_details_tag(details_tag)
+            if self.valves.remove_content:
+                modified_attrs = re.sub(r'content="[^"]*"', '', modified_attrs)
+                
+            if self.valves.remove_results:
+                modified_attrs = re.sub(r'results="[^"]*"', '', modified_attrs)
+                
+            # Clean up any double spaces from removed attributes
+            modified_attrs = re.sub(r'\s+', ' ', modified_attrs).strip()
             
-        # Return the modified HTML
-        return str(soup)
+            return f'<details {modified_attrs}>'
+        
+        modified_text = re.sub(pattern, replace_attributes, text)
+        self.log("Processed tool_calls details tags")
+        
+        return modified_text
     
-    def _process_details_tag(self, details_tag):
-        """Process a single details tag and its nested details tags recursively."""
-        # First process any nested details tags
-        nested_details = details_tag.find_all('details', recursive=False)
-        for nested_tag in nested_details:
-            self._process_details_tag(nested_tag)
-        
-        # Store content and results if needed
-        content_value = details_tag.get('content', '')
-        results_value = details_tag.get('results', '')
-        
-        # Remove the attributes if configured to do so
-        if self.valves.remove_content and 'content' in details_tag.attrs:
-            del details_tag['content']
-        if self.valves.remove_results and 'results' in details_tag.attrs:
-            del details_tag['results']
-            
-        # Add content and results as text if needed
-        if not self.valves.remove_content and content_value:
-            content_p = BeautifulSoup(f"<p>Content: {content_value}</p>", 'html.parser').p
-            details_tag.append(content_p)
-            
-        if not self.valves.remove_results and results_value:
-            results_p = BeautifulSoup(f"<p>Results: {results_value}</p>", 'html.parser').p
-            details_tag.append(results_p)
+    # This method is no longer needed with the new approach
 
     async def inlet(
         self,
