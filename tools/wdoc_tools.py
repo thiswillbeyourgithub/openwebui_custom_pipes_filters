@@ -1,6 +1,7 @@
 """
 title: wdocParser
 author: thiswillbeyourgithub
+openwebui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
