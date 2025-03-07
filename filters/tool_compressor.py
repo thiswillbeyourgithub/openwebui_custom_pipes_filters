@@ -98,3 +98,35 @@ class Filter:
         for im, m in enumerate(body["messages"]):
             body["messages"][im]["content"] = self.compress_tool_calls(m["content"])
         return body
+
+
+if __name__ == "__main__":
+    import sys
+    import os
+    
+    if len(sys.argv) != 2:
+        print("Usage: python tool_compressor.py <filename>")
+        sys.exit(1)
+    
+    filename = sys.argv[1]
+    
+    if not os.path.exists(filename):
+        print(f"Error: File '{filename}' not found.")
+        sys.exit(1)
+    
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+        
+        filter_instance = Filter()
+        compressed_content = filter_instance.compress_tool_calls(content)
+        
+        print("\n--- COMPRESSED CONTENT ---\n")
+        print(compressed_content)
+        print("\n--- END OF COMPRESSED CONTENT ---\n")
+        
+    except Exception as e:
+        print(f"Error processing file: {e}")
+        sys.exit(1)
+
+
