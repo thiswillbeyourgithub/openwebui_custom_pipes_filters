@@ -344,13 +344,17 @@ class Tools:
                     un_import_wdoc()
 
         results: dict = instance.summary_results
+        await emitter.success_update(
+            f"Successfully summarized {url}"
+        )
         summary = results['summary']
         if results['doc_total_tokens'] == 0:
             cache_mess = ", probably because cached"
         else:
             cache_mess = ""
         metadata=f"(Saved you {round(results['doc_reading_length'])} minutes for ${results['doc_total_cost']:.5f} ({results['doc_total_tokens']} tokens{cache_mess})"
-        output = f"""
+        if self.valves.use_citations_for_summary:
+            output = f"""
 
 --- 
 
@@ -364,14 +368,10 @@ class Tools:
 --- 
 
 """
-        # add the metadata at the end too
-        if len(summary.splitlines()) > 50:
-            output += f"\n{metadata}"
+            # add the metadata at the end too
+            if len(summary.splitlines()) > 50:
+                output += f"\n{metadata}"
 
-        await emitter.success_update(
-            f"Successfully summarized {url}"
-        )
-        if self.valves.use_citations_for_summary:
             await emitter.cite_summary(
                 doc_content=output,
                 title="Summary",
@@ -382,6 +382,24 @@ class Tools:
             )
             return "Summary completed successfully. Please check the citations panel to view the results."
         else:
+            output = f"""Summary succesful. Read it below.
+
+</details>
+
+<details>
+
+<summary>Summary of {url}</summary>
+
+
+{metadata}
+
+{summary}
+
+</details>
+
+--- 
+
+"""
             return output
 
 class EnvVarContext:
