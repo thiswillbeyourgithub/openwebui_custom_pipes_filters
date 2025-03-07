@@ -9,7 +9,7 @@ description: Use wdoc to parse urls and files
 funding_url: https://github.com/open-webui
 version: 1.0.0
 license: GPLv3
-# requirements: wdoc>=2.6.7  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
+# requirements: wdoc>=2.7.0  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
 description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things! It is very much recommended to use the tool ToolCompressor that I made to make the tool outputs unescaped and thus more legible annd less costly to LLMs.
 """
 
@@ -50,7 +50,7 @@ if Path('/app/backend/requirements.txt').exists():
         "--reinstall",
         "--overrides",
         "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-        "wdoc>=2.6.10",
+        "wdoc>=2.7.0",
         "--system"
     ])
 
@@ -96,7 +96,7 @@ def normalize_dict_values(input_dict: Dict) -> Dict:
 class Tools:
 
     VERSION: str = "1.0.0"
-    MINIMUM_WDOC_VERSION: str = "2.6.10"
+    MINIMUM_WDOC_VERSION: str = "2.7.0"
 
     class Valves(BaseModel):
         allow_user_valves_override: bool = Field(
