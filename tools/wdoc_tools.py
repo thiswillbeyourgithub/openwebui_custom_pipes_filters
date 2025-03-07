@@ -238,6 +238,8 @@ class Tools:
         Get back a summary of the data at a given url using the wdoc rag library.
         The summary will be directly shown to the user so DO NOT repeat this tool's
         output yourself and instead just tell the user that the summary went successfuly.
+        After this tool returned a summary, compress the summary into a
+        SINGLE sentence unless explicitely asked to do otherwise.
         If this tool fail, do not try the parsing tool right away and ask the user what to do.
 
         :param url: The URL of the online data to summarize.
