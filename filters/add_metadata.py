@@ -4,7 +4,7 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 1.1.4
+version: 1.1.5
 date: 2024-04-03
 license: GPLv3
 description: A Filter that adds user and other type of metadata to the requests. Made for litellm set to use langfuse callbacks.
@@ -29,7 +29,7 @@ def load_json_dict(user_value: str) -> dict:
 
 
 class Filter:
-    VERSION: str = "1.1.4"
+    VERSION: str = "1.1.5"
 
     class Valves(BaseModel):
         priority: int = Field(
