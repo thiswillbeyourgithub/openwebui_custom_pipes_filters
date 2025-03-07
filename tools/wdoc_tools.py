@@ -20,7 +20,7 @@ import os
 import subprocess
 import requests
 import json
-from typing import Callable, Any, Literal, Optional
+from typing import Callable, Any, Literal, Optional, Dict, Union
 import re
 from pydantic import BaseModel, Field, validator
 import importlib
@@ -58,6 +58,37 @@ try:
     del sys.modules['wdoc']
 except Exception as e:
     raise Exception(f"Couldn't import wdoc: '{e}'")
+
+
+def normalize_dict_values(input_dict: Dict) -> Dict:
+    """
+    Iterates over a dictionary and converts string values of 'none', 'true', or 'false'
+    (case-insensitive) to their Python equivalents (None, True, False).
+    
+    Args:
+        input_dict: The dictionary to process
+        
+    Returns:
+        A new dictionary with normalized values
+    """
+    result = {}
+    for key, value in input_dict.items():
+        if isinstance(value, str):
+            lower_value = value.lower()
+            if lower_value == 'none':
+                result[key] = None
+            elif lower_value == 'true':
+                result[key] = True
+            elif lower_value == 'false':
+                result[key] = False
+            else:
+                result[key] = value
+        elif isinstance(value, dict):
+            # Recursively process nested dictionaries
+            result[key] = normalize_dict_values(value)
+        else:
+            result[key] = value
+    return result
 
 
 class Tools:
@@ -123,12 +154,15 @@ class Tools:
         # Validate that the kwargs are valid JSON dictionaries
         self.summary_kwargs = json.loads(self.valves.summary_kwargs)
         assert isinstance(self.summary_kwargs, dict), f"summary_kwargs must be a dictionary, got {type(self.summary_kwargs)}"
+        self.summary_kwargs = normalize_dict_values(self.summary_kwargs)
         
         self.parse_kwargs = json.loads(self.valves.parse_kwargs)
         assert isinstance(self.parse_kwargs, dict), f"parse_kwargs must be a dictionary, got {type(self.parse_kwargs)}"
+        self.parse_kwargs = normalize_dict_values(self.parse_kwargs)
         
         self.env_variables = json.loads(self.valves.env_variables_as_dict)
         assert isinstance(self.env_variables, dict), f"env_variables_as_dict must be a dictionary, got {type(self.env_variables)}"
+        self.env_variables = normalize_dict_values(self.env_variables)
         
         # Check types of boolean valves
         assert isinstance(self.valves.allow_user_valves_override, bool), f"allow_user_valves_override must be a boolean, got {type(self.valves.allow_user_valves_override)}"
@@ -169,6 +203,7 @@ class Tools:
         if isinstance(override_parse_kwargs, str):
             override_parse_kwargs = json.loads(override_parse_kwargs)
         assert isinstance(override_parse_kwargs, dict), "override_parse_kwargs must be a JSON dictionary"
+        override_parse_kwargs = normalize_dict_values(override_parse_kwargs)
         
         # Check for import_mode in kwargs
         if "import_mode" in parse_kwargs or "import_mode" in override_parse_kwargs:
@@ -182,6 +217,7 @@ class Tools:
         if isinstance(override_env_variables_as_dict, str):
             override_env_variables_as_dict = json.loads(override_env_variables_as_dict)
         assert isinstance(override_env_variables_as_dict, dict), "override_env_variables_as_dict must be a JSON dictionary"
+        override_env_variables_as_dict = normalize_dict_values(override_env_variables_as_dict)
         for k, v in override_env_variables_as_dict.items():
             if "WDOC_PRIVATE_MODE" == k:
                 raise Exception(f"Cannot set WDOC_PRIVATE_MODE from a user valve. Just to be safe.")
@@ -266,6 +302,7 @@ class Tools:
         if isinstance(override_summary_kwargs, str):
             override_summary_kwargs = json.loads(override_summary_kwargs)
         assert isinstance(override_summary_kwargs, dict), "override_summary_kwargs must be a JSON dictionary"
+        override_summary_kwargs = normalize_dict_values(override_summary_kwargs)
         
         # Check for import_mode in kwargs
         if "import_mode" in summary_kwargs or "import_mode" in override_summary_kwargs:
@@ -279,6 +316,7 @@ class Tools:
         if isinstance(override_env_variables_as_dict, str):
             override_env_variables_as_dict = json.loads(override_env_variables_as_dict)
         assert isinstance(override_env_variables_as_dict, dict), "override_env_variables_as_dict must be a JSON dictionary"
+        override_env_variables_as_dict = normalize_dict_values(override_env_variables_as_dict)
         for k, v in override_env_variables_as_dict.items():
             if "WDOC_PRIVATE_MODE" == k:
                 raise Exception(f"Cannot set WDOC_PRIVATE_MODE from a user valve. Just to be safe.")
