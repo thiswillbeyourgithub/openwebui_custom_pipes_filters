@@ -75,6 +75,10 @@ class Tools:
             default=False,
             description="If False, wdoc will be unimported after each use. If True, wdoc will remain imported."
         )
+        use_citations: bool = Field(
+            default=False,
+            description="If True, use the citation system for summaries instead of outputting the text directly."
+        )
         summary_kwargs: str = Field(
             default="{}",
             description="JSON string of kwargs to pass to wdoc when summarizing"
@@ -129,6 +133,8 @@ class Tools:
         
         assert isinstance(self.valves.always_unimport_wdoc, bool), f"always_unimport_wdoc must be a boolean, got {type(self.valves.always_unimport_wdoc)}"
         self.always_unimport_wdoc = self.valves.always_unimport_wdoc
+        
+        assert isinstance(self.valves.use_citations, bool), f"use_citations must be a boolean, got {type(self.valves.use_citations)}"
 
     async def parse_url(
         self,
@@ -288,13 +294,15 @@ class Tools:
         await emitter.success_update(
             f"Successfully summarized {url}"
         )
-        await emitter.cite(
-            doc_content=output,
-            title="Summary",
-            url=url,
-        )
-
-        # return output
+        if self.valves.use_citations:
+            await emitter.cite(
+                doc_content=output,
+                title="Summary",
+                url=url,
+            )
+            return "Summary completed successfully. Please check the citations panel to view the results."
+        else:
+            return output
 
 class EnvVarContext:
     """Context manager for temporarily setting environment variables."""
