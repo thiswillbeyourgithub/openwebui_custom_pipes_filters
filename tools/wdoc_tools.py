@@ -292,7 +292,7 @@ class Tools:
 
         results: dict = instance.summary_results
         summary = results['summary']
-        metadata=f"(Saved you {results['doc_reading_length']:.1f} minutes for ${results['doc_total_cost']:.5f} ({results['doc_total_tokens']} tokens)"
+        metadata=f"(Saved you {round(results['doc_reading_length'])} minutes for ${results['doc_total_cost']:.5f} ({results['doc_total_tokens']} tokens)"
         output = f"""
 
 # Summary
