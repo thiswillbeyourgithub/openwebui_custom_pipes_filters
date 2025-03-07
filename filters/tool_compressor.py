@@ -57,7 +57,7 @@ class Filter:
             compressed_details = [self.compress_tool_calls(text=detail) for detail in details]
             n = len(details)
             for idet, (comp, det) in enumerate(zip(compressed_details, details)):
-                assert det in text, f"Couldn't find detail tag #{i}/{n}: '{det}'"
+                assert det in text, f"Couldn't find detail tag #{idet}/{n}: '{det}'"
                 text = text.replace(det, comp)
             return text
 
