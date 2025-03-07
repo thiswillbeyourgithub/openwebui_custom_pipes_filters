@@ -218,7 +218,7 @@ class Tools:
         )
         
         if self.valves.use_citations_for_parse:
-            await emitter.cite(
+            await emitter.cite_parser(
                 doc_content=content,
                 title=title if title else "Parsed Content",
                 url=url,
@@ -319,7 +319,7 @@ class Tools:
             f"Successfully summarized {url}"
         )
         if self.valves.use_citations_for_summary:
-            await emitter.cite(
+            await emitter.cite_summary(
                 doc_content=output,
                 title="Summary",
                 url=url,
@@ -392,7 +392,7 @@ class EventEmitter:
                 }
             )
 
-    async def cite(
+    async def cite_summary(
         self,
         doc_content: str,
         title: str,
@@ -417,6 +417,29 @@ class EventEmitter:
                         }
                     ],
                     "source": {"name": "Summary", "url": url},
+                },
+            }
+        )
+        
+    async def cite_parser(
+        self,
+        doc_content: str,
+        title: str,
+        url: str,
+    ):
+        if self.event_emitter:
+            await self.event_emitter(
+            {
+                "type": "citation",
+                "data": {
+                    "document": [doc_content],
+                    "metadata": [
+                        {
+                            "date_accessed": datetime.now().isoformat(),
+                            "source": title,
+                        }
+                    ],
+                    "source": {"name": "Parsed Content", "url": url},
                 },
             }
         )
