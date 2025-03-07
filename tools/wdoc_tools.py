@@ -292,7 +292,11 @@ class Tools:
 
         results: dict = instance.summary_results
         summary = results['summary']
-        metadata=f"(Saved you {round(results['doc_reading_length'])} minutes for ${results['doc_total_cost']:.5f} ({results['doc_total_tokens']} tokens)"
+        if results['doc_total_tokens'] == 0:
+            cache_mess = ", probably because cached"
+        else:
+            cache_mess = ""
+        metadata=f"(Saved you {round(results['doc_reading_length'])} minutes for ${results['doc_total_cost']:.5f} ({results['doc_total_tokens']} tokens{cache_mess})"
         output = f"""
 
 --- 
