@@ -292,13 +292,13 @@ class Tools:
 
         results: dict = instance.summary_results
         summary = results['summary']
+        metadata=f"(Saved you {results['doc_reading_length']:.1f} minutes for ${results['doc_total_cost']:.5f} ({results['doc_total_tokens']} tokens)"
         output = f"""
 
 # Summary
 {url}
 
-- wdoc cost: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f})
-- Time saved: {results['doc_reading_length']:.1f} minutes
+{metadata}
 
 --- 
 
@@ -307,6 +307,9 @@ class Tools:
 --- 
 
 """
+        # add the metadata at the end too
+        if len(summary.splitlines()) > 50:
+            output += f"\n{metadata}"
 
         await emitter.success_update(
             f"Successfully summarized {url}"
