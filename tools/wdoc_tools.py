@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filte
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 description: Use wdoc to parse urls and files
-funding_url: https://github.com/open-webui
+runding_url: https://github.com/open-webui
 version: 1.0.0
 license: GPLv3
 # requirements: wdoc>=2.6.7  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
@@ -229,6 +229,8 @@ class Tools:
 
         with EnvVarContext(env_variables):
             wdoc = import_wdoc()
+            # Check wdoc version
+            check_wdoc_version(wdoc, self.MINIMUM_WDOC_VERSION)
             try:
                 parsed = wdoc.wdoc.parse_file(
                     path=url,
@@ -328,6 +330,8 @@ class Tools:
 
         with EnvVarContext(env_variables):
             wdoc = import_wdoc()
+            # Check wdoc version
+            check_wdoc_version(wdoc, self.MINIMUM_WDOC_VERSION)
             try:
                 instance = wdoc.wdoc(
                     path=url,
@@ -514,6 +518,35 @@ class EventEmitter:
 def import_wdoc():
     importlib.invalidate_caches()
     return importlib.import_module('wdoc')  # Reimport
+
+def check_wdoc_version(wdoc_module, minimum_version: str) -> None:
+    """
+    Check if the imported wdoc version meets the minimum requirement.
+    
+    Args:
+        wdoc_module: The imported wdoc module
+        minimum_version: The minimum required version as a string (e.g., "2.6.10")
+    """
+    try:
+        current_version = wdoc_module.__version__
+        
+        # Convert version strings to comparable integers
+        def version_to_int(version_str: str) -> int:
+            parts = version_str.split('.')
+            # Multiply each part by the appropriate power of 10
+            # e.g., "2.6.10" -> 2*100 + 6*10 + 10*1 = 270
+            result = 0
+            for i, part in enumerate(reversed(parts)):
+                result += int(part) * (10 ** i)
+            return result
+            
+        current_int = version_to_int(current_version)
+        minimum_int = version_to_int(minimum_version)
+        
+        if current_int < minimum_int:
+            logger.warning(f"Installed wdoc version {current_version} is older than the minimum required version {minimum_version}. Some features may not work correctly.")
+    except Exception as e:
+        logger.warning(f"Failed to check wdoc version: {e}")
 
 def un_import_wdoc():
     del sys.modules['wdoc']
