@@ -13,9 +13,9 @@ openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/tool_compressor
 
 from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any
-import html
 import re
 from loguru import logger
+from bs4 import BeautifulSoup
 
 
 
@@ -47,7 +47,6 @@ class Filter:
             logger.info(f"ToolCompressor: {message}")
 
     def compress_tool_calls(self, text: str) -> str:
-        orig_text = text
         details = re.findall(r'<details type="tool_calls" done="true" .*?</details>', text, flags=re.DOTALL|re.MULTILINE)
         if not details:
             self.log("No tool_calls in message")
@@ -61,25 +60,39 @@ class Filter:
                 text = text.replace(det, comp)
             return text
 
-        match = re.search(r'details type="tool_calls" done="true" content="([^"]*?)" results="([^"]*)"', text, flags=re.DOTALL|re.MULTILINE)
-        assert match, f"Couldn't match tool call '{text}'"
-
-        content2 = html.unescape(match.group(1))
-        results2 = html.unescape(match.group(2))
+        # Use BeautifulSoup to parse and modify the details tag
+        soup = BeautifulSoup(f"<div>{details[0]}</div>", 'html.parser')
+        details_tag = soup.find('details')
         
-        # Replace the original content with the new format
-        text = text.replace(f' content="{match.group(1)}"', "")
-        text = text.replace(f' results="{match.group(2)}"', "")
-
-        text = text.replace("</details>", "\n")
-
-        if not self.valves.remove_content:
-            text += f"""Results: {content2}"""
-        if not self.valves.remove_results:
-            text += f"""Results: {results2}"""
-        if not text.endswith("</details>"):
-            text += "\n</details>"
-        return text
+        if not details_tag:
+            self.log("Could not parse details tag with BeautifulSoup")
+            return text
+            
+        # Store content and results if needed
+        content_value = details_tag.get('content', '')
+        results_value = details_tag.get('results', '')
+        
+        # Remove the attributes
+        if self.valves.remove_content:
+            del details_tag['content']
+        if self.valves.remove_results:
+            del details_tag['results']
+            
+        # Add content and results as text if needed
+        details_tag.append("\n")
+        if not self.valves.remove_content and content_value:
+            content_p = soup.new_tag("p")
+            content_p.string = f"Content: {content_value}"
+            details_tag.append(content_p)
+            
+        if not self.valves.remove_results and results_value:
+            results_p = soup.new_tag("p")
+            results_p.string = f"Results: {results_value}"
+            details_tag.append(results_p)
+            
+        # Replace the original details tag with the modified one
+        modified_details = str(details_tag)
+        return text.replace(details[0], modified_details)
 
     async def inlet(
         self,
