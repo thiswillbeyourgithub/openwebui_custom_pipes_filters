@@ -384,8 +384,6 @@ class Tools:
         else:
             output = f"""Summary succesful. Read it below.
 
-</details>
-
 <details>
 
 <summary>Summary of {url}</summary>
@@ -396,8 +394,6 @@ class Tools:
 {summary}
 
 </details>
-
---- 
 
 """
             return output
