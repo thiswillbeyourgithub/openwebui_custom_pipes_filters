@@ -28,7 +28,7 @@ class Filter:
             description="Priority level for the filter operations (default 0).",
         )
         debug: bool = Field(
-            default=True,
+            default=False,
             description="Use debug prints",
         )
         remove_results: bool = Field(
