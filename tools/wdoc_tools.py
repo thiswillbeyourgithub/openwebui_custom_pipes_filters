@@ -14,7 +14,7 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 
 # TODO:
 # - add a tool to query data
-# - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
+#   - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
 
 import os
 import subprocess
