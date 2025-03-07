@@ -168,7 +168,6 @@ class Filter:
             else:
                 raise
 
-        body["extra_body"] = {"metadata": body["metadata"]}
 
         if self.valves.debug:
             await emitter.success_update("Done")
