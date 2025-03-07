@@ -4,7 +4,7 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 1.0.1
+version: 2.0.0
 date: 2025-02-21
 license: GPLv3
 description: A Filter that makes more compact the tool calls (removes the 'content' and/or 'results' element of the <details> escaped html tag in tool calls output. Otherwise the escaping gets really costly and is unreadable. If you remove both, the LLM still has access to the tool output.
@@ -21,7 +21,7 @@ from bs4 import BeautifulSoup
 
 
 class Filter:
-    VERSION: str = "1.0.1"
+    VERSION: str = "2.0.0"
     class Valves(BaseModel):
         priority: int = Field(
             default=0,
