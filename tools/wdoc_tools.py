@@ -69,6 +69,10 @@ class Tools:
             default=True,
             description="If True then we allow user valves to override the Valves dicts. If False UserValves raise an exeception."
         )
+        ALWAYS_UNIMPORT_WDOC: bool = Field(
+            default=False,
+            description="If False, wdoc will be unimported after each use. If True, wdoc will remain imported."
+        )
         summary_kwargs: str = Field(
             default="{}",
             description="JSON string of kwargs to pass to wdoc when summarizing"
@@ -117,6 +121,7 @@ class Tools:
         assert isinstance(self.env_variables, dict), "env_variables_as_dict must be a JSON dictionary"
         
         self.allow_user_valves_override = self.valves.allow_user_valves_override
+        self.always_unimport_wdoc = self.valves.ALWAYS_UNIMPORT_WDOC
 
     async def parse_url(
         self,
@@ -175,7 +180,8 @@ class Tools:
                 await emitter.error_update(error_message)
                 raise
             finally:
-                un_import_wdoc()
+                if not self.always_unimport_wdoc:
+                    un_import_wdoc()
 
         if len(parsed) == 1:
             content = parsed[0]["page_content"]
@@ -253,7 +259,8 @@ class Tools:
                 await emitter.error_update(error_message)
                 raise
             finally:
-                un_import_wdoc()
+                if not self.always_unimport_wdoc:
+                    un_import_wdoc()
 
         results: dict = instance.summary_results
         summary = results['summary']
