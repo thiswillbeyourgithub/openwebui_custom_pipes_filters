@@ -264,6 +264,8 @@ class Tools:
 
 {summary}
 
+--- 
+
 - Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f})
 - Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
 """
