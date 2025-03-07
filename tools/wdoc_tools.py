@@ -323,6 +323,9 @@ class Tools:
                 doc_content=output,
                 title="Summary",
                 url=url,
+                dollar_cost=results['doc_total_cost'],
+                tokens=results['doc_total_tokens'],
+                time_saved=round(results['doc_reading_length']),
             )
             return "Summary completed successfully. Please check the citations panel to view the results."
         else:
@@ -389,7 +392,15 @@ class EventEmitter:
                 }
             )
 
-    async def cite(self, doc_content: str, title: str, url: str):
+    async def cite(
+        self,
+        doc_content: str,
+        title: str,
+        url: str,
+        time_saved: int,
+        dollar_cost: float,
+        tokens: int,
+    ):
         if self.event_emitter:
             await self.event_emitter(
             {
@@ -400,6 +411,9 @@ class EventEmitter:
                         {
                             "date_accessed": datetime.now().isoformat(),
                             "source": title,
+                            "time saved": time_saved,
+                            "cost in dollars": dollar_cost,
+                            "cost in tokens": tokens,
                         }
                     ],
                     "source": {"name": "Summary", "url": url},
