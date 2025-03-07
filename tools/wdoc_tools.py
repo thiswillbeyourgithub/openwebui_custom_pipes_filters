@@ -13,6 +13,7 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 """
 
 # TODO:
+# - figure out why debug=True crashes the summarizer
 # - add a tool to query data
 #   - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
 
