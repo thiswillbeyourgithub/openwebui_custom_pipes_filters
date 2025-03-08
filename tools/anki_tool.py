@@ -4,8 +4,8 @@ author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub
 open_webui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/ankiflashcardcreator/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback. Not: if you want a multi user multi anki setup (each user with its own anki) you want each user to add its own private tool with as host a local url to its host via reverse proxies like ngrok that allows a url to point to a local service on the client side.
-version: 1.1.1
+description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback. Supports fields overrides via user valves. Note: if you want a multi user multi anki setup (each user with its own anki) you want each user to add its own private tool with as host a local url to its host via reverse proxies like ngrok that allows a url to point to a local service on the client side.
+version: 1.2.0
 """
 # Note to dev: don't forget to update the version number inside the Tool class!
 
@@ -72,7 +72,7 @@ Each keys of the param `fields` must be among those fields and all values must b
 
 class Tools:
 
-    VERSION: str =  "1.1.1"
+    VERSION: str =  "1.2.0"
 
     class Valves(BaseModel):
         ankiconnect_host: str = Field(
@@ -125,6 +125,7 @@ class Tools:
             description="URL of the OpenWebUI instance. Only used if metadata_field is specified to add a link to the chat.",
             required=False,
         )
+        pass
 
     # We need to use a setter property because that's the only way I could  find
     # to update the docstring of the tool depending on a valve.
@@ -141,6 +142,13 @@ class Tools:
             rules=value.rules,
             examples=value.examples,
         )
+        
+    class UserValves(BaseModel):
+        field_overrides: str = Field(
+            default="{}",
+            description="JSON string of field values that will override any values specified by the LLM in the fields parameter."
+        )
+        pass
 
     def __init__(self):
         self.valves = self.Valves()
@@ -200,6 +208,27 @@ class Tools:
         if not isinstance(fields, dict):
             await emitter.error_update(f"Invalid format for `fields` param, it must be a dict, received '{fields}'")
             return "No field contents provided or invalid format"
+            
+        # Process user valves if present
+        field_overrides = {}
+        if __user__ and "valves" in __user__:
+            override_value = __user__["valves"].field_overrides
+            if isinstance(override_value, str):
+                try:
+                    field_overrides = json.loads(override_value)
+                    assert isinstance(field_overrides, dict), "field_overrides must be a dictionary"
+                    await emitter.progress_update(f"Field to overide: {field_overrides}")
+                except Exception as e:
+                    await emitter.error_update(f"Error parsing field_overrides from user valves: {str(e)}")
+                    return f"Error parsing field_overrides: {str(e)}"
+            elif isinstance(override_value, dict):
+                field_overrides = override_value
+                await emitter.progress_update(f"Field to overide: {field_overrides}")
+
+        # Apply field overrides to override any values specified by the LLM
+        merged_fields = fields.copy()
+        merged_fields.update(field_overrides)
+        fields = merged_fields
 
         tags = self.valves.tags
         if isinstance(tags, str):
