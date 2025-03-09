@@ -5,7 +5,6 @@ openwebui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
-description: Use wdoc to parse urls and files
 version: 1.0.0
 license: GPLv3
 # requirements: wdoc>=2.7.0  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
