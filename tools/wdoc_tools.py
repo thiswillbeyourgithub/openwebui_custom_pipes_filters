@@ -1,5 +1,5 @@
 """
-title: wdocParser
+title: wdocTool
 author: thiswillbeyourgithub
 openwebui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
