@@ -17,8 +17,8 @@ import time
 class Filter:
     class Valves(BaseModel):
         priority: int = Field(
-            default=0,
-            description="Priority level for the filter operations (default 0).",
+            default=9,
+            description="Priority level for the filter operations (default 9).",
         )
         number_of_message: int = Field(
             default=20,
