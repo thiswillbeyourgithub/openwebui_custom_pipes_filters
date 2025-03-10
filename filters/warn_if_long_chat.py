@@ -11,6 +11,7 @@ description: A filter that adds a soft and hard limit to the number of messages 
 
 from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any
+import time
 
 
 class Filter:
@@ -67,6 +68,10 @@ class Filter:
 
         elif len(body["messages"]) > self.valves.number_of_message:
             await log(f"Tips: don't use more messages than {self.valves.number_of_message} in a single chat, create new chats instead.", error=True)
+            if len(body["messages"]) == self.valves.number_of_message:
+                time.sleep(5)
+            else:
+                time.sleep(1)
 
         return body
 
