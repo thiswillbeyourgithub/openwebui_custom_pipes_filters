@@ -148,7 +148,7 @@ class Tools:
             default="{}",
             description="JSON string of field values that will override any values specified by the LLM in the fields parameter."
         )
-        include_source_meta bool = Field(
+        include_source_meta: bool = Field(
             default=True,
             description="If set to false, the source metadata will not be added to the flashcard even if metadata_field is specified."
         )
