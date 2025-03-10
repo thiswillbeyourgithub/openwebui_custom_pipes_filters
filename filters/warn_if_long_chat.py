@@ -84,24 +84,35 @@ class EventEmitter:
         self.event_emitter = event_emitter
 
     async def progress_update(self, description):
-        await self.emit(description)
+        if self.event_emitter:
+            await self.event_emitter({
+                "type": "status",
+                "data": {
+                    "status": "in_progress",
+                    "description": description,
+                    "done": False,
+                },
+            })
 
     async def error_update(self, description):
-        await self.emit(description, "error", True)
+        if self.event_emitter:
+            await self.event_emitter({
+                "type": "status",
+                "data": {
+                    "status": "error",
+                    "description": description,
+                    "done": True,
+                },
+            })
 
     async def success_update(self, description):
-        await self.emit(description, "success", True)
-
-    async def emit(self, description="Unknown State", status="in_progress", done=False):
         if self.event_emitter:
-            await self.event_emitter(
-                {
-                    "type": "status",
-                    "data": {
-                        "status": status,
-                        "description": description,
-                        "done": done,
-                    },
-                }
-            )
+            await self.event_emitter({
+                "type": "status",
+                "data": {
+                    "status": "success",
+                    "description": description,
+                    "done": True,
+                },
+            })
 
