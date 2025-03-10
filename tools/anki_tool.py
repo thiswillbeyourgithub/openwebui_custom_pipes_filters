@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub
 open_webui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/ankiflashcardcreator/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback. Supports fields overrides via user valves and toggling source metadata inclusion. Note: if you want a multi user multi anki setup (each user with its own anki) you want each user to add its own private tool with as host a local url to its host via reverse proxies like ngrok that allows a url to point to a local service on the client side.
-version: 1.2.1
+version: 1.3.0
 """
 # Note to dev: don't forget to update the version number inside the Tool class!
 
@@ -72,7 +72,7 @@ Each keys of the param `fields` must be among those fields and all values must b
 
 class Tools:
 
-    VERSION: str =  "1.2.1"
+    VERSION: str =  "1.3.0"
 
     class Valves(BaseModel):
         ankiconnect_host: str = Field(
@@ -152,6 +152,10 @@ class Tools:
             default=True,
             description="If set to false, the source metadata will not be added to the flashcard even if metadata_field is specified."
         )
+        enable_overloading: bool = Field(
+            default=True,
+            description="If set to false, the LLM's field values will not be overridden by field_overrides."
+        )
         pass
 
     def __init__(self):
@@ -215,23 +219,32 @@ class Tools:
             
         # Process user valves if present
         field_overrides = {}
+        enable_overloading = True
         if __user__ and "valves" in __user__:
-            override_value = __user__["valves"].field_overrides
-            if isinstance(override_value, str):
-                try:
-                    field_overrides = json.loads(override_value)
-                    assert isinstance(field_overrides, dict), "field_overrides must be a dictionary"
-                    await emitter.progress_update(f"Field to overide: {field_overrides}")
-                except Exception as e:
-                    await emitter.error_update(f"Error parsing field_overrides from user valves: {str(e)}")
-                    return f"Error parsing field_overrides: {str(e)}"
-            elif isinstance(override_value, dict):
-                field_overrides = override_value
-                await emitter.progress_update(f"Field to overide: {field_overrides}")
+            # Check if overloading is enabled
+            if hasattr(__user__["valves"], "enable_overloading"):
+                enable_overloading = __user__["valves"].enable_overloading
+            
+            # Only process overrides if enabled
+            if enable_overloading:
+                override_value = __user__["valves"].field_overrides
+                if isinstance(override_value, str):
+                    try:
+                        field_overrides = json.loads(override_value)
+                        assert isinstance(field_overrides, dict), "field_overrides must be a dictionary"
+                        await emitter.progress_update(f"Field to override: {field_overrides}")
+                    except Exception as e:
+                        await emitter.error_update(f"Error parsing field_overrides from user valves: {str(e)}")
+                        return f"Error parsing field_overrides: {str(e)}"
+                elif isinstance(override_value, dict):
+                    field_overrides = override_value
+                    await emitter.progress_update(f"Field to override: {field_overrides}")
 
-        # Apply field overrides to override any values specified by the LLM
+        # Apply field overrides to override any values specified by the LLM (if enabled)
         merged_fields = fields.copy()
-        merged_fields.update(field_overrides)
+        if enable_overloading and field_overrides:
+            merged_fields.update(field_overrides)
+            await emitter.progress_update("Applied field overrides")
         fields = merged_fields
 
         tags = self.valves.tags
