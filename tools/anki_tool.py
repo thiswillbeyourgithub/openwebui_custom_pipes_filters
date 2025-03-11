@@ -534,7 +534,3 @@ class EventEmitter:
                     },
                 }
             )
-
-
-# if __name__ == "__main__":
-#     tools = Tools()
