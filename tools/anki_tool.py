@@ -28,6 +28,28 @@ DEFAULT_FIELDS_DESCRIPTION='{"Front": "The concise question", "Back": "The answe
 DEFAULT_RULES="Calling this function creates a single Anki flashcard using the `fields` argument as contents.<br>You can leave some fields empty.<br>If not otherwised specified, write the flashcard in the language of the user's request.<br>You are allowed to use html formatting.<br>You cannot refer to embed media files like images, audio etc.<br>Please pay very close attention to the examples of the user and try to imitate their formulation."
 DEFAULT_EXAMPLES='[{"Front": "What is the capital of France?", "Back": "Paris"},{"Front": "What is 2+2?", "Back": "4"}]'
 
+TEMPLATE_EXAMPLE = f"""
+Here are some good flashcards examples:
+<examples>
+<card>
+EXAMPLES
+</card>
+</examples>
+"""
+TEMPLATE_DOCSTRING = f"""
+RULES
+
+Here are the text fields you can specify along with what their appropriate content should be:
+Each keys of the param `fields` must be among those fields and all values must be strings.
+<fields_description>
+FIELDS_DESCRIPTION
+</fields_description>
+EXAMPLES
+
+:param fields: Dictionary mapping the flashcard's field names to their string content. Refer to the tool description for details.
+:return: A string to show to the user
+"""
+
 def update_docstring(fields_description: str, rules: str, examples: str) -> str:
     rules = rules.replace("<br>", "\n").strip()
     assert rules.strip(), f"The rules valve cannot be empty"
@@ -45,28 +67,10 @@ def update_docstring(fields_description: str, rules: str, examples: str) -> str:
         raise Exception(f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'")
 
     exs = "\n</card>\n<card>\n".join([json.dumps(ex, ensure_ascii=False) for ex in exs])
-    examples = f"""
-Here are some good flashcards examples:
-<examples>
-<card>
-{exs}
-</card>
-</examples>
-"""
+    examples = TEMPLATE_EXAMPLE.replace("EXAMPLES", exs)
 
-    docstring = f"""
-{rules}
+    docstring = TEMPLATE_DOCSTRING.replace("RULES", rules).replace("FIELDS_DESCRIPTION", fields_description).replace("EXAMPLES", examples).strip()
 
-Here are the text fields you can specify along with what their appropriate content should be:
-Each keys of the param `fields` must be among those fields and all values must be strings.
-<fields_description>
-{fields_description}
-</fields_description>
-{examples}
-
-:param fields: Dictionary mapping the flashcard's field names to their string content. Refer to the tool description for details.
-:return: A string to show to the user
-""".strip()
     logger.info(f"AnkiTool: Updated the docstring with this value:\n---\n{docstring}\n---")
     return docstring
 
