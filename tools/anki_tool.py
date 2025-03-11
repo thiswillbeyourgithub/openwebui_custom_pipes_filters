@@ -190,7 +190,7 @@ class Tools:
                     fields_dict = f
                 except Exception as e:
                     logger.info(
-                        f"AnkiTool: fields param was a str but couldn't be parsed as dict: '{e}'"
+                        f"AnkiFlashcardCreator: fields param was a str but couldn't be parsed as dict: '{e}'"
                     )
 
         if not fields:
@@ -333,7 +333,7 @@ class Tools:
                 metadata = flatten_dict(__user__.copy())
                 if "valves" in metadata:
                     del metadata["valves"]
-                metadata["AnkiToolVersion"] = self.VERSION
+                metadata["AnkiFlashcardCreatorVersion"] = self.VERSION
                 metadata["__model__"] = flatten_dict(__model__)
                 metadata["__metadata__"] = flatten_dict(__metadata__)
 
@@ -500,7 +500,7 @@ def update_docstring(fields_description: str, rules: str, examples: str) -> str:
     )
 
     logger.info(
-        f"AnkiTool: Updated the docstring with this value:\n---\n{docstring}\n---"
+        f"AnkiFlashcardCreator: Updated the docstring with this value:\n---\n{docstring}\n---"
     )
     return docstring
 
@@ -510,16 +510,16 @@ class EventEmitter:
         self.event_emitter = event_emitter
 
     async def progress_update(self, description):
-        logger.info(f"AnkiTool: {description}")
+        logger.info(f"AnkiFlashcardCreator: {description}")
         await self.emit(description)
 
     async def error_update(self, description):
-        logger.info(f"AnkiTool: ERROR - {description}")
+        logger.info(f"AnkiFlashcardCreator: ERROR - {description}")
         await self.emit(description, "error", True)
         raise Exception(description)
 
     async def success_update(self, description):
-        logger.info(f"AnkiTool: {description}")
+        logger.info(f"AnkiFlashcardCreator: {description}")
         await self.emit(description, "success", True)
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
