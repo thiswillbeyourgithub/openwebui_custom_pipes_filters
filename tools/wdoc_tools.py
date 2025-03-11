@@ -116,6 +116,10 @@ class Tools:
             default=False,
             description="If True, use the citation system for parsed content instead of outputting the text directly.",
         )
+        parse_before_summary: bool = Field(
+            default=True,
+            description="If True, parse the URL before summarizing to provide the full document as a citation.",
+        )
         summary_kwargs: str = Field(
             default="{}",
             description="JSON string of kwargs to pass to wdoc when summarizing",
@@ -183,30 +187,28 @@ class Tools:
 
         assert isinstance(
             self.valves.use_citations_for_summary, bool
-        ), f"use_citations_for_summary must be a boolean, got {type(self.valves.use_citations)}"
+        ), f"use_citations_for_summary must be a boolean, got {type(self.valves.use_citations_for_summary)}"
         assert isinstance(
             self.valves.use_citations_for_parse, bool
         ), f"use_citations_for_parse must be a boolean, got {type(self.valves.use_citations_for_parse)}"
+        assert isinstance(
+            self.valves.parse_before_summary, bool
+        ), f"parse_before_summary must be a boolean, got {type(self.valves.parse_before_summary)}"
 
-    async def parse_url(
+    async def _parse_url_internal(
         self,
         url: str,
         __event_emitter__: Callable[[dict], Any] = None,
         __user__: dict = {},
     ) -> str:
         """
-        Parse a url using the wdoc rag library. After being parsed,
-        the content will be shown to the user so DO NOT repeat this tool's
-        output yourself and instead just tell the user that it went successfuly.
-
+        Internal method to parse a URL. Used by both parse_url and summarize_url.
+        
         :param url: The URL of the online data to parse.
-        :return: The parsed data as text, or an error message.
+        :return: The parsed data as text.
         """
         emitter = EventEmitter(__event_emitter__)
-        self.on_valves_updated()
-
-        await emitter.progress_update(f"Parsing '{url}'")
-
+        
         uvalves = dict(__user__.get("valves", {}))
         if (
             uvalves
@@ -292,12 +294,43 @@ class Tools:
             await emitter.progress_update(f"Error when getting title: '{e}'")
             content = f"Success.\n\n## Parsing of {url}\n\n{content}\n\n---\n\n"
 
-        await emitter.success_update(f"Successfully parsed '{title if title else url}'")
+        return content
+
+    async def parse_url(
+        self,
+        url: str,
+        __event_emitter__: Callable[[dict], Any] = None,
+        __user__: dict = {},
+    ) -> str:
+        """
+        Parse a url using the wdoc rag library. After being parsed,
+        the content will be shown to the user so DO NOT repeat this tool's
+        output yourself and instead just tell the user that it went successfuly.
+
+        :param url: The URL of the online data to parse.
+        :return: The parsed data as text, or an error message.
+        """
+        emitter = EventEmitter(__event_emitter__)
+        self.on_valves_updated()
+
+        await emitter.progress_update(f"Parsing '{url}'")
+        
+        try:
+            content = await self._parse_url_internal(url, __event_emitter__, __user__)
+        except Exception as e:
+            # Error already reported in _parse_url_internal
+            raise
+
+        await emitter.success_update(f"Successfully parsed '{url}'")
 
         if self.valves.use_citations_for_parse:
+            # Try to extract title from the content
+            title_match = re.search(r"## Parsing of (.+?)\n", content)
+            title = title_match.group(1) if title_match else "Parsed Content"
+            
             await emitter.cite_parser(
                 doc_content=content,
-                title=title if title else "Parsed Content",
+                title=title,
                 url=url,
             )
             return "Parsing completed successfully. Please check the citations panel to view the results."
@@ -325,6 +358,20 @@ class Tools:
         self.on_valves_updated()
 
         await emitter.progress_update(f"Summarizing '{url}'")
+        
+        # If parse_before_summary is enabled, parse the URL first
+        if self.valves.parse_before_summary:
+            await emitter.progress_update(f"First parsing '{url}' to provide full document access")
+            try:
+                parsed_content = await self._parse_url_internal(url, __event_emitter__, __user__)
+                if self.valves.use_citations_for_parse:
+                    await emitter.cite_parser(
+                        doc_content=parsed_content,
+                        title="Full Document",
+                        url=url,
+                    )
+            except Exception as e:
+                await emitter.progress_update(f"Warning: Failed to parse document before summarizing: {e}")
 
         uvalves = dict(__user__.get("valves", {}))
         if (
