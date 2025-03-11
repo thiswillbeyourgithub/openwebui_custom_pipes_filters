@@ -50,29 +50,6 @@ EXAMPLES
 :return: A string to show to the user
 """
 
-def update_docstring(fields_description: str, rules: str, examples: str) -> str:
-    rules = rules.replace("<br>", "\n").strip()
-    assert rules.strip(), f"The rules valve cannot be empty"
-
-    examples = examples.strip()
-    assert examples, f"You must supply examples"
-
-    try:
-        exs = json.loads(examples)
-        assert isinstance(exs, list), f"It's not a list but {type(exs)}"
-        assert len(exs), "The list is empty"
-        assert all(isinstance(ex, dict) for ex in exs), "The list does not contain only dicts"
-        assert len(exs) == len(set([json.dumps(ex) for ex  in exs])), "The list contains duplicates"
-    except Exception as e:
-        raise Exception(f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'")
-
-    exs = "\n</card>\n<card>\n".join([json.dumps(ex, ensure_ascii=False) for ex in exs])
-    examples = TEMPLATE_EXAMPLE.replace("EXAMPLES", exs)
-
-    docstring = TEMPLATE_DOCSTRING.replace("RULES", rules).replace("FIELDS_DESCRIPTION", fields_description).replace("EXAMPLES", examples).strip()
-
-    logger.info(f"AnkiTool: Updated the docstring with this value:\n---\n{docstring}\n---")
-    return docstring
 
 class Tools:
 
@@ -434,6 +411,30 @@ def _ankiconnect_request_sync(host: str, port: str, action: str, params: dict = 
         raise Exception(f"Invalid JSON response from Ankiconnect: {str(e)}")
     except Exception as e:
         raise Exception(f"Ankiconnect error: {str(e)}")
+
+def update_docstring(fields_description: str, rules: str, examples: str) -> str:
+    rules = rules.replace("<br>", "\n").strip()
+    assert rules.strip(), f"The rules valve cannot be empty"
+
+    examples = examples.strip()
+    assert examples, f"You must supply examples"
+
+    try:
+        exs = json.loads(examples)
+        assert isinstance(exs, list), f"It's not a list but {type(exs)}"
+        assert len(exs), "The list is empty"
+        assert all(isinstance(ex, dict) for ex in exs), "The list does not contain only dicts"
+        assert len(exs) == len(set([json.dumps(ex) for ex  in exs])), "The list contains duplicates"
+    except Exception as e:
+        raise Exception(f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'")
+
+    exs = "\n</card>\n<card>\n".join([json.dumps(ex, ensure_ascii=False) for ex in exs])
+    examples = TEMPLATE_EXAMPLE.replace("EXAMPLES", exs)
+
+    docstring = TEMPLATE_DOCSTRING.replace("RULES", rules).replace("FIELDS_DESCRIPTION", fields_description).replace("EXAMPLES", examples).strip()
+
+    logger.info(f"AnkiTool: Updated the docstring with this value:\n---\n{docstring}\n---")
+    return docstring
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
