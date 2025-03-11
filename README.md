@@ -1,6 +1,6 @@
 # OpenWebUI Custom Pipes & Filters
 
-A collection of pipes, filters and tools for OpenWebUI.
+A collection of pipes, filters and tools for OpenWebUI. My usual goto templates to quickly create new Filters and Tools can be found as `templates.py` inside their respective folders.
 
 ## Components
 
