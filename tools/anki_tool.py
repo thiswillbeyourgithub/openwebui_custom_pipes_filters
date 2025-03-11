@@ -7,6 +7,7 @@ git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback. Supports fields overrides via user valves and toggling source metadata inclusion. Note: if you want a multi user multi anki setup (each user with its own anki) you want each user to add its own private tool with as host a local url to its host via reverse proxies like ngrok that allows a url to point to a local service on the client side.
 version: 1.3.0
 """
+
 # Note to dev: don't forget to update the version number inside the Tool class!
 
 import requests
@@ -44,7 +45,7 @@ EXAMPLES
 
 class Tools:
 
-    VERSION: str =  "1.3.0"
+    VERSION: str = "1.3.0"
 
     class Valves(BaseModel):
         ankiconnect_host: str = Field(
@@ -83,7 +84,7 @@ class Tools:
             required=True,
         )
         examples: str = Field(
-            default='[{"Front": "What is the capital of France?", "Back": "Paris"},{"Front": "What is 2+2?", "Back": "4"}]'
+            default='[{"Front": "What is the capital of France?", "Back": "Paris"},{"Front": "What is 2+2?", "Back": "4"}]',
             description="Examples of good flashcards to show the LLM.",
             required=True,
         )
@@ -114,19 +115,19 @@ class Tools:
             rules=value.rules,
             examples=value.examples,
         )
-        
+
     class UserValves(BaseModel):
         field_overrides: str = Field(
             default="{}",
-            description="JSON string of field values that will override any values specified by the LLM in the fields parameter."
+            description="JSON string of field values that will override any values specified by the LLM in the fields parameter.",
         )
         include_source_meta: bool = Field(
             default=True,
-            description="If set to false, the source metadata will not be added to the flashcard even if metadata_field is specified."
+            description="If set to false, the source metadata will not be added to the flashcard even if metadata_field is specified.",
         )
         enable_overloading: bool = Field(
             default=True,
-            description="If set to false, the LLM's field values will not be overridden by field_overrides."
+            description="If set to false, the LLM's field values will not be overridden by field_overrides.",
         )
         pass
 
@@ -135,10 +136,18 @@ class Tools:
         self.fields_description = self.valves.fields_description
 
         # check deck exists and model exists
-        deck_list = _ankiconnect_request_sync(self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames")
-        assert self.valves.deck in deck_list, f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
-        models = _ankiconnect_request_sync(self.valves.ankiconnect_host, self.valves.ankiconnect_port, "modelNames")
-        assert self.valves.notetype_name in models, f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
+        deck_list = _ankiconnect_request_sync(
+            self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames"
+        )
+        assert (
+            self.valves.deck in deck_list
+        ), f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
+        models = _ankiconnect_request_sync(
+            self.valves.ankiconnect_host, self.valves.ankiconnect_port, "modelNames"
+        )
+        assert (
+            self.valves.notetype_name in models
+        ), f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
 
     async def create_flashcard(
         self,
@@ -165,30 +174,34 @@ class Tools:
                 start = -1
                 end = -1
                 for i, char in enumerate(fields):
-                    if char == '{' and start == -1:
+                    if char == "{" and start == -1:
                         start = i
-                    if char == '}':
+                    if char == "}":
                         end = i
 
                 if start != -1 and end != -1:
-                    f = fields[start:end+1]
+                    f = fields[start : end + 1]
                 else:
-                    f = ''
+                    f = ""
                 try:
                     f = json.loads(f)
                     assert isinstance(f, dict), "Not a dict"
                     fields_dict = f
                 except Exception as e:
-                    logger.info(f"AnkiTool: fields param was a str but couldn't be parsed as dict: '{e}'")
+                    logger.info(
+                        f"AnkiTool: fields param was a str but couldn't be parsed as dict: '{e}'"
+                    )
 
         if not fields:
             await emitter.error_update("No field contents provided")
             return "No field contents provided"
 
         if not isinstance(fields, dict):
-            await emitter.error_update(f"Invalid format for `fields` param, it must be a dict, received '{fields}'")
+            await emitter.error_update(
+                f"Invalid format for `fields` param, it must be a dict, received '{fields}'"
+            )
             return "No field contents provided or invalid format"
-            
+
         # Process user valves if present
         field_overrides = {}
         enable_overloading = True
@@ -196,21 +209,29 @@ class Tools:
             # Check if overloading is enabled
             if hasattr(__user__["valves"], "enable_overloading"):
                 enable_overloading = __user__["valves"].enable_overloading
-            
+
             # Only process overrides if enabled
             if enable_overloading:
                 override_value = __user__["valves"].field_overrides
                 if isinstance(override_value, str):
                     try:
                         field_overrides = json.loads(override_value)
-                        assert isinstance(field_overrides, dict), "field_overrides must be a dictionary"
-                        await emitter.progress_update(f"Field to override: {field_overrides}")
+                        assert isinstance(
+                            field_overrides, dict
+                        ), "field_overrides must be a dictionary"
+                        await emitter.progress_update(
+                            f"Field to override: {field_overrides}"
+                        )
                     except Exception as e:
-                        await emitter.error_update(f"Error parsing field_overrides from user valves: {str(e)}")
+                        await emitter.error_update(
+                            f"Error parsing field_overrides from user valves: {str(e)}"
+                        )
                         return f"Error parsing field_overrides: {str(e)}"
                 elif isinstance(override_value, dict):
                     field_overrides = override_value
-                    await emitter.progress_update(f"Field to override: {field_overrides}")
+                    await emitter.progress_update(
+                        f"Field to override: {field_overrides}"
+                    )
 
         # Apply field overrides to override any values specified by the LLM (if enabled)
         merged_fields = fields.copy()
@@ -249,34 +270,54 @@ class Tools:
             for k, v in fd.items():
                 assert v.strip(), "Cannot contain empty values"
         except Exception as e:
-            raise Exception(f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'")
+            raise Exception(
+                f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'"
+            )
 
         try:
             exs = json.loads(self.valves.examples)
             assert isinstance(exs, list), f"It's not a list but {type(exs)}"
             assert len(exs), "The list is empty"
-            assert all(isinstance(ex, dict) for ex in exs), "The list does not contain only dicts"
-            assert len(exs) == len(set([json.dumps(ex) for ex  in exs])), "The list contains duplicates"
+            assert all(
+                isinstance(ex, dict) for ex in exs
+            ), "The list does not contain only dicts"
+            assert len(exs) == len(
+                set([json.dumps(ex) for ex in exs])
+            ), "The list contains duplicates"
         except Exception as e:
-            raise Exception(f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'")
+            raise Exception(
+                f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'"
+            )
         for ex in exs:
             for k, v in ex.items():
-                assert k in fd, f"An example mentions a field '{k}' that was not defined in the fields_description: {fd}."
+                assert (
+                    k in fd
+                ), f"An example mentions a field '{k}' that was not defined in the fields_description: {fd}."
 
         # check that all fields are appropriate
         for k, v in fields.items():
-            assert k in fd, f"Field '{k}' of `fields` is not part of fields_description valve"
+            assert (
+                k in fd
+            ), f"Field '{k}' of `fields` is not part of fields_description valve"
 
         try:
             await emitter.progress_update("Connecting to Anki...")
 
             # Verify Ankiconnect is working by checking that the deck exists
-            deck_list = await _ankiconnect_request(self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames")
-            assert self.valves.deck in deck_list, f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
+            deck_list = await _ankiconnect_request(
+                self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames"
+            )
+            assert (
+                self.valves.deck in deck_list
+            ), f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
 
             # also check modelname
-            models = await _ankiconnect_request(self.valves.ankiconnect_host, self.valves.ankiconnect_port, "modelNames")
-            assert self.valves.notetype_name in models, f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
+            models = await _ankiconnect_request(
+                self.valves.ankiconnect_host, self.valves.ankiconnect_port, "modelNames"
+            )
+            assert (
+                self.valves.notetype_name in models
+            ), f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
 
             await emitter.progress_update("Creating flashcard...")
 
@@ -284,7 +325,7 @@ class Tools:
                 "deckName": self.valves.deck,
                 "modelName": self.valves.notetype_name,
                 "fields": fields.copy(),
-                "tags": tags
+                "tags": tags,
             }
 
             if self.valves.metadata_field:
@@ -294,32 +335,51 @@ class Tools:
                 metadata["AnkiToolVersion"] = self.VERSION
                 metadata["__model__"] = flatten_dict(__model__)
                 metadata["__metadata__"] = flatten_dict(__metadata__)
-                
+
                 # Add chat link if we have the URL and chat_id
-                if self.valves.openwebui_url and "__metadata__" in metadata and "chat_id" in metadata["__metadata__"]:
+                if (
+                    self.valves.openwebui_url
+                    and "__metadata__" in metadata
+                    and "chat_id" in metadata["__metadata__"]
+                ):
                     chat_url = f"{self.valves.openwebui_url}/c/{metadata['__metadata__']['chat_id']}"
                     chat_link = f'<p><a href="{chat_url}">View original chat</a></p>'
                 else:
                     chat_link = ""
-                
+
                 metadata = json.dumps(metadata, indent=2, ensure_ascii=False)
-                metadata = chat_link + "<br>" + '<pre><code class="language-json">' + metadata + '</code></pre>'
+                metadata = (
+                    chat_link
+                    + "<br>"
+                    + '<pre><code class="language-json">'
+                    + metadata
+                    + "</code></pre>"
+                )
                 if self.valves.metadata_field in note["fields"]:
                     note["fields"][self.valves.metadata_field] += "<br>" + metadata
                 else:
                     note["fields"][self.valves.metadata_field] = metadata
                 # note["fields"][self.valves.metadata_field] = note["fields"][self.valves.metadata_field].replace("\r", "\n").replace("\n", "<br>")
 
-            result = await _ankiconnect_request(self.valves.ankiconnect_host, self.valves.ankiconnect_port, "addNote", {"note": note})
+            result = await _ankiconnect_request(
+                self.valves.ankiconnect_host,
+                self.valves.ankiconnect_port,
+                "addNote",
+                {"note": note},
+            )
 
             await emitter.progress_update("Syncing with AnkiWeb...")
-            await _ankiconnect_request(self.valves.ankiconnect_host, self.valves.ankiconnect_port, "sync")
+            await _ankiconnect_request(
+                self.valves.ankiconnect_host, self.valves.ankiconnect_port, "sync"
+            )
 
             # Add the note ID to the fields and return formatted JSON
-            fields['note_id'] = result
-            formatted_output = json.dumps(fields, indent=2, ensure_ascii=False).replace('"', '')
+            fields["note_id"] = result
+            formatted_output = json.dumps(fields, indent=2, ensure_ascii=False).replace(
+                '"', ""
+            )
             # Remove the first and last lines which contain the curly braces
-            formatted_output = '\r'.join(formatted_output.split('\n')[1:-1])
+            formatted_output = "\r".join(formatted_output.split("\n")[1:-1])
             await emitter.success_update("Successfully created and synced flashcard")
             return formatted_output
 
@@ -327,14 +387,17 @@ class Tools:
             await emitter.error_update(f"Failed to create flashcards: {str(e)}")
             return f"Failed to create flashcards: {str(e)}"
 
+
 def flatten_dict(input: dict) -> dict:
     if not isinstance(input, dict):
         return input
-    
+
     result = input.copy()
     while any(isinstance(v, dict) for v in result.values()):
         dict_found = False
-        for k, v in list(result.items()):  # Create a list to avoid modification during iteration
+        for k, v in list(
+            result.items()
+        ):  # Create a list to avoid modification during iteration
             if isinstance(v, dict):
                 dict_found = True
                 # Remove the current key-value pair
@@ -356,23 +419,23 @@ def flatten_dict(input: dict) -> dict:
     return result
 
 
-async def _ankiconnect_request(host: str, port: str, action: str, params: dict = None) -> Any:
+async def _ankiconnect_request(
+    host: str, port: str, action: str, params: dict = None
+) -> Any:
     """Make a request to Ankiconnect API (async)"""
     address = f"{host}:{port}"
-    request = {
-        'action': action,
-        'params': params or {},
-        'version': 6
-    }
+    request = {"action": action, "params": params or {}, "version": 6}
 
     try:
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
             async with session.post(address, json=request) as response:
                 response.raise_for_status()
                 response_data = await response.json()
-                if response_data.get('error'):
-                    raise Exception(response_data['error'])
-                return response_data['result']
+                if response_data.get("error"):
+                    raise Exception(response_data["error"])
+                return response_data["result"]
     except aiohttp.ClientError as e:
         raise Exception(f"Network error connecting to Ankiconnect: {str(e)}")
     except json.JSONDecodeError as e:
@@ -380,28 +443,28 @@ async def _ankiconnect_request(host: str, port: str, action: str, params: dict =
     except Exception as e:
         raise Exception(f"Ankiconnect error: {str(e)}")
 
-def _ankiconnect_request_sync(host: str, port: str, action: str, params: dict = None) -> Any:
+
+def _ankiconnect_request_sync(
+    host: str, port: str, action: str, params: dict = None
+) -> Any:
     """Make a request to Ankiconnect API (sync)"""
     address = f"{host}:{port}"
-    request = {
-        'action': action,
-        'params': params or {},
-        'version': 6
-    }
+    request = {"action": action, "params": params or {}, "version": 6}
 
     try:
         response = requests.post(address, json=request, timeout=10)
         response.raise_for_status()
         response_data = response.json()
-        if response_data.get('error'):
-            raise Exception(response_data['error'])
-        return response_data['result']
+        if response_data.get("error"):
+            raise Exception(response_data["error"])
+        return response_data["result"]
     except requests.RequestException as e:
         raise Exception(f"Network error connecting to Ankiconnect: {str(e)}")
     except json.JSONDecodeError as e:
         raise Exception(f"Invalid JSON response from Ankiconnect: {str(e)}")
     except Exception as e:
         raise Exception(f"Ankiconnect error: {str(e)}")
+
 
 def update_docstring(fields_description: str, rules: str, examples: str) -> str:
     rules = rules.replace("<br>", "\n").strip()
@@ -414,18 +477,32 @@ def update_docstring(fields_description: str, rules: str, examples: str) -> str:
         exs = json.loads(examples)
         assert isinstance(exs, list), f"It's not a list but {type(exs)}"
         assert len(exs), "The list is empty"
-        assert all(isinstance(ex, dict) for ex in exs), "The list does not contain only dicts"
-        assert len(exs) == len(set([json.dumps(ex) for ex  in exs])), "The list contains duplicates"
+        assert all(
+            isinstance(ex, dict) for ex in exs
+        ), "The list does not contain only dicts"
+        assert len(exs) == len(
+            set([json.dumps(ex) for ex in exs])
+        ), "The list contains duplicates"
     except Exception as e:
-        raise Exception(f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'")
+        raise Exception(
+            f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'"
+        )
 
     exs = "\n</card>\n<card>\n".join([json.dumps(ex, ensure_ascii=False) for ex in exs])
     examples = TEMPLATE_EXAMPLE.replace("EXAMPLES", exs)
 
-    docstring = TEMPLATE_DOCSTRING.replace("RULES", rules).replace("FIELDS_DESCRIPTION", fields_description).replace("EXAMPLES", examples).strip()
+    docstring = (
+        TEMPLATE_DOCSTRING.replace("RULES", rules)
+        .replace("FIELDS_DESCRIPTION", fields_description)
+        .replace("EXAMPLES", examples)
+        .strip()
+    )
 
-    logger.info(f"AnkiTool: Updated the docstring with this value:\n---\n{docstring}\n---")
+    logger.info(
+        f"AnkiTool: Updated the docstring with this value:\n---\n{docstring}\n---"
+    )
     return docstring
+
 
 class EventEmitter:
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
@@ -456,6 +533,7 @@ class EventEmitter:
                     },
                 }
             )
+
 
 # if __name__ == "__main__":
 #     tools = Tools()
