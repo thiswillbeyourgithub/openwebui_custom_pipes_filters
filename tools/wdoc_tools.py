@@ -5,7 +5,7 @@ openwebui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
-version: 1.0.0
+version: 1.1.0
 license: GPLv3
 # requirements: wdoc>=2.7.0  # commented to instead install it in the tool itself and avoid uninstalling open-webui dependencies
 description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things! It is very much recommended to use the tool ToolCompressor that I made to make the tool outputs unescaped and thus more legible annd less costly to LLMs.
@@ -96,7 +96,7 @@ def normalize_dict_values(input_dict: Dict) -> Dict:
 
 class Tools:
 
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.1.0"
     MINIMUM_WDOC_VERSION: str = "2.7.0"
 
     class Valves(BaseModel):
