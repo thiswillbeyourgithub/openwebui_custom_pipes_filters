@@ -19,15 +19,6 @@ import aiohttp
 from loguru import logger
 
 
-DEFAULT_ANKICONNECT_HOST="http://localhost"
-DEFAULT_ANKICONNECT_PORT="8765"
-DEFAULT_DECK="Default"
-DEFAULT_NOTETYPE_NAME="Basic"
-DEFAULT_TAGS="openwebui"
-DEFAULT_FIELDS_DESCRIPTION='{"Front": "The concise question", "Back": "The answer"}'
-DEFAULT_RULES="Calling this function creates a single Anki flashcard using the `fields` argument as contents.<br>You can leave some fields empty.<br>If not otherwised specified, write the flashcard in the language of the user's request.<br>You are allowed to use html formatting.<br>You cannot refer to embed media files like images, audio etc.<br>Please pay very close attention to the examples of the user and try to imitate their formulation."
-DEFAULT_EXAMPLES='[{"Front": "What is the capital of France?", "Back": "Paris"},{"Front": "What is 2+2?", "Back": "4"}]'
-
 TEMPLATE_EXAMPLE = f"""
 Here are some good flashcards examples:
 <examples>
@@ -57,42 +48,42 @@ class Tools:
 
     class Valves(BaseModel):
         ankiconnect_host: str = Field(
-            default=DEFAULT_ANKICONNECT_HOST,
+            default="http://localhost",
             description="Host address for Ankiconnect",
             required=True,
         )
         ankiconnect_port: str = Field(
-            default=DEFAULT_ANKICONNECT_PORT,
+            default="8765",
             description="Port for Ankiconnect",
             required=True,
         )
         deck: str = Field(
-            default=DEFAULT_DECK,
+            default="Default",
             description="Deck for new flashcards. If not 'Default', it must be created manually.",
             required=True,
         )
         notetype_name: str = Field(
-            default=DEFAULT_NOTETYPE_NAME,
+            default="Basic",
             description="Note type for new flashcards. It must already exist.",
             required=True,
         )
         tags: List[str] = Field(
-            default=DEFAULT_TAGS,
+            default="open-webui",
             description="Tags for new flashcards.",
             required=True,
         )
         fields_description: str = Field(
-            default=DEFAULT_FIELDS_DESCRIPTION,
+            default='{"Front": "The concise question", "Back": "The answer"}',
             description="Description of the note type fields and their purpose. Use json format.",
             required=True,
         )
         rules: str = Field(
-            default=DEFAULT_RULES,
+            default="Calling this function creates a single Anki flashcard using the `fields` argument as contents.<br>You can leave some fields empty.<br>If not otherwised specified, write the flashcard in the language of the user's request.<br>You are allowed to use html formatting.<br>You cannot refer to embed media files like images, audio etc.<br>Please pay very close attention to the examples of the user and try to imitate their formulation.",
             description="All rules given to the LLM. Any '<br>' will be replaced by a newline to improve formatting.",
             required=True,
         )
         examples: str = Field(
-            default=DEFAULT_EXAMPLES,
+            default='[{"Front": "What is the capital of France?", "Back": "Paris"},{"Front": "What is 2+2?", "Back": "4"}]'
             description="Examples of good flashcards to show the LLM.",
             required=True,
         )
@@ -108,7 +99,7 @@ class Tools:
         )
         pass
 
-    # We need to use a setter property because that's the only way I could  find
+    # We need to use a setter property because that's the only way I could find
     # to update the docstring of the tool depending on a valve.
     # This was devised after looking at https://github.com/open-webui/open-webui/blob/2017856791b666fac5f1c2f80a3bc7916439438b/backend/open_webui/utils/tools.py
     @property
