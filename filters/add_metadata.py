@@ -92,7 +92,8 @@ class Filter:
                     await log(
                         f"User key different than expected: '{body['user']}' vs '{__user__['name']}'"
                     )
-            new_value = f"{__user__['name']}_{__user__['email']}"
+            # new_value = f"{__user__['name']}_{__user__['email']}"
+            new_value = __user__['email']
             body["user"] = new_value
             await log(f"Added user metadata '{new_value}'")
 
