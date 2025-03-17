@@ -49,7 +49,7 @@ if Path("/app/backend/requirements.txt").exists():
             "--reinstall",
             "--overrides",
             "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-            "wdoc>=2.7.0",
+            "wdoc>=2.9.0",
             "--system",
         ]
     )
@@ -97,7 +97,7 @@ def normalize_dict_values(input_dict: Dict) -> Dict:
 class Tools:
 
     VERSION: str = "1.1.0"
-    MINIMUM_WDOC_VERSION: str = "2.7.0"
+    MINIMUM_WDOC_VERSION: str = "2.9.0"
 
     class Valves(BaseModel):
         allow_user_valves_override: bool = Field(
