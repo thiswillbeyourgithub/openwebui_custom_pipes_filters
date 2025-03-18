@@ -11,6 +11,10 @@ version: 1.4.1
 
 # Note to dev: don't forget to update the version number inside the Tool class!
 
+# TODO:
+# update the tool parameters too: https://github.com/open-webui/open-webui/blob/main/backend/open_webui/utils/tools.py
+# make it possible to include images in the cards
+
 import requests
 import json
 import os
