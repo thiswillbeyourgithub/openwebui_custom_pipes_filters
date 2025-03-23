@@ -54,6 +54,10 @@ class Filter:
             default="both",
             description="When to print debug info: 'inlet', 'outlet', or 'both'",
         )
+        compress_output: bool = Field(
+            default=False,
+            description="When true, JSON output is compact (single line). When false, it's indented and readable.",
+        )
 
     def __init__(self):
         self.valves = self.Valves()
@@ -81,7 +85,8 @@ class Filter:
             for arg, should_print in args_to_print.items():
                 if should_print:
                     try:
-                        val = json.dumps(locals()[arg], ensure_ascii=False, indent=2)
+                        indent = None if self.valves.compress_output else 2
+                        val = json.dumps(locals()[arg], ensure_ascii=False, indent=indent)
                     except:
                         val = str(locals()[arg])
                     p(f"\nINLET_{prio}: {arg}:\n{val}")
@@ -110,7 +115,8 @@ class Filter:
             for arg, should_print in args_to_print.items():
                 if should_print:
                     try:
-                        val = json.dumps(locals()[arg], ensure_ascii=False, indent=2)
+                        indent = None if self.valves.compress_output else 2
+                        val = json.dumps(locals()[arg], ensure_ascii=False, indent=indent)
                     except:
                         val = str(locals()[arg])
                     p(f"\nOUTLET_{prio}: {arg}:\n{val}")
