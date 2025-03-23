@@ -3,8 +3,8 @@ title: WarnIfLongChat
 author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
-version: 1.0.1
-date: 2024-08-29
+version: 1.1.0
+date: 2025-03-23
 license: GPLv3
 description: A filter that adds a soft and hard limit to the number of messages in a chat.
 """
