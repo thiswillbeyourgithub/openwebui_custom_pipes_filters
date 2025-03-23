@@ -4,8 +4,8 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 2.1.1
-date: 2025-02-21
+version: 2.2.0
+date: 2025-03-23
 license: GPLv3
 description: Filter that prints argument as they pass through it. You can use it multiple times to debug another filter.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/debug_filter
