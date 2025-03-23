@@ -31,6 +31,10 @@ class Filter:
         debug: bool = Field(
             default=False, description="True to add emitter prints",
         )
+        exempted_users: str = Field(
+            default="",
+            description="Comma-separated list of usernames that are exempted from this filter",
+        )
 
     def __init__(self):
         self.valves = self.Valves()
@@ -39,6 +43,12 @@ class Filter:
         assert self.valves.number_of_message > 2, "number_of_message has to be more than 2"
         assert self.valves.number_of_message_hard_limit > 5, "number_of_message_hard_limit has to be more than 5"
         assert self.valves.number_of_message_hard_limit > self.valves.number_of_message, "number_of_message_hard_limit has to be higher than number_of_message"
+        
+        # Validate exempted_users format
+        if self.valves.exempted_users:
+            exempted_users = [user.strip() for user in self.valves.exempted_users.split(',')]
+            if self.valves.debug:
+                print(f"Exempted users: {exempted_users}")
 
     async def inlet(
         self,
@@ -46,6 +56,12 @@ class Filter:
         __user__: Optional[dict] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         ) -> dict:
+        # Check if user is exempted
+        if __user__ and "name" in __user__:
+            exempted_users = [user.strip() for user in self.valves.exempted_users.split(',') if user.strip()]
+            if __user__["name"] in exempted_users:
+                return body
+            
         # printer
         emitter = EventEmitter(__event_emitter__)
         async def log(message: str, error: bool = False):
@@ -76,6 +92,12 @@ class Filter:
         return body
 
     def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
+        # Check if user is exempted
+        if __user__ and "name" in __user__:
+            exempted_users = [user.strip() for user in self.valves.exempted_users.split(',') if user.strip()]
+            if __user__["name"] in exempted_users:
+                return body
+                
         return body
 
 
