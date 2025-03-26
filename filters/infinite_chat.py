@@ -1,7 +1,7 @@
 """
 title: InfiniteChat
 author: thiswillbeyourgithub
-version: 1.3.0
+version: 1.4.0
 date: 2025-03-22
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
@@ -17,7 +17,7 @@ from loguru import logger
 
 
 class Filter:
-    VERSION: str = "1.3.0"
+    VERSION: str = "1.4.0"
     class Valves(BaseModel):
         priority: int = Field(
             default=0,
