@@ -14,6 +14,7 @@ A collection of pipes, filters and tools for OpenWebUI. My usual goto templates 
 - **debug_filter.py** - prints all the arguments passing through it.
 - **infinite_chat.py** - keep only the last n messages. Used to not have to create a new chat so often, for example with the anki_tool.
 - **tool_compressor.py** - by default tool execution metadata (like output values etc) is stored as escaped html/json inside the content and results variables of a details html tag in the body of the message. Depending on formatting this can be uselessly token intensive, hence this tool removes them and prints only the content or results as regular html, making the whole chat much less token intensive.
+- **DontAccumulateThoughts.py** - remove the `<thinking></thinking>` blocks in the input. Making the chat faster and less expensive as successive turns actually could only be paying attention to the conclusion.
 - ~~**WIP_automatic_claude_caching.py**  - [WIP] Automatically replaces system prompts with cached versions. Unfinished project.~~
 
 ### Tools
