@@ -43,7 +43,7 @@ class Filter:
         """Initialize the filter with default values."""
         self.valves = self.Valves()
         self._thinking_pattern = None
-        self.thinking_regex = re.compile(self.valves.thinking_pattern, re.DOTALL)
+        self.thinking_regex = re.compile(self.valves.thinking_pattern, re.DOTALL|re.MULTILINE)
 
     async def log(self, message: str, level="info", emitter=None) -> None:
         """Log a message."""
