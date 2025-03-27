@@ -44,7 +44,7 @@ class Filter:
         self.valves = self.Valves()
         self._thinking_pattern = None
         self.thinking_regex = re.compile(self.valves.thinking_pattern, re.DOTALL)
-        
+
     async def log(self, message: str, level="info", emitter=None) -> None:
         """Log a message."""
         getattr(logger, level)(f"[{self.NAME}] {message}")
@@ -57,31 +57,31 @@ class Filter:
                     await emitter.progress_update(f"[{self.NAME}] {message}")
             elif level == "error":
                 await emitter.error_update(f"[{self.NAME}] {message}")
-                
+
     def filter_message(self, message: dict) -> dict:
         """
         Filter thinking blocks from a message.
-        
+
         Args:
             message: The message dictionary to filter
-            
+
         Returns:
             The filtered message dictionary
         """
         if message.get("role") != "assistant":
             return message
-            
+
         content = message.get("content", "")
         if not content:
             return message
-            
+
         # Remove thinking blocks
         filtered_content = self.thinking_regex.sub("", content).strip()
-        
+
         # Create a new message with the filtered content
         filtered_message = message.copy()
         filtered_message["content"] = filtered_content
-        
+
         return filtered_message
 
     async def inlet(
@@ -95,9 +95,9 @@ class Filter:
         **kwargs
     ) -> dict:
         emitter = EventEmitter(__event_emitter__)
-        
+
         await self.log("Processing inlet request", emitter=emitter)
-        
+
         try:
             if "messages" in body:
                 # Filter all assistant messages in the message history
@@ -105,10 +105,10 @@ class Filter:
                 for message in body["messages"]:
                     filtered_message = self.filter_message(message)
                     filtered_messages.append(filtered_message)
-                
+
                 body["messages"] = filtered_messages
                 await self.log(f"Filtered {len(filtered_messages)} messages", emitter=emitter)
-            
+
             await self.log("Request processed successfully", emitter=emitter)
             if self.valves.debug:
                 await emitter.success_update("Thinking blocks filtered successfully")
@@ -119,7 +119,7 @@ class Filter:
 
 class EventEmitter:
     """Helper class for emitting events to the client."""
-    
+
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
         """Initialize with an event emitter function."""
         self.event_emitter = event_emitter
