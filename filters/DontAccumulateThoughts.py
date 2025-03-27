@@ -87,6 +87,8 @@ class Filter:
             diff = len(content) - len(filtered_content)
             assert diff > 0, diff
             logger.debug(f"[{self.NAME}] removed {diff} thinking block characters")
+        elif "<think" in content:
+            logger.warning(f"[{self.NAME}] potential error, message seems to contain thoughts but not matched by the regex: '''{content}'''")
 
         return filtered_content
 
