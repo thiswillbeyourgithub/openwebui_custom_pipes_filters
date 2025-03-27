@@ -58,7 +58,7 @@ class Filter:
             elif level == "error":
                 await emitter.error_update(f"[{self.NAME}] {message}")
 
-    def filter_content(self, content: Union[dict, list]) -> Union[dict, list]:
+    def filter_content(self, content: Union[Dict, List]) -> Union[Dict, List]:
         """
         Filter thinking blocks from a content.
 
