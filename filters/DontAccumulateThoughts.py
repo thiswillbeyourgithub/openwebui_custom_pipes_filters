@@ -8,7 +8,7 @@ version: 1.0.0
 date: 2025-03-27
 license: GPLv3
 description: Removes thinking blocks (<thinking>...</thinking>) from assistant messages to avoid resending them in chat history, saving costs and reducing token usage.
-openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/dont-accumulate-thoughts
+openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/dontaccumulatethoughts
 """
 
 import re
