@@ -58,31 +58,37 @@ class Filter:
             elif level == "error":
                 await emitter.error_update(f"[{self.NAME}] {message}")
 
-    def filter_message(self, message: dict) -> dict:
+    def filter_content(self, content: Union[dict, list]) -> Union[dict, list]:
         """
-        Filter thinking blocks from a message.
+        Filter thinking blocks from a content.
 
         Args:
-            message: The message dictionary to filter
+            content: The content content to filter
 
         Returns:
-            The filtered message dictionary
+            The filtered content dictionary
         """
-        if message.get("role") != "assistant":
-            return message
-
-        content = message.get("content", "")
         if not content:
-            return message
+            return content
+
+        if isinstance(content, list):
+            return [self.filter_content(content=cont) for cont in content]
+        elif isinstance(content, dict):
+            if content["type"] != "text":
+                return content
+            else:
+                content["text"] = self.filter_content(content["text"])
+                return content
 
         # Remove thinking blocks
         filtered_content = self.thinking_regex.sub("", content).strip()
 
-        # Create a new message with the filtered content
-        filtered_message = message.copy()
-        filtered_message["content"] = filtered_content
+        if filtered_content != content:
+            diff = len(content) - len(filtered_content)
+            assert diff > 0, diff
+            logger.debug(f"[{self.NAME}] removed {diff} thinking block characters")
 
-        return filtered_message
+        return filtered_content
 
     async def inlet(
         self,
@@ -92,24 +98,22 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        **kwargs
     ) -> dict:
         emitter = EventEmitter(__event_emitter__)
 
         await self.log("Processing inlet request", emitter=emitter)
 
         try:
-            if "messages" in body:
-                # Filter all assistant messages in the message history
-                filtered_messages = []
-                for message in body["messages"]:
-                    filtered_message = self.filter_message(message)
-                    filtered_messages.append(filtered_message)
+            for im, m in enumerate(body["messages"]):
+                if m["role"] != "assistant":
+                    continue
+                old = body["messages"][im]["content"]
+                new = self.filter_content(m["content"])
+                if new != old:
+                    await self.log(f"Updated message #{im} to '''{new}'''", emitter=emitter, level="debug")
+                body["messages"][im]["content"] = new
 
-                body["messages"] = filtered_messages
-                await self.log(f"Filtered {len(filtered_messages)} messages", emitter=emitter)
-
-            await self.log("Request processed successfully", emitter=emitter)
+            await self.log("Request processed successfully", emitter=emitter, level="debug")
             if self.valves.debug:
                 await emitter.success_update("Thinking blocks filtered successfully")
         except Exception as e:
