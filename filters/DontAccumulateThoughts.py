@@ -43,10 +43,6 @@ class Filter:
         """Initialize the filter with default values."""
         self.valves = self.Valves()
         self._thinking_pattern = None
-        self._update_regex_pattern()
-        
-    def _update_regex_pattern(self):
-        """Compile the regex pattern with multiline flag."""
         self.thinking_regex = re.compile(self.valves.thinking_pattern, re.DOTALL)
         
     async def log(self, message: str, level="info", emitter=None) -> None:
@@ -103,9 +99,6 @@ class Filter:
         await self.log("Processing inlet request", emitter=emitter)
         
         try:
-            # Update regex pattern in case valves were changed
-            self._update_regex_pattern()
-            
             if "messages" in body:
                 # Filter all assistant messages in the message history
                 filtered_messages = []
