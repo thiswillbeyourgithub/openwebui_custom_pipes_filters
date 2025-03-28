@@ -238,6 +238,61 @@ class Pipeline:
             trace.event(**event_payload)
 
         return body
+        
+    def get_actual_model_name(self, model_alias: str) -> str:
+        """
+        Retrieves the actual model name from LiteLLM API based on the provided model alias.
+
+        Args:
+            model_alias (str): The alias of the model (e.g., "litellm_sonnet-3.7")
+
+        Returns:
+            str: The actual model name (e.g., "openrouter/anthropic/claude-3.7-sonnet:thinking")
+
+        Raises:
+            ValueError: If required environment variables are missing
+            ConnectionError: If connection to LiteLLM API fails
+            KeyError: If the model is not found in the API response
+            Exception: For other unexpected errors
+        """
+        # Get LiteLLM configuration from valves
+        host = self.valves.litellm_host
+        port = self.valves.litellm_port
+        api_key = self.valves.litellm_api_key
+
+        if not api_key:
+            raise ValueError("LiteLLM API key must be set either in the pipeline valve or as LITELLM_API_KEY environment variable")
+
+        try:
+            # Construct the API URL
+            url = f"http://{host}:{port}/model/info"
+
+            # Set up headers
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            }
+
+            # Make the API request
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()  # Raise exception for HTTP errors
+
+            # Parse the response
+            data = response.json().get("data", [])
+
+            # Find the model in the response
+            for model_info in data:
+                if model_info.get("model_name") == model_alias:
+                    return model_info.get("litellm_params", {}).get("model")
+
+            raise KeyError(f"Model '{model_alias}' not found in LiteLLM API response")
+
+        except requests.exceptions.RequestException as e:
+            raise ConnectionError(f"Failed to connect to LiteLLM API: {str(e)}")
+        except json.JSONDecodeError:
+            raise Exception("Failed to parse LiteLLM API response")
+        except Exception as e:
+            raise Exception(f"Error retrieving model information: {str(e)}")
 
     async def outlet(self, body: dict, user: Optional[dict] = None) -> dict:
         self.log(f"Outlet function called with body: {body}")
@@ -331,59 +386,3 @@ class Pipeline:
         return body
 
 
-
-def get_actual_model_name(model_alias: str, pipeline=None) -> str:
-    """
-    Retrieves the actual model name from LiteLLM API based on the provided model alias.
-
-    Args:
-        model_alias (str): The alias of the model (e.g., "litellm_sonnet-3.7")
-        pipeline (Pipeline, optional): The pipeline instance to get configuration from
-
-    Returns:
-        str: The actual model name (e.g., "openrouter/anthropic/claude-3.7-sonnet:thinking")
-
-    Raises:
-        ValueError: If required environment variables are missing
-        ConnectionError: If connection to LiteLLM API fails
-        KeyError: If the model is not found in the API response
-        Exception: For other unexpected errors
-    """
-    # Get LiteLLM configuration from valves if pipeline is provided, otherwise from environment
-    host = pipeline.valves.litellm_host if pipeline else os.environ.get("LITELLM_HOST", "localhost")
-    port = pipeline.valves.litellm_port if pipeline else os.environ.get("LITELLM_PORT", "4000")
-    api_key = pipeline.valves.litellm_api_key if pipeline else os.environ.get("LITELLM_API_KEY", "")
-
-    if not api_key:
-        raise ValueError("LiteLLM API key must be set either in the pipeline valve or as LITELLM_API_KEY environment variable")
-
-    try:
-        # Construct the API URL
-        url = f"http://{host}:{port}/model/info"
-
-        # Set up headers
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        }
-
-        # Make the API request
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise exception for HTTP errors
-
-        # Parse the response
-        data = response.json().get("data", [])
-
-        # Find the model in the response
-        for model_info in data:
-            if model_info.get("model_name") == model_alias:
-                return model_info.get("litellm_params", {}).get("model")
-
-        raise KeyError(f"Model '{model_alias}' not found in LiteLLM API response")
-
-    except requests.exceptions.RequestException as e:
-        raise ConnectionError(f"Failed to connect to LiteLLM API: {str(e)}")
-    except json.JSONDecodeError:
-        raise Exception("Failed to parse LiteLLM API response")
-    except Exception as e:
-        raise Exception(f"Error retrieving model information: {str(e)}")
