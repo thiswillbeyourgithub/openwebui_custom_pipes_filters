@@ -39,8 +39,8 @@ class Pipeline:
         host: str
         # New valve that controls whether task names are added as tags:
         insert_tags: bool = True
-        # New valve that controls whether to use model name instead of model ID for generation
-        use_model_name_instead_of_id_for_generation: bool = False
+        # Controls which model identifier to use for generation
+        model_identifier_type: str = "id"  # can be "id", "name", or "litellm"
         debug: bool = False
         # LiteLLM configuration
         litellm_host: str = "localhost"
@@ -57,7 +57,7 @@ class Pipeline:
                 "secret_key": os.getenv("LANGFUSE_SECRET_KEY", "your-secret-key-here"),
                 "public_key": os.getenv("LANGFUSE_PUBLIC_KEY", "your-public-key-here"),
                 "host": os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
-                "use_model_name_instead_of_id_for_generation": os.getenv("USE_MODEL_NAME", "false").lower() == "true",
+                "model_identifier_type": os.getenv("MODEL_IDENTIFIER_TYPE", "id"),
                 "debug": os.getenv("DEBUG_MODE", "false").lower() == "true",
                 "litellm_host": os.getenv("LITELLM_HOST", "localhost"),
                 "litellm_port": os.getenv("LITELLM_PORT", "4000"),
@@ -203,7 +203,16 @@ class Pipeline:
             model_name = self.model_names.get(chat_id, {}).get("name", "unknown")
 
             # Pick primary model identifier based on valve setting
-            model_value = model_name if self.valves.use_model_name_instead_of_id_for_generation else model_id
+            if self.valves.model_identifier_type == "name":
+                model_value = model_name
+            elif self.valves.model_identifier_type == "litellm":
+                try:
+                    model_value = self.get_actual_model_name(model_id)
+                except Exception as e:
+                    self.log(f"Error retrieving actual model name: {str(e)}. Falling back to model ID.")
+                    model_value = model_id
+            else:  # Default to "id"
+                model_value = model_id
 
             # Add both values to metadata regardless of valve setting
             metadata["model_id"] = model_id
@@ -341,7 +350,16 @@ class Pipeline:
             model_name = self.model_names.get(chat_id, {}).get("name", "unknown")
 
             # Pick primary model identifier based on valve setting
-            model_value = model_name if self.valves.use_model_name_instead_of_id_for_generation else model_id
+            if self.valves.model_identifier_type == "name":
+                model_value = model_name
+            elif self.valves.model_identifier_type == "litellm":
+                try:
+                    model_value = self.get_actual_model_name(model_id)
+                except Exception as e:
+                    self.log(f"Error retrieving actual model name: {str(e)}. Falling back to model ID.")
+                    model_value = model_id
+            else:  # Default to "id"
+                model_value = model_id
 
             # Add both values to metadata regardless of valve setting
             metadata["model_id"] = model_id
