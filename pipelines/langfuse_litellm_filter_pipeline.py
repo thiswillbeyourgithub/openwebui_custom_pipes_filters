@@ -6,7 +6,7 @@ version: 2.0
 license: MIT
 description: A filter pipeline that uses Langfuse and litellm.
 original_source: https://github.com/open-webui/pipelines/pull/438
-requirements: langfuse
+requirements: langfuse loguru
 """
 
 
@@ -16,6 +16,7 @@ import uuid
 import json
 import requests
 import functools
+from loguru import logger
 
 from utils.pipelines.main import get_last_assistant_message
 from pydantic import BaseModel
@@ -81,7 +82,7 @@ class Pipeline:
                 if message in self.suppressed_logs:
                     return
                 self.suppressed_logs.add(message)
-            print(f"[DEBUG] {message}")
+            logger.debug(message)
 
     async def on_startup(self):
         self.log(f"on_startup triggered for {__name__}")
@@ -111,11 +112,11 @@ class Pipeline:
             self.langfuse.auth_check()
             self.log("Langfuse client initialized successfully.")
         except UnauthorizedError:
-            print(
+            logger.error(
                 "Langfuse credentials incorrect. Please re-enter your Langfuse credentials in the pipeline settings."
             )
         except Exception as e:
-            print(
+            logger.error(
                 f"Langfuse error: {e} Please re-enter your Langfuse credentials in the pipeline settings."
             )
 
@@ -135,7 +136,7 @@ class Pipeline:
 
     async def inlet(self, body: dict, user: Optional[dict] = None) -> dict:
         if self.valves.debug:
-            print(f"[DEBUG] Received request: {json.dumps(body, indent=2)}")
+            logger.debug(f"Received request: {json.dumps(body, indent=2)}")
 
         self.log(f"Inlet function called with body: {body} and user: {user}")
 
@@ -187,7 +188,7 @@ class Pipeline:
                 trace_payload["tags"] = tags_list
 
             if self.valves.debug:
-                print(f"[DEBUG] Langfuse trace request: {json.dumps(trace_payload, indent=2)}")
+                logger.debug(f"Langfuse trace request: {json.dumps(trace_payload, indent=2)}")
 
             trace = self.langfuse.trace(**trace_payload)
             self.chat_traces[chat_id] = trace
@@ -236,7 +237,7 @@ class Pipeline:
                 generation_payload["tags"] = tags_list
 
             if self.valves.debug:
-                print(f"[DEBUG] Langfuse generation request: {json.dumps(generation_payload, indent=2)}")
+                logger.debug(f"Langfuse generation request: {json.dumps(generation_payload, indent=2)}")
 
             trace.generation(**generation_payload)
         else:
@@ -250,7 +251,7 @@ class Pipeline:
                 event_payload["tags"] = tags_list
 
             if self.valves.debug:
-                print(f"[DEBUG] Langfuse event request: {json.dumps(event_payload, indent=2)}")
+                logger.debug(f"Langfuse event request: {json.dumps(event_payload, indent=2)}")
 
             trace.event(**event_payload)
 
@@ -390,7 +391,7 @@ class Pipeline:
                 generation_payload["tags"] = tags_list
 
             if self.valves.debug:
-                print(f"[DEBUG] Langfuse generation end request: {json.dumps(generation_payload, indent=2)}")
+                logger.debug(f"Langfuse generation end request: {json.dumps(generation_payload, indent=2)}")
 
             trace.generation().end(**generation_payload)
             self.log(f"Generation ended for chat_id: {chat_id}")
@@ -409,7 +410,7 @@ class Pipeline:
                 event_payload["tags"] = tags_list
 
             if self.valves.debug:
-                print(f"[DEBUG] Langfuse event end request: {json.dumps(event_payload, indent=2)}")
+                logger.debug(f"Langfuse event end request: {json.dumps(event_payload, indent=2)}")
 
             trace.event(**event_payload)
             self.log(f"Event logged for chat_id: {chat_id}")
