@@ -418,5 +418,3 @@ class Pipeline:
             self.log(f"Event logged for chat_id: {chat_id}")
 
         return body
-
-
