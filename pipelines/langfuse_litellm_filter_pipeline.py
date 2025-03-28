@@ -2,7 +2,7 @@
 title: Langfuse Litellm Filter Pipeline
 author: open-webui
 date: 2025-03-28
-version: 1.7
+version: 2.0
 license: MIT
 description: A filter pipeline that uses Langfuse and litellm.
 original_source: https://github.com/open-webui/pipelines/pull/438
