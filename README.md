@@ -29,3 +29,7 @@ A collection of pipes, filters and tools for OpenWebUI. My usual goto templates 
     - Includes an untested anthropic caching.
 - **costtrackingpipe.py** - Tracks user costs and removes thinking blocks (deprecated in favor of langfuse).
 
+### Pipelines
+
+- **langfuse_litellm_filter_pipeline.py** - A pipeline that adds metadata to request inspired by [this PR](https://github.com/open-webui/pipelines/pull/438) but with added support for litellm model names instead of open-webui alias.
+
