@@ -224,8 +224,8 @@ class Pipeline:
                 raise ValueError(f"Invalid model_identifier_type: '{self.valves.model_identifier_type}'")
 
             # Add both values to metadata regardless of valve setting
-            metadata["openwebui_model_id"] = model_id
-            metadata["openwebui_model_name"] = model_name
+            metadata[f"openwebui_{task_name}_model_id"] = model_id
+            metadata[f"openwebui_{task_name}_model_name"] = model_name
 
             generation_payload = {
                 "name": f"{task_name}:{str(uuid.uuid4())}",
@@ -378,8 +378,8 @@ class Pipeline:
                 raise ValueError(f"Invalid model_identifier_type: '{self.valves.model_identifier_type}'")
 
             # Add both values to metadata regardless of valve setting
-            metadata["openwebui_model_id"] = model_id
-            metadata["openwebui_model_name"] = model_name
+            metadata[f"openwebui_{task_name}_model_id"] = model_id
+            metadata[f"openwebui_{task_name}_model_name"] = model_name
 
             # If it's an LLM generation
             generation_payload = {
