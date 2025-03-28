@@ -42,7 +42,7 @@ class Pipeline:
         # New valve that controls whether task names are added as tags:
         insert_tags: bool = True
         # Controls which model identifier to use for generation
-        model_identifier_type: str = "id"  # can be "id", "name", or "litellm"
+        modelkey_identifier_type: str = "id"  # can be "id", "name", or "litellm"
         debug: bool = False
         # LiteLLM configuration
         litellm_host: str = "localhost"
@@ -59,7 +59,7 @@ class Pipeline:
                 "secret_key": os.getenv("LANGFUSE_SECRET_KEY", "your-secret-key-here"),
                 "public_key": os.getenv("LANGFUSE_PUBLIC_KEY", "your-public-key-here"),
                 "host": os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
-                "model_identifier_type": os.getenv("MODEL_IDENTIFIER_TYPE", "id"),
+                "modelkey_identifier_type": os.getenv("modelkey_identifier_TYPE", "id"),
                 "debug": os.getenv("DEBUG_MODE", "false").lower() == "true",
                 "litellm_host": os.getenv("LITELLM_HOST", "localhost"),
                 "litellm_port": os.getenv("LITELLM_PORT", "4000"),
@@ -95,10 +95,10 @@ class Pipeline:
 
     async def on_valves_updated(self):
         self.log("Valves updated, resetting Langfuse client.")
-        # Validate model_identifier_type
+        # Validate modelkey_identifier_type
         valid_types = ["name", "id", "litellm"]
-        if self.valves.model_identifier_type not in valid_types:
-            raise ValueError(f"Invalid model_identifier_type: '{self.valves.model_identifier_type}'. Must be one of: {', '.join(valid_types)}")
+        if self.valves.modelkey_identifier_type not in valid_types:
+            raise ValueError(f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'. Must be one of: {', '.join(valid_types)}")
         self.set_langfuse()
 
     def set_langfuse(self):
@@ -209,19 +209,19 @@ class Pipeline:
             model_name = self.model_names.get(chat_id, {}).get("name", "unknown")
 
             # Pick primary model identifier based on valve setting
-            if self.valves.model_identifier_type == "name":
+            if self.valves.modelkey_identifier_type == "name":
                 model_value = model_name
-            elif self.valves.model_identifier_type == "litellm":
+            elif self.valves.modelkey_identifier_type == "litellm":
                 try:
                     model_value = self.get_actual_model_name(model_id)
                 except Exception as e:
                     self.log(f"Error retrieving actual model name: {str(e)}. Falling back to model ID.")
                     model_value = model_id
-            elif self.valves.model_identifier_type == "id":
+            elif self.valves.modelkey_identifier_type == "id":
                 model_value = model_id
             else:
                 # This should never happen due to validation in on_valves_updated
-                raise ValueError(f"Invalid model_identifier_type: '{self.valves.model_identifier_type}'")
+                raise ValueError(f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'")
 
             # Add both values to metadata regardless of valve setting
             metadata[f"openwebui_{task_name}_model_id"] = model_id
@@ -363,19 +363,19 @@ class Pipeline:
             model_name = self.model_names.get(chat_id, {}).get("name", "unknown")
 
             # Pick primary model identifier based on valve setting
-            if self.valves.model_identifier_type == "name":
+            if self.valves.modelkey_identifier_type == "name":
                 model_value = model_name
-            elif self.valves.model_identifier_type == "litellm":
+            elif self.valves.modelkey_identifier_type == "litellm":
                 try:
                     model_value = self.get_actual_model_name(model_id)
                 except Exception as e:
                     self.log(f"Error retrieving actual model name: {str(e)}. Falling back to model ID.")
                     model_value = model_id
-            elif self.valves.model_identifier_type == "id":
+            elif self.valves.modelkey_identifier_type == "id":
                 model_value = model_id
             else:
                 # This should never happen due to validation in on_valves_updated
-                raise ValueError(f"Invalid model_identifier_type: '{self.valves.model_identifier_type}'")
+                raise ValueError(f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'")
 
             # Add both values to metadata regardless of valve setting
             metadata[f"openwebui_{task_name}_model_id"] = model_id
