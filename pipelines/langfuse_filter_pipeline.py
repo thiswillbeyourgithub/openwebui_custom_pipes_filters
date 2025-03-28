@@ -1,10 +1,10 @@
 """
-title: Langfuse Filter Pipeline
+title: Langfuse Litellm Filter Pipeline
 author: open-webui
 date: 2025-03-28
 version: 1.7
 license: MIT
-description: A filter pipeline that uses Langfuse.
+description: A filter pipeline that uses Langfuse and litellm.
 original_source: https://github.com/open-webui/pipelines/pull/438
 requirements: langfuse
 """
@@ -14,6 +14,7 @@ from typing import List, Optional
 import os
 import uuid
 import json
+import requests
 
 from utils.pipelines.main import get_last_assistant_message
 from pydantic import BaseModel
@@ -44,7 +45,7 @@ class Pipeline:
 
     def __init__(self):
         self.type = "filter"
-        self.name = "Langfuse Filter"
+        self.name = "Langfuse Litellm Filter"
 
         self.valves = self.Valves(
             **{
@@ -134,13 +135,13 @@ class Pipeline:
         # Extract and store both model name and ID if available
         model_info = metadata.get("model", {})
         model_id = body.get("model")
-        
+
         # Store model information for this chat
         if chat_id not in self.model_names:
             self.model_names[chat_id] = {"id": model_id}
         else:
             self.model_names[chat_id]["id"] = model_id
-            
+
         if isinstance(model_info, dict) and "name" in model_info:
             self.model_names[chat_id]["name"] = model_info["name"]
             self.log(f"Stored model info - name: '{model_info['name']}', id: '{model_id}' for chat_id: {chat_id}")
@@ -193,14 +194,14 @@ class Pipeline:
             # Determine which model value to use based on the use_model_name valve
             model_id = self.model_names.get(chat_id, {}).get("id", body["model"])
             model_name = self.model_names.get(chat_id, {}).get("name", "unknown")
-            
+
             # Pick primary model identifier based on valve setting
             model_value = model_name if self.valves.use_model_name_instead_of_id_for_generation else model_id
-            
+
             # Add both values to metadata regardless of valve setting
             metadata["model_id"] = model_id
             metadata["model_name"] = model_name
-            
+
             generation_payload = {
                 "name": f"{task_name}:{str(uuid.uuid4())}",
                 "model": model_value,
@@ -276,14 +277,14 @@ class Pipeline:
             # Determine which model value to use based on the use_model_name valve
             model_id = self.model_names.get(chat_id, {}).get("id", body.get("model"))
             model_name = self.model_names.get(chat_id, {}).get("name", "unknown")
-            
+
             # Pick primary model identifier based on valve setting
             model_value = model_name if self.valves.use_model_name_instead_of_id_for_generation else model_id
-            
+
             # Add both values to metadata regardless of valve setting
             metadata["model_id"] = model_id
             metadata["model_name"] = model_name
-            
+
             # If it's an LLM generation
             generation_payload = {
                 "name": f"{task_name}:{str(uuid.uuid4())}",
@@ -321,3 +322,60 @@ class Pipeline:
             self.log(f"Event logged for chat_id: {chat_id}")
 
         return body
+
+
+
+def get_actual_model_name(model_alias: str) -> str:
+    """
+    Retrieves the actual model name from LiteLLM API based on the provided model alias.
+
+    Args:
+        model_alias (str): The alias of the model (e.g., "litellm_sonnet-3.7")
+
+    Returns:
+        str: The actual model name (e.g., "openrouter/anthropic/claude-3.7-sonnet:thinking")
+
+    Raises:
+        ValueError: If required environment variables are missing
+        ConnectionError: If connection to LiteLLM API fails
+        KeyError: If the model is not found in the API response
+        Exception: For other unexpected errors
+    """
+    # Check for required environment variables
+    host = os.environ.get("LITELLM_HOST", "localhost")
+    port = os.environ.get("LITELLM_PORT", "4000")
+    api_key = os.environ.get("LITELLM_API_KEY")
+
+    if not api_key:
+        raise ValueError("LITELLM_API_KEY environment variable must be set")
+
+    try:
+        # Construct the API URL
+        url = f"http://{host}:{port}/model/info"
+
+        # Set up headers
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+        # Make the API request
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise exception for HTTP errors
+
+        # Parse the response
+        data = response.json().get("data", [])
+
+        # Find the model in the response
+        for model_info in data:
+            if model_info.get("model_name") == model_alias:
+                return model_info.get("litellm_params", {}).get("model")
+
+        raise KeyError(f"Model '{model_alias}' not found in LiteLLM API response")
+
+    except requests.exceptions.RequestException as e:
+        raise ConnectionError(f"Failed to connect to LiteLLM API: {str(e)}")
+    except json.JSONDecodeError:
+        raise Exception("Failed to parse LiteLLM API response")
+    except Exception as e:
+        raise Exception(f"Error retrieving model information: {str(e)}")
