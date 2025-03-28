@@ -303,7 +303,9 @@ class Pipeline:
             # Find the model in the response
             for model_info in data:
                 if model_info.get("model_name") == model_alias:
-                    return model_info.get("litellm_params", {}).get("model")
+                    actual_model = model_info.get("litellm_params", {}).get("model")
+                    logger.info(f"LiteLLM model mapping: '{model_alias}' → '{actual_model}'")
+                    return actual_model
 
             raise KeyError(f"Model '{model_alias}' not found in LiteLLM API response")
 
