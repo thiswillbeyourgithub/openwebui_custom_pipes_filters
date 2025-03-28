@@ -93,6 +93,10 @@ class Pipeline:
 
     async def on_valves_updated(self):
         self.log("Valves updated, resetting Langfuse client.")
+        # Validate model_identifier_type
+        valid_types = ["name", "id", "litellm"]
+        if self.valves.model_identifier_type not in valid_types:
+            raise ValueError(f"Invalid model_identifier_type: '{self.valves.model_identifier_type}'. Must be one of: {', '.join(valid_types)}")
         self.set_langfuse()
 
     def set_langfuse(self):
@@ -211,8 +215,11 @@ class Pipeline:
                 except Exception as e:
                     self.log(f"Error retrieving actual model name: {str(e)}. Falling back to model ID.")
                     model_value = model_id
-            else:  # Default to "id"
+            elif self.valves.model_identifier_type == "id":
                 model_value = model_id
+            else:
+                # This should never happen due to validation in on_valves_updated
+                raise ValueError(f"Invalid model_identifier_type: '{self.valves.model_identifier_type}'")
 
             # Add both values to metadata regardless of valve setting
             metadata["model_id"] = model_id
@@ -358,8 +365,11 @@ class Pipeline:
                 except Exception as e:
                     self.log(f"Error retrieving actual model name: {str(e)}. Falling back to model ID.")
                     model_value = model_id
-            else:  # Default to "id"
+            elif self.valves.model_identifier_type == "id":
                 model_value = model_id
+            else:
+                # This should never happen due to validation in on_valves_updated
+                raise ValueError(f"Invalid model_identifier_type: '{self.valves.model_identifier_type}'")
 
             # Add both values to metadata regardless of valve setting
             metadata["model_id"] = model_id
