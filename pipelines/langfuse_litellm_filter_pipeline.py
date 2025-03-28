@@ -42,6 +42,9 @@ class Pipeline:
         # New valve that controls whether to use model name instead of model ID for generation
         use_model_name_instead_of_id_for_generation: bool = False
         debug: bool = False
+        # LiteLLM configuration
+        litellm_host: str = "localhost"
+        litellm_port: str = "4000"
 
     def __init__(self):
         self.type = "filter"
@@ -55,6 +58,8 @@ class Pipeline:
                 "host": os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
                 "use_model_name_instead_of_id_for_generation": os.getenv("USE_MODEL_NAME", "false").lower() == "true",
                 "debug": os.getenv("DEBUG_MODE", "false").lower() == "true",
+                "litellm_host": os.getenv("LITELLM_HOST", "localhost"),
+                "litellm_port": os.getenv("LITELLM_PORT", "4000"),
             }
         )
 
@@ -325,12 +330,13 @@ class Pipeline:
 
 
 
-def get_actual_model_name(model_alias: str) -> str:
+def get_actual_model_name(model_alias: str, pipeline=None) -> str:
     """
     Retrieves the actual model name from LiteLLM API based on the provided model alias.
 
     Args:
         model_alias (str): The alias of the model (e.g., "litellm_sonnet-3.7")
+        pipeline (Pipeline, optional): The pipeline instance to get configuration from
 
     Returns:
         str: The actual model name (e.g., "openrouter/anthropic/claude-3.7-sonnet:thinking")
@@ -341,9 +347,9 @@ def get_actual_model_name(model_alias: str) -> str:
         KeyError: If the model is not found in the API response
         Exception: For other unexpected errors
     """
-    # Check for required environment variables
-    host = os.environ.get("LITELLM_HOST", "localhost")
-    port = os.environ.get("LITELLM_PORT", "4000")
+    # Get LiteLLM configuration from valves if pipeline is provided, otherwise from environment
+    host = pipeline.valves.litellm_host if pipeline else os.environ.get("LITELLM_HOST", "localhost")
+    port = pipeline.valves.litellm_port if pipeline else os.environ.get("LITELLM_PORT", "4000")
     api_key = os.environ.get("LITELLM_API_KEY")
 
     if not api_key:
