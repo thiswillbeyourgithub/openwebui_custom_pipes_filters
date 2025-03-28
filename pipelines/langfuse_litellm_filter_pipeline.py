@@ -45,6 +45,7 @@ class Pipeline:
         # LiteLLM configuration
         litellm_host: str = "localhost"
         litellm_port: str = "4000"
+        litellm_api_key: str = ""
 
     def __init__(self):
         self.type = "filter"
@@ -60,6 +61,7 @@ class Pipeline:
                 "debug": os.getenv("DEBUG_MODE", "false").lower() == "true",
                 "litellm_host": os.getenv("LITELLM_HOST", "localhost"),
                 "litellm_port": os.getenv("LITELLM_PORT", "4000"),
+                "litellm_api_key": os.getenv("LITELLM_API_KEY", ""),
             }
         )
 
@@ -350,10 +352,10 @@ def get_actual_model_name(model_alias: str, pipeline=None) -> str:
     # Get LiteLLM configuration from valves if pipeline is provided, otherwise from environment
     host = pipeline.valves.litellm_host if pipeline else os.environ.get("LITELLM_HOST", "localhost")
     port = pipeline.valves.litellm_port if pipeline else os.environ.get("LITELLM_PORT", "4000")
-    api_key = os.environ.get("LITELLM_API_KEY")
+    api_key = pipeline.valves.litellm_api_key if pipeline else os.environ.get("LITELLM_API_KEY", "")
 
     if not api_key:
-        raise ValueError("LITELLM_API_KEY environment variable must be set")
+        raise ValueError("LiteLLM API key must be set either in the pipeline valve or as LITELLM_API_KEY environment variable")
 
     try:
         # Construct the API URL
