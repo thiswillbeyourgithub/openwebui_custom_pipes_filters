@@ -6,7 +6,7 @@ version: 2.1
 license: MIT
 description: A filter pipeline that uses Langfuse and litellm.
 original_source: https://github.com/open-webui/pipelines/pull/438
-requirements: langfuse loguru
+requirements: langfuse, loguru
 """
 
 
