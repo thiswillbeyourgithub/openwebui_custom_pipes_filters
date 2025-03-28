@@ -15,6 +15,7 @@ import os
 import uuid
 import json
 import requests
+import functools
 
 from utils.pipelines.main import get_last_assistant_message
 from pydantic import BaseModel
@@ -254,10 +255,12 @@ class Pipeline:
             trace.event(**event_payload)
 
         return body
-        
+
+    @functools.lru_cache(maxsize=128)
     def get_actual_model_name(self, model_alias: str) -> str:
         """
         Retrieves the actual model name from LiteLLM API based on the provided model alias.
+        Results are cached using functools.lru_cache to improve performance.
 
         Args:
             model_alias (str): The alias of the model (e.g., "litellm_sonnet-3.7")
