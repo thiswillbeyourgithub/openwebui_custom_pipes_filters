@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub
 open_webui_url: https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/ankiflashcardcreator/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback. Supports fields overrides via user valves. Note: if you want a multi user multi anki setup (each user with its own anki) you want each user to add its own private tool with as host a local url to its host via reverse proxies like ngrok that allows a url to point to a local service on the client side.
+description: A tool to create Anki flashcards through Ankiconnect with configurable settings and event emitters for UI feedback. Supports fields overrides via user valves. Note: if you want a multi user multi anki setup (each user with its own anki) you want each user to add its own private tool with as host a local url to its host via reverse proxies like ngrok that allows a url to point to a local service on the client side. By the author of Voice2Anki and AnkiAiUtils.
 version: 1.4.1
 """
 
