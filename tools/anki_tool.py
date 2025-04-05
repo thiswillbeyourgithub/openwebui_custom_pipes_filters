@@ -9,8 +9,6 @@ description: A tool to create Anki flashcards through Ankiconnect with configura
 version: 1.4.1
 """
 
-# Note to dev: don't forget to update the version number inside the Tool class!
-
 # TODO update the tool parameters too: https://github.com/open-webui/open-webui/blob/main/backend/open_webui/utils/tools.py
 # TODO make it possible to include images in the cards, by that I mean for example: send an image + a question, and get the card created about the question (this is already working) AND store the image in the source
 # TODO if the example field contains only a string, it is a path to a file that contains examples in a json or toml file.
