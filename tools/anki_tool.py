@@ -11,9 +11,12 @@ version: 1.4.1
 
 # Note to dev: don't forget to update the version number inside the Tool class!
 
-# TODO:
-# update the tool parameters too: https://github.com/open-webui/open-webui/blob/main/backend/open_webui/utils/tools.py
-# make it possible to include images in the cards
+# TODO update the tool parameters too: https://github.com/open-webui/open-webui/blob/main/backend/open_webui/utils/tools.py
+# TODO make it possible to include images in the cards, by that I mean for example: send an image + a question, and get the card created about the question (this is already working) AND store the image in the source
+# TODO if the example field contains only a string, it is a path to a file that contains examples in a json or toml file.
+# TODO support for specifying input and output (currently we only use output) in the examples
+# TODO add a tool "add to memory" that is never triggered autonomously by the llm but the user can ask the llm to use it to add the last created anki card as an example
+#   TODO then make a prompt filtering that roughly filters out by semantic cosine, just to avoid issues when having too many examples
 
 import requests
 import json
