@@ -519,12 +519,14 @@ def update_docstring(fields_description: str, rules: str, examples: str) -> str:
     exs = "\n</card>\n<card>\n".join([json.dumps(ex, ensure_ascii=False) for ex in exs])
     examples = TEMPLATE_EXAMPLE.replace("EXAMPLES", exs)
 
-    docstring = (
-        TEMPLATE_DOCSTRING.replace("RULES", rules)
-        .replace("FIELDS_DESCRIPTION", fields_description)
-        .replace("EXAMPLES", examples)
-        .strip()
-    )
+    temp = TEMPLATE_DOCSTRING
+    assert temp.count("RULES") == 1, "Found multiple RULES in the template"
+    temp = temp.replace("RULES", rules)
+    assert temp.count("FIELDS_DESCRIPTION") == 1, "Found multiple FIELDS_DESCRIPTION in the template"
+    temp = temp.replace("FIELDS_DESCRIPTION", fields_description)
+    assert temp.count("EXAMPLES") == 1, "Found multiple EXAMPLES in the template"
+    temp = temp.replace("EXAMPLES", examples)
+    docstring = temp.strip()
 
     logger.info(
         f"AnkiFlashcardCreator: Updated the docstring with this value:\n---\n{docstring}\n---"
