@@ -414,7 +414,7 @@ class Tools:
         for k, v in override_env_variables_as_dict.items():
             if "WDOC_PRIVATE_MODE" == k:
                 raise Exception(
-                    f"Cannot set WDOC_PRIVATE_MODE from a user valve. Just to be safe."
+                    "Cannot set WDOC_PRIVATE_MODE from a user valve. Just to be safe."
                 )
         env_variables.update(override_env_variables_as_dict)
         for k, v in env_variables.items():
