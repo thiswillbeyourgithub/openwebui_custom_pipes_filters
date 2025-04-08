@@ -98,7 +98,7 @@ class Tools:
     VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
         0
     ].split("version: ")[1]
-    MINIMUM_WDOC_VERSION: str = "2.9.0"
+    APPROPRIATE_WDOC_VERSION: str = "2.9.0"
 
     class Valves(BaseModel):
         allow_user_valves_override: bool = Field(
@@ -258,7 +258,7 @@ class Tools:
         with EnvVarContext(env_variables):
             wdoc = import_wdoc()
             # Check wdoc version
-            check_wdoc_version(wdoc, self.MINIMUM_WDOC_VERSION)
+            check_wdoc_version(wdoc, self.APPROPRIATE_WDOC_VERSION)
             try:
                 parsed = wdoc.wdoc.parse_file(
                     path=url,
@@ -424,7 +424,7 @@ class Tools:
         with EnvVarContext(env_variables):
             wdoc = import_wdoc()
             # Check wdoc version
-            check_wdoc_version(wdoc, self.MINIMUM_WDOC_VERSION)
+            check_wdoc_version(wdoc, self.APPROPRIATE_WDOC_VERSION)
             try:
                 instance = wdoc.wdoc(
                     path=url, task="summarize", filetype="auto", **summary_kwargs
