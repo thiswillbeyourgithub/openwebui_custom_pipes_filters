@@ -44,12 +44,12 @@ class Filter:
         getattr(logger, level)(f"[{self.NAME}] {message}")
         if level == "info":
             if self.valves.debug:
-                await emitter.progress_update(f"[{self.NAME}]" {message}")
+                await self.emitter.progress_update(f"[{self.NAME}] {message}")
         elif level == "debug":
             if self.valves.debug:
-                await emitter.progress_update(f"[{self.NAME}]" {message}")
+                await self.emitter.progress_update(f"[{self.NAME}] {message}")
         elif level == "error":
-            await emitter.error_update(f"[{self.NAME}]" {message}")
+            await self.emitter.error_update(f"[{self.NAME}] {message}")
 
     async def inlet(
         self,
@@ -61,7 +61,7 @@ class Filter:
         __event_emitter__: Callable[[dict], Any] = None,
         **kwargs
     ) -> dict:
-        emitter = EventEmitter(__event_emitter__)
+        self.emitter = EventEmitter(__event_emitter__)
         user_valves = dict(__user__.get("valves"))
         
         await self.log("Processing inlet request")
@@ -70,7 +70,6 @@ class Filter:
             # TODO
             
             await self.log("Request processed successfully")
-            await emitter.success_update("Request processed successfully")
         except Exception as e:
             await self.log(f"Error in inlet: {str(e)}", level="error")
         return body
@@ -85,7 +84,7 @@ class Filter:
         __event_emitter__: Callable[[dict], Any] = None,
         **kwargs
     ) -> dict:
-        emitter = EventEmitter(__event_emitter__)
+        self.emitter = EventEmitter(__event_emitter__)
         user_valves = dict(__user__.get("valves"))
         
         await self.log("Processing outlet request")
@@ -94,7 +93,6 @@ class Filter:
             # TODO
             
             await self.log("Request processed successfully")
-            await emitter.success_update("Request processed successfully")
         except Exception as e:
             await self.log(f"Error in outlet: {str(e)}", level="error")
         return body
