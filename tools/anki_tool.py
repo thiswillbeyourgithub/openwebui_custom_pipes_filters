@@ -136,8 +136,13 @@ class Tools:
     def __init__(self):
         self.valves = self.Valves()
         self.fields_description = self.valves.fields_description
+        self.parameters_are_checked = False
 
+    def __tool_param_checker__(self):
         # check deck exists and model exists
+        logger.debug(
+            "AnkiFlashcardCreator: Starting to check Tool parameters"
+        )
         deck_list = _ankiconnect_request_sync(
             self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames"
         )
@@ -150,6 +155,7 @@ class Tools:
         assert (
             self.valves.notetype_name in models
         ), f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
+        self.parameters_are_checked = True
 
     async def create_flashcard(
         self,
@@ -167,7 +173,19 @@ class Tools:
         """
         emitter = EventEmitter(__event_emitter__)
 
-        # quick request to ankiconnect to check that the connection is valid
+        # check tool parameter validity on first method call instead of 
+        if not self.parameters_are_checked:
+            try:
+                self.__tool_param_checker__()
+            except Exception as e:
+                logger.error(
+                    f"AnkiFlashcardCreator: Error when checking tool parameters: '{e}'"
+                )
+                await emitter.error_update(
+                    f"AnkiFlashcardCreator: Error when checking tool parameters: '{e}'"
+                )
+                return f"AnkiFlashcardCreator: Error when checking tool parameters: '{e}'"
+
         # quick request to ankiconnect to check that the connection is working
         version = _ankiconnect_request(
             self.valves.ankiconnect_host, self.valves.ankiconnect_port, "version"
