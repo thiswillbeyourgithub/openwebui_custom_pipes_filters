@@ -51,7 +51,7 @@ EXAMPLES
 
 class Tools:
 
-    VERSION: str = "1.5.0"
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
 
     class Valves(BaseModel):
         ankiconnect_host: str = Field(
