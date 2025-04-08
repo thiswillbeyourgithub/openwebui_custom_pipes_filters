@@ -540,7 +540,7 @@ class EventEmitter:
         await self.emit(description, "success", True)
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
-        logger.info(f"wdoctool: {description}")
+        logger.info(description)
         if self.event_emitter:
             await self.event_emitter(
                 {
