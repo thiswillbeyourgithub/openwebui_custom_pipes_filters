@@ -18,15 +18,13 @@ version: 1.5.1
 
 import requests
 import json
-import os
-from pathlib import Path
-from typing import Callable, Any, List, Optional, Dict
-from pydantic import BaseModel, Field, model_validator
+from typing import Callable, Any, List, Optional
+from pydantic import BaseModel, Field
 import aiohttp
 from loguru import logger
 
 
-TEMPLATE_EXAMPLE = f"""
+TEMPLATE_EXAMPLE = """
 Here are some good flashcards examples:
 <examples>
 <card>
@@ -34,7 +32,7 @@ EXAMPLES
 </card>
 </examples>
 """
-TEMPLATE_DOCSTRING = f"""
+TEMPLATE_DOCSTRING = """
 RULES
 
 Here are the text fields you can specify along with what their appropriate content should be:
