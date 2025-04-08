@@ -96,7 +96,9 @@ def normalize_dict_values(input_dict: Dict) -> Dict:
 
 class Tools:
 
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     MINIMUM_WDOC_VERSION: str = "2.9.0"
 
@@ -204,12 +206,12 @@ class Tools:
     ) -> str:
         """
         Internal method to parse a URL. Used by both parse_url and summarize_url.
-        
+
         :param url: The URL of the online data to parse.
         :return: The parsed data as text.
         """
         emitter = EventEmitter(__event_emitter__)
-        
+
         uvalves = dict(__user__.get("valves", {}))
         if (
             uvalves
@@ -309,7 +311,7 @@ class Tools:
         self.on_valves_updated()
 
         await emitter.progress_update(f"Parsing '{url}'")
-        
+
         try:
             content = await self._parse_url_internal(url, __event_emitter__, __user__)
         except Exception as e:
@@ -322,7 +324,7 @@ class Tools:
             # Try to extract title from the content
             title_match = re.search(r"## Parsing of (.+?)\n", content)
             title = title_match.group(1) if title_match else "Parsed Content"
-            
+
             await emitter.cite_parser(
                 doc_content=content,
                 title=title,
@@ -353,12 +355,16 @@ class Tools:
         self.on_valves_updated()
 
         await emitter.progress_update(f"Summarizing '{url}'")
-        
+
         # If parse_before_summary is enabled, parse the URL first
         if self.valves.parse_before_summary:
-            await emitter.progress_update(f"First parsing '{url}' to provide full document access")
+            await emitter.progress_update(
+                f"First parsing '{url}' to provide full document access"
+            )
             try:
-                parsed_content = await self._parse_url_internal(url, __event_emitter__, __user__)
+                parsed_content = await self._parse_url_internal(
+                    url, __event_emitter__, __user__
+                )
                 if self.valves.use_citations_for_parse:
                     await emitter.cite_parser(
                         doc_content=parsed_content,
@@ -366,7 +372,9 @@ class Tools:
                         url=url,
                     )
             except Exception as e:
-                await emitter.progress_update(f"Warning: Failed to parse document before summarizing: {e}")
+                await emitter.progress_update(
+                    f"Warning: Failed to parse document before summarizing: {e}"
+                )
 
         uvalves = dict(__user__.get("valves", {}))
         if (

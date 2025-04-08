@@ -51,7 +51,9 @@ EXAMPLES
 
 class Tools:
 
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
         ankiconnect_host: str = Field(
@@ -140,9 +142,7 @@ class Tools:
 
     async def __tool_param_checker__(self):
         # check deck exists and model exists
-        logger.debug(
-            "AnkiFlashcardCreator: Starting to check Tool parameters"
-        )
+        logger.debug("AnkiFlashcardCreator: Starting to check Tool parameters")
         deck_list = await _ankiconnect_request(
             self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames"
         )
@@ -173,7 +173,7 @@ class Tools:
         """
         emitter = EventEmitter(__event_emitter__)
 
-        # check tool parameter validity on first method call instead of 
+        # check tool parameter validity on first method call instead of
         if not self.parameters_are_checked:
             try:
                 self.__tool_param_checker__()
@@ -184,7 +184,9 @@ class Tools:
                 await emitter.error_update(
                     f"AnkiFlashcardCreator: Error when checking tool parameters: '{e}'"
                 )
-                return f"AnkiFlashcardCreator: Error when checking tool parameters: '{e}'"
+                return (
+                    f"AnkiFlashcardCreator: Error when checking tool parameters: '{e}'"
+                )
 
         if isinstance(fields, str):
             try:
@@ -329,8 +331,12 @@ class Tools:
                 self.valves.ankiconnect_host, self.valves.ankiconnect_port, "version"
             )
             if not isinstance(version, int):
-                logger.error(f"Unepected version check value from AnkiConnect: '{version}'")
-                await emitter.error_update(f"Unepected version check value from AnkiConnect: '{version}'")
+                logger.error(
+                    f"Unepected version check value from AnkiConnect: '{version}'"
+                )
+                await emitter.error_update(
+                    f"Unepected version check value from AnkiConnect: '{version}'"
+                )
                 return f"Error when checking version of ankiconnect. Instead of an int received '{version}'"
 
             # # Verify Ankiconnect is working by checking that the deck exists
