@@ -43,7 +43,7 @@ FIELDS_DESCRIPTION
 EXAMPLES
 
 :param fields: Dictionary mapping the flashcard's field names to their string content. Refer to the tool description for details.
-:return: A string to show to the user
+:return: The note id of the new card.
 """
 
 
@@ -407,15 +407,9 @@ class Tools:
                 self.valves.ankiconnect_host, self.valves.ankiconnect_port, "sync"
             )
 
-            # Add the note ID to the fields and return formatted JSON
-            fields["note_id"] = result
-            formatted_output = json.dumps(fields, indent=2, ensure_ascii=False).replace(
-                '"', ""
-            )
-            # Remove the first and last lines which contain the curly braces
-            formatted_output = "\r".join(formatted_output.split("\n")[1:-1])
+            assert isinstance(result, int), f"Output of ankiconnect was not an note_id but: {result}"
             await emitter.success_update("Successfully created and synced flashcard")
-            return formatted_output
+            return f"Note ID: {result}"
 
         except Exception as e:
             await emitter.error_update(f"Failed to create flashcards: {str(e)}")
