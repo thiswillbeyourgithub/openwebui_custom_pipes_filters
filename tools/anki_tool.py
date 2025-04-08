@@ -138,18 +138,18 @@ class Tools:
         self.fields_description = self.valves.fields_description
         self.parameters_are_checked = False
 
-    def __tool_param_checker__(self):
+    async def __tool_param_checker__(self):
         # check deck exists and model exists
         logger.debug(
             "AnkiFlashcardCreator: Starting to check Tool parameters"
         )
-        deck_list = _ankiconnect_request_sync(
+        deck_list = await _ankiconnect_request(
             self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames"
         )
         assert (
             self.valves.deck in deck_list
         ), f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
-        models = _ankiconnect_request_sync(
+        models = await _ankiconnect_request(
             self.valves.ankiconnect_host, self.valves.ankiconnect_port, "modelNames"
         )
         assert (
