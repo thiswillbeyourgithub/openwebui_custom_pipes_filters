@@ -19,9 +19,10 @@ from loguru import logger
 from bs4 import BeautifulSoup
 
 
-
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
         priority: int = Field(
@@ -50,39 +51,39 @@ class Filter:
 
     def compress_tool_calls(self, text: str) -> str:
         # Check if there are any tool_calls details tags
-        if "<details type=\"tool_calls\"" not in text:
+        if '<details type="tool_calls"' not in text:
             self.log("No tool_calls in message")
             return text
 
         # Use regex to find and modify details tags
         pattern = r'<details\s+([^>]*?)type="tool_calls"([^>]*?)>'
-        
+
         def replace_attributes(match):
             attrs = match.group(1) + match.group(2)
             modified_attrs = attrs
-            
+
             if self.valves.remove_content:
-                modified_attrs = re.sub(r'content="[^"]*"', '', modified_attrs)
-                
+                modified_attrs = re.sub(r'content="[^"]*"', "", modified_attrs)
+
             if self.valves.remove_results:
-                modified_attrs = re.sub(r'results="[^"]*"', '', modified_attrs)
-                
+                modified_attrs = re.sub(r'results="[^"]*"', "", modified_attrs)
+
             # Clean up any double spaces from removed attributes
-            modified_attrs = re.sub(r'\s+', ' ', modified_attrs).strip()
-            
-            return f'<details {modified_attrs}>'
-        
+            modified_attrs = re.sub(r"\s+", " ", modified_attrs).strip()
+
+            return f"<details {modified_attrs}>"
+
         modified_text = re.sub(pattern, replace_attributes, text)
         self.log("Processed tool_calls details tags")
-        
+
         return modified_text
-    
+
     # This method is no longer needed with the new approach
 
     async def inlet(
         self,
         body: dict,
-        ) -> dict:
+    ) -> dict:
         self.log("Inlet")
         for im, m in enumerate(body["messages"]):
             body["messages"][im]["content"] = self.compress_tool_calls(m["content"])
@@ -91,7 +92,7 @@ class Filter:
     def outlet(
         self,
         body: dict,
-        ) -> dict:
+    ) -> dict:
         self.log("Outlet")
         for im, m in enumerate(body["messages"]):
             body["messages"][im]["content"] = self.compress_tool_calls(m["content"])
@@ -101,30 +102,28 @@ class Filter:
 if __name__ == "__main__":
     import sys
     import os
-    
+
     if len(sys.argv) != 2:
         print("Usage: python tool_compressor.py <filename>")
         sys.exit(1)
-    
+
     filename = sys.argv[1]
-    
+
     if not os.path.exists(filename):
         print(f"Error: File '{filename}' not found.")
         sys.exit(1)
-    
+
     try:
-        with open(filename, 'r', encoding='utf-8') as file:
+        with open(filename, "r", encoding="utf-8") as file:
             content = file.read()
-        
+
         filter_instance = Filter()
         compressed_content = filter_instance.compress_tool_calls(content)
-        
+
         print("\n--- COMPRESSED CONTENT ---\n")
         print(compressed_content)
         print("\n--- END OF COMPRESSED CONTENT ---\n")
-        
+
     except Exception as e:
         print(f"Error processing file: {e}")
         sys.exit(1)
-
-

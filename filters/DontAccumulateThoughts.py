@@ -18,21 +18,20 @@ from loguru import logger
 
 
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
     NAME: str = "DontAccumulateThoughts"
 
     class Valves(BaseModel):
         priority: int = Field(
             default=0,
-            description="Priority level for the filter operations (lower numbers run first)."
+            description="Priority level for the filter operations (lower numbers run first).",
         )
-        debug: bool = Field(
-            default=False,
-            description="Enable debug logging"
-        )
+        debug: bool = Field(default=False, description="Enable debug logging")
         thinking_pattern: str = Field(
             default=r"<thinking>.*?</thinking>",
-            description="Regex pattern to match thinking blocks (supports multiline with (?s) flag)"
+            description="Regex pattern to match thinking blocks (supports multiline with (?s) flag)",
         )
 
     def __init__(self):
@@ -43,7 +42,9 @@ class Filter:
         """Initialize the filter with default values."""
         self.valves = self.Valves()
         self._thinking_pattern = None
-        self.thinking_regex = re.compile(self.valves.thinking_pattern, re.DOTALL|re.MULTILINE)
+        self.thinking_regex = re.compile(
+            self.valves.thinking_pattern, re.DOTALL | re.MULTILINE
+        )
 
     async def log(self, message: str, level="info", emitter=None) -> None:
         """Log a message."""
@@ -88,7 +89,9 @@ class Filter:
             assert diff > 0, diff
             logger.debug(f"[{self.NAME}] removed {diff} thinking block characters")
         elif "<think" in content:
-            logger.warning(f"[{self.NAME}] potential error, message seems to contain thoughts but not matched by the regex: '''{content}'''")
+            logger.warning(
+                f"[{self.NAME}] potential error, message seems to contain thoughts but not matched by the regex: '''{content}'''"
+            )
 
         return filtered_content
 
@@ -112,10 +115,16 @@ class Filter:
                 old = body["messages"][im]["content"]
                 new = self.filter_content(m["content"])
                 if new != old:
-                    await self.log(f"Updated message #{im} to '''{new}'''", emitter=emitter, level="debug")
+                    await self.log(
+                        f"Updated message #{im} to '''{new}'''",
+                        emitter=emitter,
+                        level="debug",
+                    )
                 body["messages"][im]["content"] = new
 
-            await self.log("Request processed successfully", emitter=emitter, level="debug")
+            await self.log(
+                "Request processed successfully", emitter=emitter, level="debug"
+            )
             if self.valves.debug:
                 await emitter.success_update("Thinking blocks filtered successfully")
         except Exception as e:
@@ -142,11 +151,14 @@ class EventEmitter:
         """Emit a success event."""
         await self.emit(description=description, status="success", done=True)
 
-    async def emit(self, description: str = "Unknown State", status: str = "in_progress", done: bool = False):
+    async def emit(
+        self,
+        description: str = "Unknown State",
+        status: str = "in_progress",
+        done: bool = False,
+    ):
         """Emit an event with the given parameters."""
         if self.event_emitter:
-            await self.event_emitter({
-                "description": description,
-                "status": status,
-                "done": done
-            })
+            await self.event_emitter(
+                {"description": description, "status": status, "done": done}
+            )

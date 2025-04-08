@@ -9,7 +9,6 @@ original_source: https://github.com/open-webui/pipelines/pull/438
 requirements: langfuse, loguru
 """
 
-
 from typing import List, Optional
 import os
 import uuid
@@ -33,7 +32,9 @@ def get_last_assistant_message_obj(messages: List[dict]) -> dict:
 
 
 class Pipeline:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
         pipelines: List[str] = []
@@ -100,7 +101,9 @@ class Pipeline:
         # Validate modelkey_identifier_type
         valid_types = ["name", "id", "litellm"]
         if self.valves.modelkey_identifier_type not in valid_types:
-            raise ValueError(f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'. Must be one of: {', '.join(valid_types)}")
+            raise ValueError(
+                f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'. Must be one of: {', '.join(valid_types)}"
+            )
         self.set_langfuse()
 
     def set_langfuse(self):
@@ -159,12 +162,16 @@ class Pipeline:
 
         if isinstance(model_info, dict) and "name" in model_info:
             self.model_names[chat_id]["name"] = model_info["name"]
-            self.log(f"Stored model info - name: '{model_info['name']}', id: '{model_id}' for chat_id: {chat_id}")
+            self.log(
+                f"Stored model info - name: '{model_info['name']}', id: '{model_id}' for chat_id: {chat_id}"
+            )
 
         required_keys = ["model", "messages"]
         missing_keys = [key for key in required_keys if key not in body]
         if missing_keys:
-            error_message = f"Error: Missing keys in the request body: {', '.join(missing_keys)}"
+            error_message = (
+                f"Error: Missing keys in the request body: {', '.join(missing_keys)}"
+            )
             self.log(error_message)
             raise ValueError(error_message)
 
@@ -190,7 +197,9 @@ class Pipeline:
                 trace_payload["tags"] = tags_list
 
             if self.valves.debug:
-                logger.debug(f"Langfuse trace request: {json.dumps(trace_payload, indent=2)}")
+                logger.debug(
+                    f"Langfuse trace request: {json.dumps(trace_payload, indent=2)}"
+                )
 
             trace = self.langfuse.trace(**trace_payload)
             self.chat_traces[chat_id] = trace
@@ -217,13 +226,17 @@ class Pipeline:
                 try:
                     model_value = self.get_actual_model_name(model_id)
                 except Exception as e:
-                    self.log(f"Error retrieving actual model name: {str(e)}. Falling back to model ID.")
+                    self.log(
+                        f"Error retrieving actual model name: {str(e)}. Falling back to model ID."
+                    )
                     model_value = model_id
             elif self.valves.modelkey_identifier_type == "id":
                 model_value = model_id
             else:
                 # This should never happen due to validation in on_valves_updated
-                raise ValueError(f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'")
+                raise ValueError(
+                    f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'"
+                )
 
             # Add both values to metadata regardless of valve setting
             metadata[f"openwebui_{task_name}_model_id"] = model_id
@@ -239,7 +252,9 @@ class Pipeline:
                 generation_payload["tags"] = tags_list
 
             if self.valves.debug:
-                logger.debug(f"Langfuse generation request: {json.dumps(generation_payload, indent=2)}")
+                logger.debug(
+                    f"Langfuse generation request: {json.dumps(generation_payload, indent=2)}"
+                )
 
             trace.generation(**generation_payload)
         else:
@@ -253,7 +268,9 @@ class Pipeline:
                 event_payload["tags"] = tags_list
 
             if self.valves.debug:
-                logger.debug(f"Langfuse event request: {json.dumps(event_payload, indent=2)}")
+                logger.debug(
+                    f"Langfuse event request: {json.dumps(event_payload, indent=2)}"
+                )
 
             trace.event(**event_payload)
 
@@ -283,7 +300,9 @@ class Pipeline:
         api_key = self.valves.litellm_api_key
 
         if not api_key:
-            raise ValueError("LiteLLM API key must be set either in the pipeline valve or as LITELLM_API_KEY environment variable")
+            raise ValueError(
+                "LiteLLM API key must be set either in the pipeline valve or as LITELLM_API_KEY environment variable"
+            )
 
         try:
             # Construct the API URL
@@ -292,7 +311,7 @@ class Pipeline:
             # Set up headers
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}"
+                "Authorization": f"Bearer {api_key}",
             }
 
             # Make the API request
@@ -306,7 +325,9 @@ class Pipeline:
             for model_info in data:
                 if model_info.get("model_name") == model_alias:
                     actual_model = model_info.get("litellm_params", {}).get("model")
-                    logger.info(f"LiteLLM model mapping: '{model_alias}' → '{actual_model}'")
+                    logger.info(
+                        f"LiteLLM model mapping: '{model_alias}' → '{actual_model}'"
+                    )
                     return actual_model
 
             raise KeyError(f"Model '{model_alias}' not found in LiteLLM API response")
@@ -330,7 +351,9 @@ class Pipeline:
         tags_list = self._build_tags(task_name)
 
         if chat_id not in self.chat_traces:
-            self.log(f"[WARNING] No matching trace found for chat_id: {chat_id}, attempting to re-register.")
+            self.log(
+                f"[WARNING] No matching trace found for chat_id: {chat_id}, attempting to re-register."
+            )
             # Re-run inlet to register if somehow missing
             return await self.inlet(body, user)
 
@@ -343,7 +366,9 @@ class Pipeline:
         if assistant_message_obj:
             info = assistant_message_obj.get("usage", {})
             if isinstance(info, dict):
-                input_tokens = info.get("prompt_eval_count") or info.get("prompt_tokens")
+                input_tokens = info.get("prompt_eval_count") or info.get(
+                    "prompt_tokens"
+                )
                 output_tokens = info.get("eval_count") or info.get("completion_tokens")
                 if input_tokens is not None and output_tokens is not None:
                     usage = {
@@ -371,13 +396,17 @@ class Pipeline:
                 try:
                     model_value = self.get_actual_model_name(model_id)
                 except Exception as e:
-                    self.log(f"Error retrieving actual model name: {str(e)}. Falling back to model ID.")
+                    self.log(
+                        f"Error retrieving actual model name: {str(e)}. Falling back to model ID."
+                    )
                     model_value = model_id
             elif self.valves.modelkey_identifier_type == "id":
                 model_value = model_id
             else:
                 # This should never happen due to validation in on_valves_updated
-                raise ValueError(f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'")
+                raise ValueError(
+                    f"Invalid modelkey_identifier_type: '{self.valves.modelkey_identifier_type}'"
+                )
 
             # Add both values to metadata regardless of valve setting
             metadata[f"openwebui_{task_name}_model_id"] = model_id
@@ -386,7 +415,7 @@ class Pipeline:
             # If it's an LLM generation
             generation_payload = {
                 "name": f"{task_name}:{str(uuid.uuid4())}",
-                "model": model_value,   # <-- Use model name or ID based on valve setting
+                "model": model_value,  # <-- Use model name or ID based on valve setting
                 "input": body["messages"],
                 "metadata": metadata,
                 "usage": usage,
@@ -395,7 +424,9 @@ class Pipeline:
                 generation_payload["tags"] = tags_list
 
             if self.valves.debug:
-                logger.debug(f"Langfuse generation end request: {json.dumps(generation_payload, indent=2)}")
+                logger.debug(
+                    f"Langfuse generation end request: {json.dumps(generation_payload, indent=2)}"
+                )
 
             trace.generation().end(**generation_payload)
             self.log(f"Generation ended for chat_id: {chat_id}")
@@ -414,7 +445,9 @@ class Pipeline:
                 event_payload["tags"] = tags_list
 
             if self.valves.debug:
-                logger.debug(f"Langfuse event end request: {json.dumps(event_payload, indent=2)}")
+                logger.debug(
+                    f"Langfuse event end request: {json.dumps(event_payload, indent=2)}"
+                )
 
             trace.event(**event_payload)
             self.log(f"Event logged for chat_id: {chat_id}")

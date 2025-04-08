@@ -17,7 +17,9 @@ from loguru import logger
 
 
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
         priority: int = Field(
@@ -25,7 +27,7 @@ class Filter:
             description="Priority level for the filter operations (default 0).",
         )
         debug: bool = Field(
-            default=False, 
+            default=False,
             description="True to add emitter prints",
         )
         keep_messages: int = Field(
@@ -63,7 +65,9 @@ class Filter:
                     break
 
             if latest_user_msg_idx is None:
-                logger.debug("InfiniteChat filter: No user message found to preserve content to")
+                logger.debug(
+                    "InfiniteChat filter: No user message found to preserve content to"
+                )
                 return messages
 
             latest_user_msg = messages[latest_user_msg_idx]
@@ -71,7 +75,9 @@ class Filter:
 
             # Check if the pattern already exists in the latest message
             if self._content_has_pattern(latest_content, pattern):
-                logger.debug(f"InfiniteChat filter: Pattern '{self.valves.preserve_regex}' already exists in latest message")
+                logger.debug(
+                    f"InfiniteChat filter: Pattern '{self.valves.preserve_regex}' already exists in latest message"
+                )
                 return messages
 
             # Search older messages for the pattern
@@ -103,11 +109,15 @@ class Filter:
                 raise ValueError(latest_content)
 
             if not match:
-                logger.debug(f"InfiniteChat filter: No content matching pattern '{self.valves.preserve_regex}' found in older messages")
+                logger.debug(
+                    f"InfiniteChat filter: No content matching pattern '{self.valves.preserve_regex}' found in older messages"
+                )
                 return messages
 
             new_content = match + "\n" + latest_content_str
-            logger.info(f"InfiniteChat filter: Readded line '{match}' to the latest user message")
+            logger.info(
+                f"InfiniteChat filter: Readded line '{match}' to the latest user message"
+            )
 
             # readd to the last message
             if isinstance(latest_content, str):
@@ -115,7 +125,9 @@ class Filter:
             elif isinstance(latest_content, list):
                 for ili, li in enumerate(latest_content):
                     if li["type"] == "text":
-                        messages[latest_user_msg_idx]["content"][ili]["text"] = new_content
+                        messages[latest_user_msg_idx]["content"][ili][
+                            "text"
+                        ] = new_content
                         break
             else:
                 raise ValueError(latest_content)
@@ -125,7 +137,12 @@ class Filter:
             logger.error(f"InfiniteChat filter: Error during regex matching: {str(e)}")
             return messages
 
-    def _content_has_pattern(self, content: Union[str, List[dict], dict], pattern: re.Pattern, return_match: bool = False) -> Union[bool, str]:
+    def _content_has_pattern(
+        self,
+        content: Union[str, List[dict], dict],
+        pattern: re.Pattern,
+        return_match: bool = False,
+    ) -> Union[bool, str]:
         """
         Checks if the content already contains the pattern.
 
@@ -142,7 +159,10 @@ class Filter:
             else:
                 return self._content_has_pattern(content["text"], pattern, return_match)
         elif isinstance(content, list):
-            vals = [self._content_has_pattern(cont, pattern, return_match) for cont in content]
+            vals = [
+                self._content_has_pattern(cont, pattern, return_match)
+                for cont in content
+            ]
             if not any(vals):
                 return False
             elif return_match:
@@ -153,7 +173,7 @@ class Filter:
         if not content:
             return False
 
-        for line in content.split('\n'):
+        for line in content.split("\n"):
             if pattern.search(line):
                 return pattern.findall(line)[0]
 
@@ -164,9 +184,10 @@ class Filter:
         body: dict,
         __user__: Optional[dict] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        ) -> dict:
+    ) -> dict:
         # printer
         emitter = EventEmitter(__event_emitter__)
+
         async def log(message: str):
             if self.valves.debug:
                 logger.info(f"InfiniteChat filter: inlet: {message}")
@@ -177,13 +198,19 @@ class Filter:
             await log("keep_messages must be at least 2, using default of 2")
             keep = 2
 
-        sys_message = [m for m in body["messages"] if "role" in m and m["role"] == "system"]
+        sys_message = [
+            m for m in body["messages"] if "role" in m and m["role"] == "system"
+        ]
 
         if self.valves.debug:
-            await log(f"InfiniteChat filter: inlet: messages count before: {len(body['messages'])}, including {len(sys_message)} system message(s)")
+            await log(
+                f"InfiniteChat filter: inlet: messages count before: {len(body['messages'])}, including {len(sys_message)} system message(s)"
+            )
 
         # Separate user/assistant messages from system messages
-        non_system_messages = [m for m in body["messages"] if ("role" not in m) or (m["role"] != "system")]
+        non_system_messages = [
+            m for m in body["messages"] if ("role" not in m) or (m["role"] != "system")
+        ]
 
         # Check if we need to preserve any content based on regex
         if self.valves.preserve_regex and len(non_system_messages) > keep:
@@ -193,7 +220,9 @@ class Filter:
         body["messages"] = sys_message + non_system_messages[-keep:]
 
         if self.valves.debug:
-            await emitter.success_update(f"InfiniteChat filter: inlet: messages count after: {len(body['messages'])}")
+            await emitter.success_update(
+                f"InfiniteChat filter: inlet: messages count after: {len(body['messages'])}"
+            )
 
         return body
 

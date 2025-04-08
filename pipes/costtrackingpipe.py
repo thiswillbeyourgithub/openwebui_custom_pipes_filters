@@ -107,10 +107,11 @@ class Pipe:
         self.start_thought = re.compile(__user__["valves"].start_thoughts)
         self.stop_thought = re.compile(__user__["valves"].stop_thoughts)
         self.pattern = re.compile(
-            __user__["valves"].start_thoughts + "(.*)?" + __user__["valves"].stop_thoughts,
+            __user__["valves"].start_thoughts
+            + "(.*)?"
+            + __user__["valves"].stop_thoughts,
             flags=re.DOTALL | re.MULTILINE,
         )
-
 
         # load the api_keys as a dict
         if self.valves.api_keys is None:
@@ -202,7 +203,9 @@ class Pipe:
 
             if body["stream"]:
                 await prog("Receiving chunks")
-                if (not __user__["valves"].remove_thoughts) or (not __user__["valves"].enabled):
+                if (not __user__["valves"].remove_thoughts) or (
+                    not __user__["valves"].enabled
+                ):
                     for line in r.iter_lines():
                         yield line
                     return
@@ -296,4 +299,3 @@ class EventEmitter:
                     },
                 }
             )
-

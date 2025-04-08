@@ -29,7 +29,9 @@ def load_json_dict(user_value: str) -> dict:
 
 
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
         priority: int = Field(
@@ -93,7 +95,7 @@ class Filter:
                         f"User key different than expected: '{body['user']}' vs '{__user__['name']}'"
                     )
             # new_value = f"{__user__['name']}_{__user__['email']}"
-            new_value = __user__['email']
+            new_value = __user__["email"]
             body["user"] = new_value
             await log(f"Added user metadata '{new_value}'")
 
@@ -169,7 +171,6 @@ class Filter:
             else:
                 raise
 
-
         if self.valves.debug:
             await emitter.success_update("Done")
         return body
@@ -200,4 +201,3 @@ class EventEmitter:
                     },
                 }
             )
-

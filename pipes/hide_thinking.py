@@ -40,7 +40,7 @@ class Pipe:
         )
         start_thought: str = Field(
             default="<thinking>",
-            description="Start of a thought block. Note that any whitespace following the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE"
+            description="Start of a thought block. Note that any whitespace following the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE",
         )
         stop_thought: str = Field(
             default="</thinking>",
@@ -72,8 +72,7 @@ class Pipe:
             flags=re.DOTALL | re.MULTILINE,
         )
         self.stop_thought = re.compile(
-            "r\s*" + self.valves.stop_thought,
-            flags=re.DOTALL |re.MULTILINE
+            "r\s*" + self.valves.stop_thought, flags=re.DOTALL | re.MULTILINE
         )
         self.pattern = re.compile(
             self.valves.start_thought + "(.*)?" + self.valves.stop_thought,
@@ -312,7 +311,9 @@ class Pipe:
                         bef, buffer = buffer.split(section, 1)
                         yielded += bef
                         yield bef
-                        section = self.start_thought.sub("\n\n<details>\n<summary>Reasonning</summary>\n\n", section)
+                        section = self.start_thought.sub(
+                            "\n\n<details>\n<summary>Reasonning</summary>\n\n", section
+                        )
                         section = self.stop_thought.sub("\n\n</details>\n", section)
                         yielded += section
                         yield section
@@ -341,7 +342,9 @@ class Pipe:
                         bef, buffer = buffer.split(section, 1)
                         yielded += bef
                         yield bef
-                        section = self.start_thought.sub("\n\n<details>\n<summary>Reasonning</summary>\n\n", section)
+                        section = self.start_thought.sub(
+                            "\n\n<details>\n<summary>Reasonning</summary>\n\n", section
+                        )
                         section = self.stop_thought.sub("\n\n</details>\n", section)
                         yielded += section
                         yield section
@@ -439,4 +442,3 @@ class EventEmitter:
                     },
                 }
             )
-

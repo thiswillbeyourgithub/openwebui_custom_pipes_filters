@@ -16,12 +16,9 @@ from typing import Optional
 
 class Filter:
     class Valves(BaseModel):
-        verbose: bool = Field(
-            default=True, description="Verbosity"
-        )
+        verbose: bool = Field(default=True, description="Verbosity")
         cache_system_prompt: bool = Field(
-            default=True,
-            description="True to automatically cache the system prompt"
+            default=True, description="True to automatically cache the system prompt"
         )
         regex_model: str = Field(
             default="anthropic|claude|sonnet|haiku|opus",
@@ -31,7 +28,9 @@ class Filter:
     def __init__(self):
         self.valves = self.Valves()
         self.p("Init:start")
-        self.regex_model = re.compile(self.valves.regex_model, flags=re.DOTALL|re.IGNORECASE)
+        self.regex_model = re.compile(
+            self.valves.regex_model, flags=re.DOTALL | re.IGNORECASE
+        )
         self.p("Init:done")
         pass
 
@@ -41,7 +40,7 @@ class Filter:
         __user__: Optional[dict] = None,
         # __task__: Optional[dict] = None,
         # __task_body__: Optional[dict] = None,
-        ) -> dict:
+    ) -> dict:
         "reduce token count by removing thoughts in the previous messages"
         self.p("inlet:start")
 
@@ -52,7 +51,9 @@ class Filter:
         if self.valves.regex_model:
             model = body["model"]
             if not self.regex_model.match(model):
-                self.p(f"inlet: Regex for model does not think this model should be cached. Bypassing cachg. Model: '{model}'")
+                self.p(
+                    f"inlet: Regex for model does not think this model should be cached. Bypassing cachg. Model: '{model}'"
+                )
                 return body
         # self.p(__task__)
         # self.p(__task_body__)
@@ -100,4 +101,3 @@ class Filter:
         if self.valves.verbose:
             print(m)
         return m
-

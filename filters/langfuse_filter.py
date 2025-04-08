@@ -33,8 +33,11 @@ with FileLock(LOCK_FILENAME, timeout=1):
     if BUFFER.read_text() == "":
         BUFFER.write_text("{}")
 
+
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
         priority: int = Field(
@@ -46,17 +49,17 @@ class Filter:
             description="True to print debug statements",
         )
         langfuse_host: str = Field(
-            default='',
+            default="",
             description="langfuse_host",
             required=True,
         )
         langfuse_public_key: str = Field(
-            default='',
+            default="",
             description="langfuse_public_key",
             required=True,
         )
         langfuse_secret_key: str = Field(
-            default='',
+            default="",
             description="langfuse_secret_key",
             required=True,
         )
@@ -75,7 +78,11 @@ class Filter:
     async def __init_langfuse__(self):
         try:
             self.langfuse = Langfuse(
-                host="http://" + self.valves.langfuse_host if not self.valves.langfuse_host.startswith("http") else self.valves.langfuse_host,
+                host=(
+                    "http://" + self.valves.langfuse_host
+                    if not self.valves.langfuse_host.startswith("http")
+                    else self.valves.langfuse_host
+                ),
                 public_key=self.valves.langfuse_public_key,
                 secret_key=self.valves.langfuse_secret_key,
                 # debug=self.valves.debug,  # a bit too verbose
@@ -89,7 +96,7 @@ class Filter:
         body: dict,
         __metadata__: Optional[dict] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        ) -> dict:
+    ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
 
         if not hasattr(self, "langfuse"):
@@ -102,12 +109,19 @@ class Filter:
                 buffer = json.loads(content)
                 assert isinstance(buffer, dict), f"Not a dict but {type(buffer)}"
             except Exception as e:
-                self.log(f"LangfuseFilterInlet: Error when loading json: '{e}'\nBuffer: {content}")
-                await self.emitter.error_update(f"LangfuseFilterInlet: Error when loading json: '{e}'\nBuffer: {content}")
+                self.log(
+                    f"LangfuseFilterInlet: Error when loading json: '{e}'\nBuffer: {content}"
+                )
+                await self.emitter.error_update(
+                    f"LangfuseFilterInlet: Error when loading json: '{e}'\nBuffer: {content}"
+                )
                 buffer = {}
 
             if chat_id in buffer:
-                self.log(f"INLET ERROR: buffer already contains chat_id '{chat_id}': '{buffer[chat_id]}'", force=True)
+                self.log(
+                    f"INLET ERROR: buffer already contains chat_id '{chat_id}': '{buffer[chat_id]}'",
+                    force=True,
+                )
 
             self.log(f"Started timer for chat_id {chat_id}")
             buffer[chat_id] = time.time()
@@ -122,21 +136,21 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        ) -> dict:
+    ) -> dict:
         t_end = datetime.now()
         self.emitter = EventEmitter(__event_emitter__)
         chat_id = __metadata__["chat_id"]
         if not hasattr(self, "langfuse"):
             await self.__init_langfuse__()
 
-        metadata={
+        metadata = {
             "ow_message_id": __metadata__["message_id"],
-            "ow_session_id":__metadata__["session_id"],
+            "ow_session_id": __metadata__["session_id"],
             "ow_user_id": __user__["id"],
             "ow_user_name": __user__["name"],
             "ow_user_mail": __user__["email"],
-            "ow_model_name": __model__['info']["id"],
-            "ow_base_model_id": __model__['info']["base_model_id"],
+            "ow_model_name": __model__["info"]["id"],
+            "ow_base_model_id": __model__["info"]["base_model_id"],
         }
         flat_metadata = self.flatten_dict(__metadata__)
         for k, v in flat_metadata.items():
@@ -152,12 +166,18 @@ class Filter:
                 buffer = json.loads(content)
                 assert isinstance(buffer, dict), f"Not a dict but {type(buffer)}"
             except Exception as e:
-                await self.log(f"LangfuseFilterOutlet: Error when loading json: '{e}'\nBuffer: {content}")
-                await self.emitter.error_update(f"LangfuseFilterOutlet: Error when loading json: '{e}'\nBuffer: {content}")
+                await self.log(
+                    f"LangfuseFilterOutlet: Error when loading json: '{e}'\nBuffer: {content}"
+                )
+                await self.emitter.error_update(
+                    f"LangfuseFilterOutlet: Error when loading json: '{e}'\nBuffer: {content}"
+                )
                 buffer = {}
 
             if chat_id not in buffer:
-                await self.log(f"OUTLET ERROR: buffer is missing chat_id '{chat_id}'", force=True)
+                await self.log(
+                    f"OUTLET ERROR: buffer is missing chat_id '{chat_id}'", force=True
+                )
                 t_start = None
             else:
                 t_start = datetime.fromtimestamp(float(buffer[chat_id]))
@@ -167,7 +187,7 @@ class Filter:
             trace = self.langfuse.trace(
                 # id=chat_id,
                 # name="OpenWebuiLangfuseFilter",
-                name = "open-webui_chat-trace",
+                name="open-webui_chat-trace",
                 input=body["messages"][:-1],
                 output=body["messages"][-1],
                 metadata=metadata,
@@ -193,7 +213,7 @@ class Filter:
                 name=body["messages"][-1]["content"][:100],
                 start_time=t_start,
                 end_time=t_end,
-                model= __model__['info']["base_model_id"],
+                model=__model__["info"]["base_model_id"],
                 model_parameters=model_parameters,
                 input=body["messages"][:-1],
                 output=body["messages"][-1],
@@ -214,11 +234,13 @@ class Filter:
     def flatten_dict(self, input: dict) -> dict:
         if not isinstance(input, dict):
             return input
-        
+
         result = input.copy()
         while any(isinstance(v, dict) for v in result.values()):
             dict_found = False
-            for k, v in list(result.items()):  # Create a list to avoid modification during iteration
+            for k, v in list(
+                result.items()
+            ):  # Create a list to avoid modification during iteration
                 if isinstance(v, dict):
                     dict_found = True
                     # Remove the current key-value pair
@@ -271,4 +293,3 @@ class EventEmitter:
                     },
                 }
             )
-

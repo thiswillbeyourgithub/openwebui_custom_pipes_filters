@@ -16,15 +16,15 @@ from typing import Optional
 
 
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
-        verbose: bool = Field(
-            default=True, description="Verbosity"
-        )
+        verbose: bool = Field(default=True, description="Verbosity")
         start_thought: str = Field(
             default="<thinking>",
-            description="Start of a thought block. Note that any whitespace following the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE"
+            description="Start of a thought block. Note that any whitespace following the pattern will be considered part of the pattern. The applied regex flags are re.DOTALL and re.MULTILINE",
         )
         stop_thought: str = Field(
             default="</thinking>",
@@ -35,14 +35,21 @@ class Filter:
         self.valves = self.Valves()
         self.p("Init:start")
 
-        self.start_thought = re.compile(self.valves.start_thought + r"\s*", flags=re.DOTALL | re.MULTILINE)
-        self.stop_thought = re.compile(r"\s*" + self.valves.stop_thought, flags=re.DOTALL | re.MULTILINE)
+        self.start_thought = re.compile(
+            self.valves.start_thought + r"\s*", flags=re.DOTALL | re.MULTILINE
+        )
+        self.stop_thought = re.compile(
+            r"\s*" + self.valves.stop_thought, flags=re.DOTALL | re.MULTILINE
+        )
 
         self.pattern = re.compile(
             rf"{self.valves.start_thought}(.*?){self.valves.stop_thought}",
             flags=re.DOTALL | re.MULTILINE,
         )
-        self.converted_pattern = re.compile(r"<details>\s*<summary>Reasonning</summary>.*?</details>", flags=re.DOTALL | re.MULTILINE)
+        self.converted_pattern = re.compile(
+            r"<details>\s*<summary>Reasonning</summary>.*?</details>",
+            flags=re.DOTALL | re.MULTILINE,
+        )
         self.p("Init:done")
         pass
 
@@ -68,7 +75,9 @@ class Filter:
             self.p("hide_thought: No thought to hide in text")
             return text
         section = match.group()
-        section = self.start_thought.sub("<details>\n<summary>Reasonning</summary>\n\n", section)
+        section = self.start_thought.sub(
+            "<details>\n<summary>Reasonning</summary>\n\n", section
+        )
         section = self.stop_thought.sub("\n\n</details>\n", section)
         newtext = text.replace(match.group(), section)
         self.p("hide_thought: done")
@@ -113,7 +122,9 @@ class Filter:
         assert isinstance(body, dict), f"Unexpected type of body: '{body}'"
         assert "messages" in body, f"Body is missing messages: '{body}'"
         last_message = body["messages"][-1]
-        assert "content" in last_message, f"last_message does not have a 'content' key: '{last_message}'"
+        assert (
+            "content" in last_message
+        ), f"last_message does not have a 'content' key: '{last_message}'"
         last_message = last_message["content"]
 
         modified = 0
@@ -138,7 +149,9 @@ class Filter:
                 modified += 1
                 body["messages"][-1]["content"] = new
         else:
-            raise Exception(f"outlet: Unexpected type of last_message: {type(last_message)}")
+            raise Exception(
+                f"outlet: Unexpected type of last_message: {type(last_message)}"
+            )
 
         self.p(f"outlet:done: modified {modified} messages")
         return body

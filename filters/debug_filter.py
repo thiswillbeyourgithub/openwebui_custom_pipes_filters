@@ -16,11 +16,15 @@ from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any
 from loguru import logger
 
+
 def p(message: str) -> None:
     logger.info(f"DebugFilter: {message}")
 
+
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
         priority: int = Field(
@@ -71,7 +75,7 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        ) -> dict:
+    ) -> dict:
         prio = self.valves.priority
         args_to_print = {
             "body": self.valves.print_body,
@@ -81,13 +85,15 @@ class Filter:
             "__files__": self.valves.print_files,
             "__event_emitter__": self.valves.print_emitter,
         }
-        
+
         if self.valves.direction in ["inlet", "both"]:
             for arg, should_print in args_to_print.items():
                 if should_print:
                     try:
                         indent = None if self.valves.compress_output else 2
-                        val = json.dumps(locals()[arg], ensure_ascii=False, indent=indent)
+                        val = json.dumps(
+                            locals()[arg], ensure_ascii=False, indent=indent
+                        )
                     except:
                         val = str(locals()[arg])
                     p(f"\nINLET_{prio}: {arg}:\n{val}")
@@ -101,7 +107,7 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        ) -> dict:
+    ) -> dict:
         prio = self.valves.priority
         args_to_print = {
             "body": self.valves.print_body,
@@ -111,13 +117,15 @@ class Filter:
             "__files__": self.valves.print_files,
             "__event_emitter__": self.valves.print_emitter,
         }
-        
+
         if self.valves.direction in ["outlet", "both"]:
             for arg, should_print in args_to_print.items():
                 if should_print:
                     try:
                         indent = None if self.valves.compress_output else 2
-                        val = json.dumps(locals()[arg], ensure_ascii=False, indent=indent)
+                        val = json.dumps(
+                            locals()[arg], ensure_ascii=False, indent=indent
+                        )
                     except:
                         val = str(locals()[arg])
                     p(f"\nOUTLET_{prio}: {arg}:\n{val}")
