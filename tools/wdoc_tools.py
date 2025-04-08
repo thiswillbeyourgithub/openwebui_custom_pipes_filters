@@ -96,7 +96,8 @@ def normalize_dict_values(input_dict: Dict) -> Dict:
 
 class Tools:
 
-    VERSION: str = "1.1.0"
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+
     MINIMUM_WDOC_VERSION: str = "2.9.0"
 
     class Valves(BaseModel):

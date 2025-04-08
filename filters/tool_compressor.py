@@ -21,7 +21,8 @@ from bs4 import BeautifulSoup
 
 
 class Filter:
-    VERSION: str = "2.0.0"
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+
     class Valves(BaseModel):
         priority: int = Field(
             default=0,

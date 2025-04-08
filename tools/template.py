@@ -19,7 +19,7 @@ from loguru import logger
 
 
 class Tools:
-    VERSION: str = "1.0.0"
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
     NAME: str = "TODO"
 
     class Valves(BaseModel):

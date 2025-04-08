@@ -20,7 +20,8 @@ def p(message: str) -> None:
     logger.info(f"DebugFilter: {message}")
 
 class Filter:
-    VERSION: "2.1.1"
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+
     class Valves(BaseModel):
         priority: int = Field(
             default=0,

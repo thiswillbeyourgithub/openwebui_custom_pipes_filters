@@ -33,6 +33,8 @@ def get_last_assistant_message_obj(messages: List[dict]) -> dict:
 
 
 class Pipeline:
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+
     class Valves(BaseModel):
         pipelines: List[str] = []
         priority: int = 0
