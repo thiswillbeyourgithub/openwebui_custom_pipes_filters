@@ -7,7 +7,7 @@ git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 2.0.0
 date: 2025-02-21
 license: GPLv3
-description: A Filter that makes more compact the tool calls (removes the 'content' and/or 'results' element of the <details> escaped html tag in tool calls output. Otherwise the escaping gets really costly and is unreadable. If you remove both, the LLM still has access to the tool output.
+description: A Filter that makes more compact the tool calls (removes the 'content' and/or 'results' element of the <details> escaped html tag in tool calls output. Otherwise the escaping gets really costly and is unreadable. If you remove both, the LLM still has access to the tool output. This might not be needed anymore since version 0.6.1
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/tool_compressor
 requirements: bs4
 """
