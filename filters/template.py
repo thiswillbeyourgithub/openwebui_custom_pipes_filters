@@ -17,21 +17,23 @@ from loguru import logger
 
 
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
     NAME: str = "TODO"
 
     class Valves(BaseModel):
         priority: int = Field(
             default=0,
-            description="Priority level for the filter operations (lower numbers run first)."
+            description="Priority level for the filter operations (lower numbers run first).",
         )
         pass
 
     class UserValves(BaseModel):
         """User-specific configuration options for the filter."""
+
         enabled: bool = Field(
-            default=True,
-            description="Enable or disable this filter for the user"
+            default=True, description="Enable or disable this filter for the user"
         )
         pass
 
@@ -59,16 +61,16 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        **kwargs
+        **kwargs,
     ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
         user_valves = dict(__user__.get("valves"))
-        
+
         await self.log("Processing inlet request")
-        
+
         try:
             # TODO
-            
+
             await self.log("Request processed successfully")
         except Exception as e:
             await self.log(f"Error in inlet: {str(e)}", level="error")
@@ -82,16 +84,16 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        **kwargs
+        **kwargs,
     ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
         user_valves = dict(__user__.get("valves"))
-        
+
         await self.log("Processing outlet request")
-        
+
         try:
             # TODO
-            
+
             await self.log("Request processed successfully")
         except Exception as e:
             await self.log(f"Error in outlet: {str(e)}", level="error")
@@ -100,7 +102,7 @@ class Filter:
 
 class EventEmitter:
     """Helper class for emitting events to the client."""
-    
+
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
         """Initialize with an event emitter function."""
         self.event_emitter = event_emitter
@@ -117,11 +119,14 @@ class EventEmitter:
         """Emit a success event."""
         await self.emit(description=description, status="success", done=True)
 
-    async def emit(self, description: str = "Unknown State", status: str = "in_progress", done: bool = False):
+    async def emit(
+        self,
+        description: str = "Unknown State",
+        status: str = "in_progress",
+        done: bool = False,
+    ):
         """Emit an event with the given parameters."""
         if self.event_emitter:
-            await self.event_emitter({
-                "description": description,
-                "status": status,
-                "done": done
-            })
+            await self.event_emitter(
+                {"description": description, "status": status, "done": done}
+            )
