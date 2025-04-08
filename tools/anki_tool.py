@@ -186,15 +186,6 @@ class Tools:
                 )
                 return f"AnkiFlashcardCreator: Error when checking tool parameters: '{e}'"
 
-        # quick request to ankiconnect to check that the connection is working
-        version = _ankiconnect_request(
-            self.valves.ankiconnect_host, self.valves.ankiconnect_port, "version"
-        )
-        if not isinstance(version, int):
-            logger.error(f"Unepected version check value from AnkiConnect: '{version}'")
-            await emitter.error_update(f"Unepected version check value from AnkiConnect: '{version}'")
-            return f"Error when checking version of ankiconnect. Instead of an int received '{version}'"
-
         if isinstance(fields, str):
             try:
                 fields_dict = json.loads(fields)
@@ -333,21 +324,30 @@ class Tools:
         try:
             await emitter.progress_update("Connecting to Anki...")
 
-            # Verify Ankiconnect is working by checking that the deck exists
-            deck_list = await _ankiconnect_request(
-                self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames"
+            # quick request to ankiconnect to check that the connection is working
+            version = await _ankiconnect_request(
+                self.valves.ankiconnect_host, self.valves.ankiconnect_port, "version"
             )
-            assert (
-                self.valves.deck in deck_list
-            ), f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
+            if not isinstance(version, int):
+                logger.error(f"Unepected version check value from AnkiConnect: '{version}'")
+                await emitter.error_update(f"Unepected version check value from AnkiConnect: '{version}'")
+                return f"Error when checking version of ankiconnect. Instead of an int received '{version}'"
 
-            # also check modelname
-            models = await _ankiconnect_request(
-                self.valves.ankiconnect_host, self.valves.ankiconnect_port, "modelNames"
-            )
-            assert (
-                self.valves.notetype_name in models
-            ), f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
+            # # Verify Ankiconnect is working by checking that the deck exists
+            # deck_list = await _ankiconnect_request(
+            #     self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames"
+            # )
+            # assert (
+            #     self.valves.deck in deck_list
+            # ), f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
+            #
+            # # also check modelname
+            # models = await _ankiconnect_request(
+            #     self.valves.ankiconnect_host, self.valves.ankiconnect_port, "modelNames"
+            # )
+            # assert (
+            #     self.valves.notetype_name in models
+            # ), f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
 
             await emitter.progress_update("Creating flashcard...")
 
