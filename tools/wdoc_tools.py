@@ -621,7 +621,7 @@ def check_wdoc_version(wdoc_module, minimum_version: str) -> None:
         minimum_version: The minimum required version as a string (e.g., "2.6.10")
     """
     try:
-        current_version = wdoc_module.VERSION
+        current_version = wdoc_module.wdoc.VERSION
 
         # Convert version strings to comparable integers
         def version_to_int(version_str: str) -> int:
