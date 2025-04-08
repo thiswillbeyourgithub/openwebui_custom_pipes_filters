@@ -429,6 +429,11 @@ class Tools:
                 instance = wdoc.wdoc(
                     path=url, task="summarize", filetype="auto", **summary_kwargs
                 )
+                if not hasattr(instance, "summary_results"):
+                    logger.info("Starting the task 'summary' of wdoc")
+                    results = instance.summary_task()
+                else:
+                    results: dict = instance.summary_results
             except Exception as e:
                 error_message = (
                     f"Error when summarizing:\nArguments were: '{summary_kwargs}'\n{e}"
@@ -439,7 +444,6 @@ class Tools:
                 if not self.always_unimport_wdoc:
                     un_import_wdoc()
 
-        results: dict = instance.summary_results
         await emitter.success_update(f"Successfully summarized {url}")
         summary = results["summary"]
         if results["doc_total_tokens"] == 0:
