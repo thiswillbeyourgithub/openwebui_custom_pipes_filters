@@ -167,6 +167,16 @@ class Tools:
         """
         emitter = EventEmitter(__event_emitter__)
 
+        # quick request to ankiconnect to check that the connection is valid
+        # quick request to ankiconnect to check that the connection is working
+        version = _ankiconnect_request(
+            self.valves.ankiconnect_host, self.valves.ankiconnect_port, "version"
+        )
+        if not isinstance(version, int):
+            logger.error(f"Unepected version check value from AnkiConnect: '{version}'")
+            await emitter.error_update(f"Unepected version check value from AnkiConnect: '{version}'")
+            return f"Error when checking version of ankiconnect. Instead of an int received '{version}'"
+
         if isinstance(fields, str):
             try:
                 fields_dict = json.loads(fields)
