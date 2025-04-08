@@ -18,11 +18,10 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 
 import os
 import subprocess
-import requests
 import json
-from typing import Callable, Any, Literal, Optional, Dict, Union
+from typing import Callable, Any, Dict
 import re
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 import importlib
 import sys
 from pathlib import Path
