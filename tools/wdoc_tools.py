@@ -289,6 +289,8 @@ class Tools:
             await emitter.progress_update(f"Error when getting title: '{e}'")
             content = f"Success.\n\n## Parsing of {url}\n\n{content}\n\n---\n\n"
 
+        assert content.strip(), "Empty output of _parse_url_internal"
+
         return content
 
     async def parse_url(
