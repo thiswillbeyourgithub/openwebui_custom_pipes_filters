@@ -35,7 +35,7 @@ os.environ["WDOC_IMPORT_TYPE"] = "native"
 try:
     import wdoc
 except ImportError as e:
-    logger.info("ImportError so wdoc needs to be installed")
+    logger.info(f"ImportError so wdoc needs to be installed: {e}")
 if Path("/app/backend/requirements.txt").exists():
     subprocess.check_call(
         [
