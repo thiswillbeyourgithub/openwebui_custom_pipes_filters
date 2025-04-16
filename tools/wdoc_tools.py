@@ -646,7 +646,7 @@ if Path("/app/backend/requirements.txt").exists():
             "--reinstall",
             "--overrides",
             "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-            "wdoc>=2.9.0",
+            "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION,
             "--system",
         ]
     )
