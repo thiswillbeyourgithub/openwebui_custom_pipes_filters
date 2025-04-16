@@ -11,7 +11,6 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 """
 
 # TODO:
-# - figure out why debug=True crashes the summarizer
 # - test that putting a gibberish API key in the env variable makes it indeed not work
 # - add a tool to query data
 #   - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
