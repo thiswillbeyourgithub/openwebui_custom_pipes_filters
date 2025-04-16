@@ -30,37 +30,6 @@ from datetime import datetime
 # disable import tricks, even though should be set by default in 2.7.0
 os.environ["WDOC_IMPORT_TYPE"] = "native"
 
-# install wdoc if not present already
-try:
-    import wdoc
-except ImportError as e:
-    logger.info(f"ImportError so wdoc needs to be installed: {e}")
-if Path("/app/backend/requirements.txt").exists():
-    subprocess.check_call(
-        [
-            sys.executable,
-            "-m",
-            "uv",
-            "pip",
-            "install",
-            # "-U",
-            "--reinstall",
-            "--overrides",
-            "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-            "wdoc>=2.9.0",
-            "--system",
-        ]
-    )
-
-
-try:
-    import wdoc
-
-    del sys.modules["wdoc"]
-except Exception as e:
-    raise Exception(f"Couldn't import wdoc: '{e}'")
-
-
 def normalize_dict_values(input_dict: Dict) -> Dict:
     """
     Iterates over a dictionary and converts string values of 'none', 'true', or 'false'
@@ -650,3 +619,43 @@ def check_wdoc_version(wdoc_module, minimum_version: str) -> None:
 def un_import_wdoc():
     del sys.modules["wdoc"]
     importlib.invalidate_caches()
+
+
+# force unimporting wdoc to test import it
+if "wdoc" in sys.modules:
+    try:
+        un_import_wdoc()
+    except Exception as e:
+        logger.error(f"Error when un importing wdoc before installing/updating it: '{e}'")
+
+# install wdoc if not present already
+try:
+    import wdoc
+except ImportError as e:
+    logger.warning(f"ImportError for wdoc before trying to install/update it: '{e}'")
+
+if Path("/app/backend/requirements.txt").exists():
+    subprocess.check_call(
+        [
+            sys.executable,
+            "-m",
+            "uv",
+            "pip",
+            "install",
+            # "-U",
+            "--reinstall",
+            "--overrides",
+            "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
+            "wdoc>=2.9.0",
+            "--system",
+        ]
+    )
+else:
+    logger.error(f"No /app/backend/requirements.txt file found")
+
+
+try:
+    import wdoc
+    un_import_wdoc()
+except Exception as e:
+    raise Exception(f"Couldn't import wdoc after installation: '{e}'")
