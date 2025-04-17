@@ -218,6 +218,12 @@ class Filter:
                     full_match = match.group(0)  # The entire match including the tags
                     cleaned_result = cleaned_result.replace(full_match, "").strip()
 
+                # the leading and ending " gets turned into &quote;
+                if cleaned_result.startswith('"'):
+                    cleaned_result = cleaned_result[1:]
+                if cleaned_result.endswith('"'):
+                    cleaned_result = cleaned_result[:-1]
+
                 await self.log(f"Cleaned result (first 100 chars): {cleaned_result[:100]}", level="debug")
 
                 # Update the result attribute with cleaned content
