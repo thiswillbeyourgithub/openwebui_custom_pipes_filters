@@ -155,8 +155,8 @@ class Filter:
 
                 result_content = html.unescape(details.attrs.get("result", ""))
 
-                # Find all matches of the pattern
-                matches = re.findall(pattern, result_content)
+                # Find all matches using finditer to get both the full match and captured groups
+                matches = list(re.finditer(pattern, result_content))
 
                 if not matches:
                     continue
@@ -165,16 +165,17 @@ class Filter:
 
                 # Remove the full matches (including start/end patterns) from the result attribute
                 cleaned_result = result_content
-                for match_content in matches:
-                    full_match = f"{self.valves.pattern_start}{match_content}{self.valves.pattern_end}"
+                for match in matches:
+                    full_match = match.group(0)  # The entire match including the tags
                     cleaned_result = cleaned_result.replace(full_match, "").strip()
 
                 # Update the result attribute with cleaned content
                 details.attrs["result"] = html.escape(cleaned_result)
 
                 # Add the extracted content (without start/end patterns) after the details tag
-                for match_content in matches:
-                    details.insert_after("\n\n" + match_content)
+                for match in matches:
+                    inner_content = match.group(1)  # Just the content between the tags
+                    details.insert_after("\n\n" + inner_content)
 
             return str(soup)
 
