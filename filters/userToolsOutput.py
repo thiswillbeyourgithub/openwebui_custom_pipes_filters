@@ -110,23 +110,26 @@ class Filter:
                     if isinstance(content, str):
                         # Process string content and get extracted parts
                         processed_content, extracted_parts = await self._process_html_content(content)
-                        # Combine the processed content with the extracted parts at the end
+                        # Only modify the content if we actually found and extracted parts
                         if extracted_parts:
                             message["content"] = processed_content + "\n\n" + "\n\n".join(extracted_parts)
-                        else:
-                            message["content"] = processed_content
+                        # Otherwise leave it unchanged
                     elif isinstance(content, list):
                         # Process list of content items (multi-modal)
                         all_extracted_parts = []
                         for j, item in enumerate(content):
                             if isinstance(item, dict) and "text" in item:
                                 processed_text, extracted_parts = await self._process_html_content(item["text"])
-                                content[j]["text"] = processed_text
-                                all_extracted_parts.extend(extracted_parts)
+                                # Only modify text if we found extractions
+                                if extracted_parts:
+                                    content[j]["text"] = processed_text
+                                    all_extracted_parts.extend(extracted_parts)
                             elif isinstance(item, dict) and "content" in item:
                                 processed_content, extracted_parts = await self._process_html_content(item["content"])
-                                content[j]["content"] = processed_content
-                                all_extracted_parts.extend(extracted_parts)
+                                # Only modify content if we found extractions
+                                if extracted_parts:
+                                    content[j]["content"] = processed_content
+                                    all_extracted_parts.extend(extracted_parts)
                         
                         # Append extracted parts at the end of the content list
                         if all_extracted_parts:
@@ -135,10 +138,9 @@ class Filter:
                 # Handle legacy "body" key
                 elif "body" in message:
                     processed_body, extracted_parts = await self._process_html_content(message["body"])
+                    # Only modify the body if we actually found and extracted parts
                     if extracted_parts:
                         message["body"] = processed_body + "\n\n" + "\n\n".join(extracted_parts)
-                    else:
-                        message["body"] = processed_body
 
             await self.log("Tool outputs extracted and repositioned successfully")
 
