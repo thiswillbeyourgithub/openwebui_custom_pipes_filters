@@ -143,8 +143,9 @@ class Filter:
 
             await self.log(f"Found {len(details_tags)} details tags", level="debug")
 
+            # Create pattern with a capture group to extract only content between tags
             pattern = re.compile(
-                f"{re.escape(self.valves.pattern_start)}.*?{re.escape(self.valves.pattern_end)}",
+                f"{re.escape(self.valves.pattern_start)}(.*?){re.escape(self.valves.pattern_end)}",
                 re.MULTILINE | re.DOTALL
             )
 
@@ -155,24 +156,25 @@ class Filter:
                 result_content = html.unescape(details.attrs.get("result", ""))
 
                 # Find all matches of the pattern
-                matches = pattern.findall(result_content)
+                matches = re.findall(pattern, result_content)
 
                 if not matches:
                     continue
 
                 await self.log(f"Found {len(matches)} matches in details", level="debug")
 
-                # Remove the matches from the result attribute
+                # Remove the full matches (including start/end patterns) from the result attribute
                 cleaned_result = result_content
-                for match in matches:
-                    cleaned_result = cleaned_result.replace(match, "").strip()
+                for match_content in matches:
+                    full_match = f"{self.valves.pattern_start}{match_content}{self.valves.pattern_end}"
+                    cleaned_result = cleaned_result.replace(full_match, "").strip()
 
                 # Update the result attribute with cleaned content
                 details.attrs["result"] = html.escape(cleaned_result)
 
-                # Add the extracted content after the details tag
-                for match in matches:
-                    details.insert_after("\n\n" + match)
+                # Add the extracted content (without start/end patterns) after the details tag
+                for match_content in matches:
+                    details.insert_after("\n\n" + match_content)
 
             return str(soup)
 
