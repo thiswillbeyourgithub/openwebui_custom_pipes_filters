@@ -7,7 +7,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 version: 1.3.0
 license: GPLv3
-description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things! You might want to take a look at ToolCompressor that I made to make the tool outputs unescaped and thus more legible annd less costly to LLMs.
+description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things! Note: as of open-webui 0.6.5, you HAVE to install my other tool 'userToolsOutput' to make wdoc's output appear as an assistant message.
 """
 
 # TODO:
