@@ -4,7 +4,7 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 1.0.0
+version: 1.1.0
 date: 2023-07-12
 license: GPLv3
 description: Extracts tool results from HTML details tags and displays them more prominently. This was done for the wdoc tool to make its output appear as an LLM message but could be used elsewhere too.
