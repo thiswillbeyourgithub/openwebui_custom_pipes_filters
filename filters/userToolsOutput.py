@@ -165,7 +165,7 @@ class Filter:
                 # Remove the matches from the result attribute
                 cleaned_result = result_content
                 for match in matches:
-                    cleaned_result = cleaned_result.replace(match, "")
+                    cleaned_result = cleaned_result.replace(match, "").strip()
 
                 # Update the result attribute with cleaned content
                 details.attrs["result"] = html.escape(cleaned_result)
