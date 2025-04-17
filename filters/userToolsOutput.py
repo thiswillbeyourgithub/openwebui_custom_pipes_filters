@@ -112,7 +112,7 @@ class Filter:
                         processed_content, extracted_parts = await self._process_html_content(content)
                         # Combine the processed content with the extracted parts at the end
                         if extracted_parts:
-                            message["content"] = processed_content + "\n\n### Tool Outputs\n\n" + "\n\n---\n\n".join(extracted_parts)
+                            message["content"] = processed_content + "\n\n".join(extracted_parts)
                         else:
                             message["content"] = processed_content
                     elif isinstance(content, list):
@@ -130,13 +130,13 @@ class Filter:
                         
                         # Append extracted parts at the end of the content list
                         if all_extracted_parts:
-                            content.append({"text": "\n\n### Tool Outputs\n\n" + "\n\n---\n\n".join(all_extracted_parts), "type": "text"})
+                            content.append({"text": "\n\n".join(all_extracted_parts), "type": "text"})
 
                 # Handle legacy "body" key
                 elif "body" in message:
                     processed_body, extracted_parts = await self._process_html_content(message["body"])
                     if extracted_parts:
-                        message["body"] = processed_body + "\n\n### Tool Outputs\n\n" + "\n\n---\n\n".join(extracted_parts)
+                        message["body"] = processed_body + "\n\n".join(extracted_parts)
                     else:
                         message["body"] = processed_body
 
