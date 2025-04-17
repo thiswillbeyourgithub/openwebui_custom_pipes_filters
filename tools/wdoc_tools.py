@@ -450,10 +450,11 @@ class Tools:
         else:
             output = f"""Summary succesful. Read it below.
 
+<userToolsOutput>
+
 <details>
 
 <summary>Summary of {url}</summary>
-
 
 {metadata}
 
@@ -461,6 +462,7 @@ class Tools:
 
 </details>
 
+</userToolsOutput>
 """
             return output
 
