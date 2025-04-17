@@ -132,55 +132,87 @@ class Filter:
     async def _process_html_content(self, content: str) -> str:
         """Process HTML content to extract and reposition tool outputs."""
         if not content or "<details" not in content:
+            await self.log("No details tags in content, skipping", level="debug")
             return content
 
         try:
+            await self.log(f"Content length before processing: {len(content)}", level="debug")
+            await self.log(f"Content snippet: {content[:100]}...", level="debug")
+            
             soup = BeautifulSoup(content, 'html.parser')
             details_tags = soup.find_all("details")
 
             if not details_tags:
+                await self.log("No details tags found by BeautifulSoup", level="debug")
                 return content
 
             await self.log(f"Found {len(details_tags)} details tags", level="debug")
+            
+            # Log details tags attributes
+            for i, tag in enumerate(details_tags):
+                await self.log(f"Details tag {i} attrs: {tag.attrs}", level="debug")
 
             # Create pattern with a capture group to extract only content between tags
+            pattern_str = f"{re.escape(self.valves.pattern_start)}(.*?){re.escape(self.valves.pattern_end)}"
+            await self.log(f"Pattern string: {pattern_str}", level="debug")
+            
             pattern = re.compile(
-                f"{re.escape(self.valves.pattern_start)}(.*?){re.escape(self.valves.pattern_end)}",
+                pattern_str,
                 re.MULTILINE | re.DOTALL
             )
 
-            for details in details_tags:
+            for i, details in enumerate(details_tags):
+                await self.log(f"Processing details tag {i}", level="debug")
+                
                 if "result" not in details.attrs:
+                    await self.log(f"No result attribute in details tag {i}", level="debug")
                     continue
 
                 result_content = html.unescape(details.attrs.get("result", ""))
+                await self.log(f"Result content before unescaping (first 100 chars): {details.attrs.get('result', '')[:100]}", level="debug")
+                await self.log(f"Result content after unescaping (first 100 chars): {result_content[:100]}", level="debug")
 
                 # Find all matches using finditer to get both the full match and captured groups
                 matches = list(re.finditer(pattern, result_content))
 
                 if not matches:
+                    await self.log(f"No pattern matches found in details tag {i}", level="debug")
                     continue
 
-                await self.log(f"Found {len(matches)} matches in details", level="debug")
+                await self.log(f"Found {len(matches)} matches in details tag {i}", level="debug")
+                
+                # Log each match for debugging
+                for j, match in enumerate(matches):
+                    await self.log(f"Match {j} full text: {match.group(0)[:50]}...", level="debug")
+                    await self.log(f"Match {j} captured content: {match.group(1)[:50]}...", level="debug")
 
                 # Remove the full matches (including start/end patterns) from the result attribute
                 cleaned_result = result_content
                 for match in matches:
                     full_match = match.group(0)  # The entire match including the tags
                     cleaned_result = cleaned_result.replace(full_match, "").strip()
+                
+                await self.log(f"Cleaned result (first 100 chars): {cleaned_result[:100]}", level="debug")
 
                 # Update the result attribute with cleaned content
-                details.attrs["result"] = html.escape(cleaned_result)
+                escaped_result = html.escape(cleaned_result)
+                await self.log(f"Escaped result (first 100 chars): {escaped_result[:100]}", level="debug")
+                details.attrs["result"] = escaped_result
 
                 # Add the extracted content (without start/end patterns) after the details tag
                 for match in matches:
                     inner_content = match.group(1)  # Just the content between the tags
+                    await self.log(f"Adding inner content (first 100 chars): {inner_content[:100]}", level="debug")
                     details.insert_after("\n\n" + inner_content)
 
+            await self.log(f"Processed HTML content length: {len(str(soup))}", level="debug")
             return str(soup)
 
         except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
             await self.log(f"Error processing HTML content: {str(e)}", level="error")
+            await self.log(f"Traceback: {tb}", level="error")
             return content
 
 
