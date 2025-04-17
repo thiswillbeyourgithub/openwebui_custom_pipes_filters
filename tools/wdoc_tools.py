@@ -452,7 +452,7 @@ class Tools:
 
 <userToolsOutput>
 
-<details>
+<details open="">
 
 <summary>Summary of {url}</summary>
 
