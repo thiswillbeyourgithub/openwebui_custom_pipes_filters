@@ -138,7 +138,7 @@ class Filter:
         try:
             await self.log(f"Content length before processing: {len(content)}", level="debug")
             await self.log(f"Content snippet: {content[:100]}...", level="debug")
-            
+
             soup = BeautifulSoup(content, 'html.parser')
             details_tags = soup.find_all("details")
 
@@ -147,7 +147,7 @@ class Filter:
                 return content
 
             await self.log(f"Found {len(details_tags)} details tags", level="debug")
-            
+
             # Log details tags attributes
             for i, tag in enumerate(details_tags):
                 await self.log(f"Details tag {i} attrs: {tag.attrs}", level="debug")
@@ -155,7 +155,7 @@ class Filter:
             # Create pattern with a capture group to extract only content between tags
             pattern_str = f"{re.escape(self.valves.pattern_start)}(.*?){re.escape(self.valves.pattern_end)}"
             await self.log(f"Pattern string: {pattern_str}", level="debug")
-            
+
             pattern = re.compile(
                 pattern_str,
                 re.MULTILINE | re.DOTALL
@@ -163,7 +163,7 @@ class Filter:
 
             for i, details in enumerate(details_tags):
                 await self.log(f"Processing details tag {i}", level="debug")
-                
+
                 if "result" not in details.attrs:
                     await self.log(f"No result attribute in details tag {i}", level="debug")
                     continue
@@ -180,7 +180,7 @@ class Filter:
                     continue
 
                 await self.log(f"Found {len(matches)} matches in details tag {i}", level="debug")
-                
+
                 # Log each match for debugging
                 for j, match in enumerate(matches):
                     await self.log(f"Match {j} full text: {match.group(0)[:50]}...", level="debug")
@@ -191,7 +191,7 @@ class Filter:
                 for match in matches:
                     full_match = match.group(0)  # The entire match including the tags
                     cleaned_result = cleaned_result.replace(full_match, "").strip()
-                
+
                 await self.log(f"Cleaned result (first 100 chars): {cleaned_result[:100]}", level="debug")
 
                 # Update the result attribute with cleaned content
