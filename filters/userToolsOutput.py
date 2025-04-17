@@ -108,19 +108,37 @@ class Filter:
                     content = message["content"]
 
                     if isinstance(content, str):
-                        # Process string content
-                        message["content"] = await self._process_html_content(content)
+                        # Process string content and get extracted parts
+                        processed_content, extracted_parts = await self._process_html_content(content)
+                        # Combine the processed content with the extracted parts at the end
+                        if extracted_parts:
+                            message["content"] = processed_content + "\n\n" + "\n\n".join(extracted_parts)
+                        else:
+                            message["content"] = processed_content
                     elif isinstance(content, list):
                         # Process list of content items (multi-modal)
+                        all_extracted_parts = []
                         for j, item in enumerate(content):
                             if isinstance(item, dict) and "text" in item:
-                                content[j]["text"] = await self._process_html_content(item["text"])
+                                processed_text, extracted_parts = await self._process_html_content(item["text"])
+                                content[j]["text"] = processed_text
+                                all_extracted_parts.extend(extracted_parts)
                             elif isinstance(item, dict) and "content" in item:
-                                content[j]["content"] = await self._process_html_content(item["content"])
+                                processed_content, extracted_parts = await self._process_html_content(item["content"])
+                                content[j]["content"] = processed_content
+                                all_extracted_parts.extend(extracted_parts)
+                        
+                        # Append extracted parts at the end of the content list
+                        if all_extracted_parts:
+                            content.append({"text": "\n\n" + "\n\n".join(all_extracted_parts), "type": "text"})
 
                 # Handle legacy "body" key
                 elif "body" in message:
-                    message["body"] = await self._process_html_content(message["body"])
+                    processed_body, extracted_parts = await self._process_html_content(message["body"])
+                    if extracted_parts:
+                        message["body"] = processed_body + "\n\n" + "\n\n".join(extracted_parts)
+                    else:
+                        message["body"] = processed_body
 
             await self.log("Tool outputs extracted and repositioned successfully")
 
@@ -129,11 +147,16 @@ class Filter:
 
         return body
 
-    async def _process_html_content(self, content: str) -> str:
-        """Process HTML content to extract and reposition tool outputs."""
+    async def _process_html_content(self, content: str) -> tuple[str, list[str]]:
+        """
+        Process HTML content to extract tool outputs.
+        
+        Returns:
+            tuple: (processed_content, list_of_extracted_contents)
+        """
         if not content or "<details" not in content:
             await self.log("No details tags in content, skipping", level="debug")
-            return content
+            return content, []
 
         try:
             await self.log(f"Content length before processing: {len(content)}", level="debug")
@@ -144,7 +167,7 @@ class Filter:
 
             if not details_tags:
                 await self.log("No details tags found by BeautifulSoup", level="debug")
-                return content
+                return content, []
 
             await self.log(f"Found {len(details_tags)} details tags", level="debug")
 
@@ -160,6 +183,9 @@ class Filter:
                 pattern_str,
                 re.MULTILINE | re.DOTALL
             )
+
+            # List to collect extracted content
+            extracted_contents = []
 
             for i, details in enumerate(details_tags):
                 await self.log(f"Processing details tag {i}", level="debug")
@@ -199,28 +225,21 @@ class Filter:
                 await self.log(f"Escaped result (first 100 chars): {escaped_result[:100]}", level="debug")
                 details.attrs["result"] = escaped_result
 
-                # Add the extracted content (without start/end patterns) after the details tag
+                # Collect the extracted content instead of inserting it after the details tag
                 for match in matches:
                     inner_content = match.group(1)  # Just the content between the tags
-                    await self.log(f"Adding inner content (first 100 chars): {inner_content[:100]}", level="debug")
-                    
-                    # Create a new BeautifulSoup object from the inner content
-                    # This ensures HTML tags are properly parsed, not escaped
-                    inner_soup = BeautifulSoup(f"\n\n{inner_content}", 'html.parser')
-                    
-                    # Insert each top-level element after the details tag
-                    for element in inner_soup.contents:
-                        details.insert_after(element)
+                    await self.log(f"Collecting inner content (first 100 chars): {inner_content[:100]}", level="debug")
+                    extracted_contents.append(inner_content)
 
             await self.log(f"Processed HTML content length: {len(str(soup))}", level="debug")
-            return str(soup)
+            return str(soup), extracted_contents
 
         except Exception as e:
             import traceback
             tb = traceback.format_exc()
             await self.log(f"Error processing HTML content: {str(e)}", level="error")
             await self.log(f"Traceback: {tb}", level="error")
-            return content
+            return content, []
 
 
 class EventEmitter:
