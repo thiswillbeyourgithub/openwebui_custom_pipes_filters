@@ -228,6 +228,8 @@ class Filter:
                 # Collect the extracted content instead of inserting it after the details tag
                 for match in matches:
                     inner_content = match.group(1)  # Just the content between the tags
+                    # Replace escaped newlines with actual newlines
+                    inner_content = inner_content.replace('\\n', '\n')
                     await self.log(f"Collecting inner content (first 100 chars): {inner_content[:100]}", level="debug")
                     extracted_contents.append(inner_content)
 
