@@ -16,11 +16,12 @@ A collection of pipes, filters and tools for OpenWebUI. My usual goto templates 
 - **tool_compressor.py** - by default tool execution metadata (like output values etc) is stored as escaped html/json inside the content and results variables of a details html tag in the body of the message. Depending on formatting this can be uselessly token intensive, hence this tool removes them and prints only the content or results as regular html, making the whole chat much less token intensive. **This might not be needed since openwebui version 0.6.1**
 - **DontAccumulateThoughts.py** - remove the `<thinking></thinking>` blocks in the input. Making the chat faster and less expensive as successive turns actually could only be paying attention to the conclusion.
 - ~~**WIP_automatic_claude_caching.py**  - [WIP] Automatically replaces system prompts with cached versions. Unfinished project.~~
+- **userToolsOutput.py** - Tool made for `wdoc` to make the wdoc output appear inside the assistant message instead of inside the `tool call` json lines.
 
 ### Tools
 
 - **anki_tool.py** - Creates Anki flashcards through AnkiConnect with configurable settings. Pairs nicely with **infinite_chat.py**.
-- **wdoc_tool.py** - tool to use wdoc as an url parser or summarizer
+- **wdoc_tool.py** - tool to use wdoc as an url parser or summarizer. You **HAVE TO** also install and enable the tool `userToolsOutput` otherwise the wdoc output will be hidden away.
 
 ### Pipes
 
