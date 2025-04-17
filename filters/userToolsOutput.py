@@ -223,6 +223,9 @@ class Filter:
                     cleaned_result = cleaned_result[1:]
                 if cleaned_result.endswith('"'):
                     cleaned_result = cleaned_result[:-1]
+                while cleaned_result.endswith(r"\n"):
+                    cleaned_result = cleaned_result[:-2]
+                cleaned_result = cleaned_result.strip()
 
                 await self.log(f"Cleaned result (first 100 chars): {cleaned_result[:100]}", level="debug")
 
