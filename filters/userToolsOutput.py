@@ -172,10 +172,7 @@ class Filter:
 
                 # Add the extracted content after the details tag
                 for match in matches:
-                    extracted_div = soup.new_tag("div")
-                    extracted_div.attrs["class"] = "extracted-tool-result"
-                    extracted_div.append(BeautifulSoup(match, 'html.parser'))
-                    details.insert_after(extracted_div)
+                    details.insert_after("\n\n" + match)
 
             return str(soup)
 
