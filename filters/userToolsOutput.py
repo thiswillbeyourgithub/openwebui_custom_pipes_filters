@@ -31,11 +31,11 @@ class Filter:
             description="Priority level for the filter operations (lower numbers run last).",
         )
         pattern_start: str = Field(
-            default="Result:",
+            default="<userToolsOutput>",
             description="Start pattern to match for extracting tool output",
         )
         pattern_end: str = Field(
-            default="\n\n",
+            default="</userToolsOutput>",
             description="End pattern to match for extracting tool output",
         )
         debug: bool = Field(
