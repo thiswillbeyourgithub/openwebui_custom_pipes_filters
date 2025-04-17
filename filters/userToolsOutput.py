@@ -203,7 +203,14 @@ class Filter:
                 for match in matches:
                     inner_content = match.group(1)  # Just the content between the tags
                     await self.log(f"Adding inner content (first 100 chars): {inner_content[:100]}", level="debug")
-                    details.insert_after("\n\n" + inner_content)
+                    
+                    # Create a new BeautifulSoup object from the inner content
+                    # This ensures HTML tags are properly parsed, not escaped
+                    inner_soup = BeautifulSoup(f"\n\n{inner_content}", 'html.parser')
+                    
+                    # Insert each top-level element after the details tag
+                    for element in inner_soup.contents:
+                        details.insert_after(element)
 
             await self.log(f"Processed HTML content length: {len(str(soup))}", level="debug")
             return str(soup)
