@@ -152,6 +152,7 @@ class Filter:
     async def _process_html_content(self, content: str) -> tuple[str, list[str]]:
         """
         Process HTML content to extract tool outputs.
+        Only processes <details> tags, leaving the rest of the markdown intact.
         
         Returns:
             tuple: (processed_content, list_of_extracted_contents)
@@ -163,64 +164,70 @@ class Filter:
         try:
             await self.log(f"Content length before processing: {len(content)}", level="debug")
             await self.log(f"Content snippet: {content[:100]}...", level="debug")
-
-            soup = BeautifulSoup(content, 'html.parser')
-            details_tags = soup.find_all("details")
-
-            if not details_tags:
-                await self.log("No details tags found by BeautifulSoup", level="debug")
+            
+            # Use regex to find all <details> tags in the content
+            details_pattern = re.compile(r'<details[^>]*>.*?</details>', re.DOTALL)
+            details_matches = list(details_pattern.finditer(content))
+            
+            if not details_matches:
+                await self.log("No details tags found by regex", level="debug")
                 return content, []
-
-            await self.log(f"Found {len(details_tags)} details tags", level="debug")
-
-            # Log details tags attributes
-            for i, tag in enumerate(details_tags):
-                await self.log(f"Details tag {i} attrs: {tag.attrs}", level="debug")
-
-            # Create pattern with a capture group to extract only content between tags
-            pattern_str = f"{re.escape(self.valves.pattern_start)}(.*?){re.escape(self.valves.pattern_end)}"
-            await self.log(f"Pattern string: {pattern_str}", level="debug")
-
-            pattern = re.compile(
-                pattern_str,
+                
+            await self.log(f"Found {len(details_matches)} details tags", level="debug")
+            
+            # Create pattern for extracting content between userToolsOutput tags
+            tool_output_pattern = re.compile(
+                f"{re.escape(self.valves.pattern_start)}(.*?){re.escape(self.valves.pattern_end)}",
                 re.MULTILINE | re.DOTALL
             )
-
+            
             # List to collect extracted content
             extracted_contents = []
-
-            for i, details in enumerate(details_tags):
+            modified_content = content
+            
+            for i, match in enumerate(details_matches):
                 await self.log(f"Processing details tag {i}", level="debug")
-
-                if "result" not in details.attrs:
+                details_html = match.group(0)
+                details_start = match.start()
+                details_end = match.end()
+                
+                # Parse only this specific details tag with BeautifulSoup
+                soup = BeautifulSoup(details_html, 'html.parser')
+                details_tag = soup.find('details')
+                
+                if not details_tag or "result" not in details_tag.attrs:
                     await self.log(f"No result attribute in details tag {i}", level="debug")
                     continue
-
-                result_content = html.unescape(details.attrs.get("result", ""))
-                await self.log(f"Result content before unescaping (first 100 chars): {details.attrs.get('result', '')[:100]}", level="debug")
+                
+                result_content = html.unescape(details_tag.attrs.get("result", ""))
                 await self.log(f"Result content after unescaping (first 100 chars): {result_content[:100]}", level="debug")
-
-                # Find all matches using finditer to get both the full match and captured groups
-                matches = list(re.finditer(pattern, result_content))
-
-                if not matches:
+                
+                # Find all tool output matches in the result content
+                tool_matches = list(tool_output_pattern.finditer(result_content))
+                
+                if not tool_matches:
                     await self.log(f"No pattern matches found in details tag {i}", level="debug")
                     continue
-
-                await self.log(f"Found {len(matches)} matches in details tag {i}", level="debug")
-
-                # Log each match for debugging
-                for j, match in enumerate(matches):
-                    await self.log(f"Match {j} full text: {match.group(0)[:50]}...", level="debug")
-                    await self.log(f"Match {j} captured content: {match.group(1)[:50]}...", level="debug")
-
-                # Remove the full matches (including start/end patterns) from the result attribute
+                
+                await self.log(f"Found {len(tool_matches)} tool output matches in details tag {i}", level="debug")
+                
+                # Process the matches
                 cleaned_result = result_content
-                for match in matches:
-                    full_match = match.group(0)  # The entire match including the tags
+                for tool_match in tool_matches:
+                    full_match = tool_match.group(0)  # The entire match including the tags
+                    inner_content = tool_match.group(1)  # Just the content between the tags
+                    
+                    # Replace escaped newlines with actual newlines
+                    inner_content = inner_content.replace('\\n', '\n')
+                    
+                    # Add to extracted contents list
+                    await self.log(f"Collecting inner content (first 100 chars): {inner_content[:100]}", level="debug")
+                    extracted_contents.append(inner_content)
+                    
+                    # Remove the match from the result attribute
                     cleaned_result = cleaned_result.replace(full_match, "").strip()
-
-                # the leading and ending " gets turned into &quote;
+                
+                # Clean up the result content
                 if cleaned_result.startswith('"'):
                     cleaned_result = cleaned_result[1:]
                 if cleaned_result.endswith('"'):
@@ -228,24 +235,18 @@ class Filter:
                 while cleaned_result.endswith(r"\n"):
                     cleaned_result = cleaned_result[:-2]
                 cleaned_result = cleaned_result.strip()
-
+                
                 await self.log(f"Cleaned result (first 100 chars): {cleaned_result[:100]}", level="debug")
-
-                # Update the result attribute with cleaned content
-                escaped_result = html.escape(cleaned_result)
-                await self.log(f"Escaped result (first 100 chars): {escaped_result[:100]}", level="debug")
-                details.attrs["result"] = escaped_result
-
-                # Collect the extracted content instead of inserting it after the details tag
-                for match in matches:
-                    inner_content = match.group(1)  # Just the content between the tags
-                    # Replace escaped newlines with actual newlines
-                    inner_content = inner_content.replace('\\n', '\n')
-                    await self.log(f"Collecting inner content (first 100 chars): {inner_content[:100]}", level="debug")
-                    extracted_contents.append(inner_content)
-
-            await self.log(f"Processed HTML content length: {len(str(soup))}", level="debug")
-            return str(soup), extracted_contents
+                
+                # Update the result attribute
+                details_tag.attrs["result"] = html.escape(cleaned_result)
+                
+                # Replace the original details tag in the content
+                processed_details = str(details_tag)
+                modified_content = modified_content[:details_start] + processed_details + modified_content[details_end:]
+            
+            await self.log(f"Final content length: {len(modified_content)}", level="debug")
+            return modified_content, extracted_contents
 
         except Exception as e:
             import traceback
