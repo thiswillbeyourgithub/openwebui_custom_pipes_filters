@@ -11,7 +11,7 @@ description: Extracts tool results from HTML details tags and displays them more
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/userToolsOutput
 """
 
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional
 from pydantic import BaseModel, Field
 from loguru import logger
 import re
