@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from loguru import logger
 import re
 import html
+import codecs
 from bs4 import BeautifulSoup
 
 
@@ -250,7 +251,13 @@ class Filter:
 
                     # Replace escaped newlines with actual newlines
                     inner_content = inner_content.replace("\\n", "\n")
-
+                    
+                    # Decode Unicode escape sequences like \u00e9 to proper characters
+                    try:
+                        inner_content = codecs.decode(inner_content, 'unicode_escape')
+                    except Exception as e:
+                        await self.log(f"Error decoding unicode: {str(e)}", level="debug")
+                    
                     # Add to extracted contents list
                     await self.log(
                         f"Collecting inner content (first 100 chars): {inner_content[:100]}",
@@ -269,6 +276,12 @@ class Filter:
                 while cleaned_result.endswith(r"\n"):
                     cleaned_result = cleaned_result[:-2]
                 cleaned_result = cleaned_result.strip()
+                
+                # Decode Unicode escape sequences in the cleaned result
+                try:
+                    cleaned_result = codecs.decode(cleaned_result, 'unicode_escape')
+                except Exception as e:
+                    await self.log(f"Error decoding unicode in result: {str(e)}", level="debug")
 
                 await self.log(
                     f"Cleaned result (first 100 chars): {cleaned_result[:100]}",
