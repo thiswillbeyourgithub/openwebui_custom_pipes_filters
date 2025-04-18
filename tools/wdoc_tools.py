@@ -29,6 +29,11 @@ from pathlib import Path
 from loguru import logger
 from datetime import datetime
 
+# change this to choose which wdoc version to install
+WDOC_VERSION = "release"
+# WDOC_VERSION = "git_main"
+# WDOC_VERSION = "git_dev"
+
 def normalize_dict_values(input_dict: Dict) -> Dict:
     """
     Iterates over a dictionary and converts string values of 'none', 'true', or 'false'
@@ -645,6 +650,14 @@ except ImportError as e:
     logger.warning(f"ImportError for wdoc before trying to install/update it: '{e}'")
 
 if Path("/app/backend/requirements.txt").exists():
+    if WDOC_VERSION == "release":
+        ver = "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION
+    elif WDOC_VERSION == "git_main":
+        ver = "git+https://github.com/thiswillbeyourgithub/wdoc"
+    elif WDOC_VERSION == "git_dev":
+        ver = "git+https://github.com/thiswillbeyourgithub/wdoc@dev"
+    else:
+        raise ValueError("Invalid WDOC_VERSION value")
     subprocess.check_call(
         [
             sys.executable,
@@ -656,9 +669,7 @@ if Path("/app/backend/requirements.txt").exists():
             "--reinstall",
             "--overrides",
             "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-            "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION,
-            # "git+https://github.com/thiswillbeyourgithub/wdoc",
-            # "git+https://github.com/thiswillbeyourgithub/wdoc@dev",
+            ver,
             "langchain-core>=0.3.37",  #  apparently needed for smooth installation as of open-webui 0.6.5
             "--system",
         ]
