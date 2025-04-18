@@ -29,9 +29,6 @@ from pathlib import Path
 from loguru import logger
 from datetime import datetime
 
-# disable import tricks, even though should be set by default in 2.7.0
-os.environ["WDOC_IMPORT_TYPE"] = "native"
-
 def normalize_dict_values(input_dict: Dict) -> Dict:
     """
     Iterates over a dictionary and converts string values of 'none', 'true', or 'false'
