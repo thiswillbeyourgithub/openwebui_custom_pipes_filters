@@ -20,6 +20,7 @@ import os
 import subprocess
 import json
 from typing import Callable, Any, Dict
+import traceback
 import re
 from pydantic import BaseModel, Field
 import importlib
@@ -242,7 +243,9 @@ class Tools:
                     f"Error when parsing:\nArguments were: '{parse_kwargs}'\n{e}"
                 )
                 await emitter.error_update(error_message)
-                raise
+                # raise
+                stack_trace_string = traceback.format_exc()
+                return error_message + "\n\n" + stack_trace_string
             finally:
                 if not self.always_unimport_wdoc:
                     un_import_wdoc()
@@ -288,8 +291,11 @@ class Tools:
         try:
             content = await self._parse_url_internal(url, __event_emitter__, __user__)
         except Exception as e:
-            await emitter.error_update("Error when parsing url: '{e}'")
-            raise
+            error_message = f"Error when parsing url: '{e}'"
+            await emitter.error_update(error_message)
+            # raise
+            stack_trace_string = traceback.format_exc()
+            return error_message + "\n\n" + stack_trace_string
 
         await emitter.success_update(f"Successfully parsed '{url}'")
 
@@ -410,7 +416,9 @@ class Tools:
                     f"Error when summarizing:\nArguments were: '{summary_kwargs}'\n{e}"
                 )
                 await emitter.error_update(error_message)
-                raise
+                # raise
+                stack_trace_string = traceback.format_exc()
+                return error_message + "\n\n" + stack_trace_string
             finally:
                 if not self.always_unimport_wdoc:
                     un_import_wdoc()
