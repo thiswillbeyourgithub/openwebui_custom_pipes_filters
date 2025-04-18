@@ -11,7 +11,7 @@ A collection of pipes, filters and tools for OpenWebUI. My usual goto templates 
 - **langfuse filter.py** - should maybe be better than add_metadata, and don't rely on litellm
 - **warn_if_long_chat.py** - Adds soft and hard limits to the number of messages in a chat.
 - **hide_thinking_filter.py** - Removes thinking XML tags to reduce token count and converts them to HTML details tags. Not used anymore because open-webui now automatically wraps the thoughts.
-- **debug_filter.py** - Filter that prints argument as they pass through it. You can use it multiple times to debug another filter. You can then use `docker logs open-webui --tail 100 --follow | grep debugfilter` to see the data that interests you.
+- **debug_filter.py** - Filter that prints argument as they pass through it. You can use it multiple times to debug another filter. You can then use `docker logs open-webui --tail 100 --follow | grep DebugFilter` to see the data that interests you.
 - **infinite_chat.py** - keep only the last n messages. Used to not have to create a new chat so often, for example with the anki_tool.
 - **tool_compressor.py** - by default tool execution metadata (like output values etc) is stored as escaped html/json inside the content and results variables of a details html tag in the body of the message. Depending on formatting this can be uselessly token intensive, hence this tool removes them and prints only the content or results as regular html, making the whole chat much less token intensive. **This might not be needed since openwebui version 0.6.1**
 - **DontAccumulateThoughts.py** - remove the `<thinking></thinking>` blocks in the input. Making the chat faster and less expensive as successive turns actually could only be paying attention to the conclusion.
