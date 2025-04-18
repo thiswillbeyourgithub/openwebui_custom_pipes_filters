@@ -11,8 +11,10 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 """
 
 # TODO:
-# - add a tool to summarize files (either from the file parser or from the the file path itself)
+# - make the filetype argument reachable by the user but tell the LLM to leave it to default unless specified
+# - add a tool to summarize files instead of urls (either from the file parser or from the the file path itself)
 # - add a tool to query data
+#   - think carefully about how nultiturn should work in that case
 #   - add a user valve to specify a path to use as a source of embeddings (make sure they are in a $username subfolder)
 
 import os
