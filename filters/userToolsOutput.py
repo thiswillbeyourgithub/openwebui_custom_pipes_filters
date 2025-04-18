@@ -54,14 +54,14 @@ class Filter:
 
     async def log(self, message: str, level="info") -> None:
         """Log a message."""
-        getattr(logger, level)(f"[{self.NAME}] {message}")
+        # Only log if debug is True or if it's an error
+        if (hasattr(self.valves, "debug") and self.valves.debug) or level == "error":
+            getattr(logger, level)(f"[{self.NAME}] {message}")
+            
         if not self.emitter:
             return
 
-        if level == "info":
-            if hasattr(self.valves, "debug") and self.valves.debug:
-                await self.emitter.progress_update(f"[{self.NAME}] {message}")
-        elif level == "debug":
+        if level == "info" or level == "debug":
             if hasattr(self.valves, "debug") and self.valves.debug:
                 await self.emitter.progress_update(f"[{self.NAME}] {message}")
         elif level == "error":
