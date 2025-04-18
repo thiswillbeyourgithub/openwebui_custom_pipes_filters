@@ -190,7 +190,7 @@ class Tools:
             # Check if user is in the allowed list
             user_allowed = __user__.get("name", "") in self.allowed_users_for_override
             if not user_allowed:
-                error_msg = f"User '{__user__.get('name', '')}' is not allowed to override valves. Only these users can: {', '.join(self.allowed_users_for_override) or 'None'}"
+                error_msg = f"User '{__user__.get('name', '')}' is not allowed to override valves."
                 await emitter.error_update(error_msg)
                 assert user_allowed, error_msg
 
@@ -356,7 +356,7 @@ class Tools:
             # Check if user is in the allowed list
             user_allowed = __user__.get("name", "") in self.allowed_users_for_override
             if not user_allowed:
-                error_msg = f"User '{__user__.get('name', '')}' is not allowed to override valves. Only these users can: {', '.join(self.allowed_users_for_override) or 'None'}"
+                error_msg = f"User '{__user__.get('name', '')}' is not allowed to override valves."
                 await emitter.error_update(error_msg)
                 assert user_allowed, error_msg
 
