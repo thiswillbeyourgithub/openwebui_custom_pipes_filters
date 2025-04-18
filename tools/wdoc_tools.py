@@ -79,7 +79,7 @@ class Tools:
         )
         use_citations_for_summary: bool = Field(
             default=False,
-            description="If True, use the citation system for summaries instead of outputting the text directly.",
+            description="If True, use the citation system for summaries instead of outputting the text directly. Keep in mind that if using userToolsOutput with wdoc, your token might mention the whole summary twice so be careful if using multiturn chats!",
         )
         use_citations_for_parse: bool = Field(
             default=False,
