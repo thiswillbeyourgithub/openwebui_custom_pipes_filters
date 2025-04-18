@@ -70,7 +70,7 @@ class Tools:
     VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
         0
     ].split("version: ")[1]
-    APPROPRIATE_WDOC_VERSION: str = "3.0.2"
+    APPROPRIATE_WDOC_VERSION: str = "3.1.0"
 
     class Valves(BaseModel):
         useracknowledgement: bool = Field(
