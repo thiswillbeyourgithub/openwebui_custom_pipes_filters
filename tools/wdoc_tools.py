@@ -657,6 +657,8 @@ if Path("/app/backend/requirements.txt").exists():
             "--overrides",
             "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
             "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION,
+            # "git+https://github.com/thiswillbeyourgithub/wdoc",
+            # "git+https://github.com/thiswillbeyourgithub/wdoc@dev",
             "langchain-core>=0.3.37",  #  apparently needed for smooth installation as of open-webui 0.6.5
             "--system",
         ]
