@@ -650,6 +650,20 @@ except ImportError as e:
     logger.warning(f"ImportError for wdoc before trying to install/update it: '{e}'")
 
 if Path("/app/backend/requirements.txt").exists():
+    logger.warning("First uninstalling wdoc")
+    subprocess.check_call(
+        [
+            sys.executable,
+            "-m",
+            "uv",
+            "pip",
+            "uninstall",
+            "wdoc",
+            "--system"
+        ]
+    )
+    logger.warning("Done uninstalling wdoc")
+
     if WDOC_VERSION == "release":
         ver = "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION
     elif WDOC_VERSION == "git_main":
@@ -658,6 +672,7 @@ if Path("/app/backend/requirements.txt").exists():
         ver = "git+https://github.com/thiswillbeyourgithub/wdoc@dev"
     else:
         raise ValueError("Invalid WDOC_VERSION value")
+    logger.warning(f"Reinsalling wdoc version '{ver}'")
     subprocess.check_call(
         [
             sys.executable,
