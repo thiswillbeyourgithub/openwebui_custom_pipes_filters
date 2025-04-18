@@ -288,7 +288,7 @@ class Tools:
         try:
             content = await self._parse_url_internal(url, __event_emitter__, __user__)
         except Exception as e:
-            # Error already reported in _parse_url_internal
+            await emitter.error_update("Error when parsing url: '{e}'")
             raise
 
         await emitter.success_update(f"Successfully parsed '{url}'")
