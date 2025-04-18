@@ -130,7 +130,7 @@ class Filter:
                                 if extracted_parts:
                                     content[j]["content"] = processed_content
                                     all_extracted_parts.extend(extracted_parts)
-                        
+
                         # Append extracted parts at the end of the content list
                         if all_extracted_parts:
                             content.append({"text": "\n\n".join(all_extracted_parts), "type": "text"})
@@ -153,7 +153,7 @@ class Filter:
         """
         Process HTML content to extract tool outputs.
         Only processes <details> tags, leaving the rest of the markdown intact.
-        
+
         Returns:
             tuple: (processed_content, list_of_extracted_contents)
         """
@@ -164,69 +164,69 @@ class Filter:
         try:
             await self.log(f"Content length before processing: {len(content)}", level="debug")
             await self.log(f"Content snippet: {content[:100]}...", level="debug")
-            
+
             # Use regex to find all <details> tags in the content
             details_pattern = re.compile(r'<details[^>]*>.*?</details>', re.DOTALL)
             details_matches = list(details_pattern.finditer(content))
-            
+
             if not details_matches:
                 await self.log("No details tags found by regex", level="debug")
                 return content, []
-                
+
             await self.log(f"Found {len(details_matches)} details tags", level="debug")
-            
+
             # Create pattern for extracting content between userToolsOutput tags
             tool_output_pattern = re.compile(
                 f"{re.escape(self.valves.pattern_start)}(.*?){re.escape(self.valves.pattern_end)}",
                 re.MULTILINE | re.DOTALL
             )
-            
+
             # List to collect extracted content
             extracted_contents = []
             modified_content = content
-            
+
             for i, match in enumerate(details_matches):
                 await self.log(f"Processing details tag {i}", level="debug")
                 details_html = match.group(0)
                 details_start = match.start()
                 details_end = match.end()
-                
+
                 # Parse only this specific details tag with BeautifulSoup
                 soup = BeautifulSoup(details_html, 'html.parser')
                 details_tag = soup.find('details')
-                
+
                 if not details_tag or "result" not in details_tag.attrs:
                     await self.log(f"No result attribute in details tag {i}", level="debug")
                     continue
-                
+
                 result_content = html.unescape(details_tag.attrs.get("result", ""))
                 await self.log(f"Result content after unescaping (first 100 chars): {result_content[:100]}", level="debug")
-                
+
                 # Find all tool output matches in the result content
                 tool_matches = list(tool_output_pattern.finditer(result_content))
-                
+
                 if not tool_matches:
                     await self.log(f"No pattern matches found in details tag {i}", level="debug")
                     continue
-                
+
                 await self.log(f"Found {len(tool_matches)} tool output matches in details tag {i}", level="debug")
-                
+
                 # Process the matches
                 cleaned_result = result_content
                 for tool_match in tool_matches:
                     full_match = tool_match.group(0)  # The entire match including the tags
                     inner_content = tool_match.group(1)  # Just the content between the tags
-                    
+
                     # Replace escaped newlines with actual newlines
                     inner_content = inner_content.replace('\\n', '\n')
-                    
+
                     # Add to extracted contents list
                     await self.log(f"Collecting inner content (first 100 chars): {inner_content[:100]}", level="debug")
                     extracted_contents.append(inner_content)
-                    
+
                     # Remove the match from the result attribute
                     cleaned_result = cleaned_result.replace(full_match, "").strip()
-                
+
                 # Clean up the result content
                 if cleaned_result.startswith('"'):
                     cleaned_result = cleaned_result[1:]
@@ -235,16 +235,16 @@ class Filter:
                 while cleaned_result.endswith(r"\n"):
                     cleaned_result = cleaned_result[:-2]
                 cleaned_result = cleaned_result.strip()
-                
+
                 await self.log(f"Cleaned result (first 100 chars): {cleaned_result[:100]}", level="debug")
-                
+
                 # Update the result attribute
                 details_tag.attrs["result"] = html.escape(cleaned_result)
-                
+
                 # Replace the original details tag in the content
                 processed_details = str(details_tag)
                 modified_content = modified_content[:details_start] + processed_details + modified_content[details_end:]
-            
+
             await self.log(f"Final content length: {len(modified_content)}", level="debug")
             return modified_content, extracted_contents
 
