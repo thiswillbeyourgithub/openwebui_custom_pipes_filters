@@ -96,7 +96,9 @@ class Filter:
                         )
                     except:
                         val = str(locals()[arg])
-                    p(f"\nINLET_{prio}: {arg}:\n{val}")
+                    val_lines = val.strip().splitlines()
+                    for vl in val_lines:
+                        p(f"INLET_{prio}: {arg}: {vl}")
         return body
 
     def outlet(
@@ -128,5 +130,7 @@ class Filter:
                         )
                     except:
                         val = str(locals()[arg])
-                    p(f"\nOUTLET_{prio}: {arg}:\n{val}")
+                    val_lines = val.strip().splitlines()
+                    for vl in val_lines:
+                        p(f"OUTLET_{prio}: {arg}: {vl}")
         return body
