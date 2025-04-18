@@ -74,9 +74,9 @@ class Tools:
             default=False,
             description="I have understood that I need to install the filter 'userToolsOutput' to make the summary appear directly in the LLM output.",
         )
-        allow_user_valves_override: bool = Field(
-            default=True,
-            description="If True then we allow user valves to override the Valves dicts. If False UserValves raise an exeception.",
+        allowed_users_for_override: str = Field(
+            default="",
+            description="Comma-separated list of usernames that are allowed to override valves. If empty, no users can override.",
         )
         always_unimport_wdoc: bool = Field(
             default=False,
@@ -148,11 +148,13 @@ class Tools:
         ), f"env_variables_as_dict must be a dictionary, got {type(self.env_variables)}"
         self.env_variables = normalize_dict_values(self.env_variables)
 
-        # Check types of boolean valves
+        # Check allowed users format
         assert isinstance(
-            self.valves.allow_user_valves_override, bool
-        ), f"allow_user_valves_override must be a boolean, got {type(self.valves.allow_user_valves_override)}"
-        self.allow_user_valves_override = self.valves.allow_user_valves_override
+            self.valves.allowed_users_for_override, str
+        ), f"allowed_users_for_override must be a string, got {type(self.valves.allowed_users_for_override)}"
+        self.allowed_users_for_override = [
+            username.strip() for username in self.valves.allowed_users_for_override.split(',') if username.strip()
+        ]
 
         assert isinstance(
             self.valves.always_unimport_wdoc, bool
@@ -184,17 +186,13 @@ class Tools:
         emitter = EventEmitter(__event_emitter__)
 
         uvalves = dict(__user__.get("valves", {}))
-        if (
-            uvalves
-            and any(d != "{}" for d in uvalves.values())
-            and not self.allow_user_valves_override
-        ):
-            await emitter.error_update(
-                f"You are trying to use a UserValve but the Valves of WdocTool don't allow it.\n{uvalves}"
-            )
-            assert (
-                self.allow_user_valves_override
-            ), f"You are trying to use a UserValve but the Valves of WdocTool don't allow it.\n{uvalves}"
+        if uvalves and any(d != "{}" for d in uvalves.values()):
+            # Check if user is in the allowed list
+            user_allowed = __user__.get("name", "") in self.allowed_users_for_override
+            if not user_allowed:
+                error_msg = f"User '{__user__.get('name', '')}' is not allowed to override valves. Only these users can: {', '.join(self.allowed_users_for_override) or 'None'}"
+                await emitter.error_update(error_msg)
+                assert user_allowed, error_msg
 
         parse_kwargs = self.parse_kwargs.copy()
         override_parse_kwargs = uvalves.get("override_parse_kwargs", "{}")
@@ -354,17 +352,13 @@ class Tools:
                 )
 
         uvalves = dict(__user__.get("valves", {}))
-        if (
-            uvalves
-            and any(d != "{}" for d in uvalves.values())
-            and not self.allow_user_valves_override
-        ):
-            await emitter.error_update(
-                f"You are trying to use a UserValve but the Valves of WdocTool don't allow it.\n{uvalves}"
-            )
-            assert (
-                self.allow_user_valves_override
-            ), f"You are trying to use a UserValve but the Valves of WdocTool don't allow it.\n{uvalves}"
+        if uvalves and any(d != "{}" for d in uvalves.values()):
+            # Check if user is in the allowed list
+            user_allowed = __user__.get("name", "") in self.allowed_users_for_override
+            if not user_allowed:
+                error_msg = f"User '{__user__.get('name', '')}' is not allowed to override valves. Only these users can: {', '.join(self.allowed_users_for_override) or 'None'}"
+                await emitter.error_update(error_msg)
+                assert user_allowed, error_msg
 
         summary_kwargs = self.summary_kwargs.copy()
         override_summary_kwargs = uvalves.get("override_summary_kwargs", "{}")
