@@ -245,7 +245,7 @@ class Tools:
                 await emitter.error_update(error_message)
                 # raise
                 stack_trace_string = traceback.format_exc()
-                return error_message + "\n\n" + stack_trace_string
+                return error_message + "\n\n<userToolsOutput>" + stack_trace_string + "\n</userToolsOutput>"
             finally:
                 if not self.always_unimport_wdoc:
                     un_import_wdoc()
@@ -295,7 +295,7 @@ class Tools:
             await emitter.error_update(error_message)
             # raise
             stack_trace_string = traceback.format_exc()
-            return error_message + "\n\n" + stack_trace_string
+            return error_message + "\n\n<userToolsOutput>" + stack_trace_string + "\n</userToolsOutput>"
 
         await emitter.success_update(f"Successfully parsed '{url}'")
 
@@ -418,7 +418,7 @@ class Tools:
                 await emitter.error_update(error_message)
                 # raise
                 stack_trace_string = traceback.format_exc()
-                return error_message + "\n\n" + stack_trace_string
+                return error_message + "\n\n<userToolsOutput>" + stack_trace_string + "\n</userToolsOutput>"
             finally:
                 if not self.always_unimport_wdoc:
                     un_import_wdoc()
