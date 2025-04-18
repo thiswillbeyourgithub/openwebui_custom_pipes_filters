@@ -69,6 +69,10 @@ class Tools:
     APPROPRIATE_WDOC_VERSION: str = "3.0.0"
 
     class Valves(BaseModel):
+        useracknowledgement: bool = Field(
+            default=False,
+            description="I have understood that I need to install the filter 'userToolsOutput' to make the summary appear directly in the LLM output.",
+        )
         allow_user_valves_override: bool = Field(
             default=True,
             description="If True then we allow user valves to override the Valves dicts. If False UserValves raise an exeception.",
@@ -275,6 +279,8 @@ class Tools:
         :param url: The URL of the online data to parse.
         :return: The parsed data as text, or an error message.
         """
+        if not self.valves.useracknowledgement:
+            raise Exception("ERROR: You need to ask the admin to manually check the first valve.")
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
 
@@ -319,6 +325,8 @@ class Tools:
         :param url: The URL of the online data to summarize.
         :return: The summary as text, or an error message.
         """
+        if not self.valves.useracknowledgement:
+            raise Exception("ERROR: You need to ask the admin to manually check the first valve.")
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
 
