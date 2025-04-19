@@ -7,7 +7,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 version: 1.5.0
 license: GPLv3
-description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things! Note: as of open-webui 0.6.5, you HAVE to install my other tool 'userToolsOutput' to make wdoc's output appear as an assistant message.
+description: use wdoc (cf github repo) as rag system to parse online stuff or summarize them. WIP because it can be used to do many more things!
 """
 
 # TODO:
@@ -74,10 +74,6 @@ class Tools:
     APPROPRIATE_WDOC_VERSION: str = "3.1.0"
 
     class Valves(BaseModel):
-        useracknowledgement: bool = Field(
-            default=False,
-            description="I have understood that I need to install the filter 'userToolsOutput' to make the summary appear directly in the LLM output.",
-        )
         allowed_users_for_override: str = Field(
             default="",
             description="Comma-separated list of usernames that are allowed to override valves. If empty, no users can override.",
@@ -284,8 +280,6 @@ class Tools:
         :param url: The URL of the online data to parse.
         :return: The parsed data as text, or an error message.
         """
-        if not self.valves.useracknowledgement:
-            raise Exception("ERROR: You need to ask the admin to manually check the first valve.")
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
 
@@ -334,8 +328,6 @@ class Tools:
         :param url: The URL of the online data to summarize.
         :return: The summary as text, or an error message.
         """
-        if not self.valves.useracknowledgement:
-            raise Exception("ERROR: You need to ask the admin to manually check the first valve.")
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
 
