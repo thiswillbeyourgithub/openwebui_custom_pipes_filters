@@ -319,7 +319,20 @@ class Tools:
             )
             return "Parsing completed successfully. Please check the citations panel to view the results."
         else:
-            await emitter.send_as_message(f"# Parsing of {url}\n\n{content}")
+            message = f"""
+
+# Parsing of {url}
+
+<details open>
+
+<summary>Click to read the parsing</summary>
+
+{content}
+
+</details>
+
+"""
+            await emitter.send_as_message(message)
             return "Parsing completed successfully. Please read it below."
 
     async def summarize_url(
