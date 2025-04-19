@@ -314,7 +314,8 @@ class Tools:
             )
             return "Parsing completed successfully. Please check the citations panel to view the results."
         else:
-            return content
+            await emitter.send_as_message(f"# Parsing of {url}\n\n{content}")
+            return "Parsing completed successfully. Please read it below."
 
     async def summarize_url(
         self,
@@ -462,22 +463,18 @@ class Tools:
             )
             return "Summary completed successfully. Please check the citations panel to view the results."
         else:
-            output = f"""Summary succesful. Read it below.
+            output = "Summary succesful. Read it below."
+            message = f"""
 
-<userToolsOutput>
-
-<details open="">
-
-<summary>Summary of {url}</summary>
+# Summary of {url}
 
 {metadata}
 
 {summary}
 
-</details>
-
-</userToolsOutput>
 """
+            await emitter.send_as_message(message)
+
             return output
 
 
@@ -538,6 +535,20 @@ class EventEmitter:
                         "status": status,
                         "description": description,
                         "done": done,
+                    },
+                }
+            )
+
+    async def send_as_message(
+        self,
+        message: str,
+    ):
+        if self.event_emitter:
+            await self.event_emitter(
+                {
+                    "type": "message",
+                    "data": {
+                        "content": message,
                     },
                 }
             )
