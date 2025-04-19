@@ -463,9 +463,15 @@ class Tools:
 
 # Summary of {url}
 
+<details open="">
+
+<summary>Click to read the summary</summary>
+
 {metadata}
 
 {summary}
+
+</details>
 
 """
             await emitter.send_as_message(message)
