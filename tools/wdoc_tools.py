@@ -477,7 +477,7 @@ class Tools:
 
 # Summary of {url}
 
-<details open="">
+<details open>
 
 <summary>Click to read the summary</summary>
 
