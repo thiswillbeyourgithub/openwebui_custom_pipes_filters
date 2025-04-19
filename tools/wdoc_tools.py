@@ -519,31 +519,29 @@ class EventEmitter:
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
         logger.info(description)
-        if self.event_emitter:
-            await self.event_emitter(
-                {
-                    "type": "status",
-                    "data": {
-                        "status": status,
-                        "description": description,
-                        "done": done,
-                    },
-                }
-            )
+        await self.event_emitter(
+            {
+                "type": "status",
+                "data": {
+                    "status": status,
+                    "description": description,
+                    "done": done,
+                },
+            }
+        )
 
     async def send_as_message(
         self,
         message: str,
     ):
-        if self.event_emitter:
-            await self.event_emitter(
-                {
-                    "type": "message",
-                    "data": {
-                        "content": message,
-                    },
-                }
-            )
+        await self.event_emitter(
+            {
+                "type": "message",
+                "data": {
+                    "content": message,
+                },
+            }
+        )
 
     async def cite_summary(
         self,
