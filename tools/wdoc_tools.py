@@ -74,6 +74,10 @@ class Tools:
     APPROPRIATE_WDOC_VERSION: str = "3.1.0"
 
     class Valves(BaseModel):
+        useracknowledgement: bool = Field(
+            default=False,
+            description="Must be set to True to use the tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the summary output will be hidden. Once you made sure it's the case, set this valve to True.",
+        )
         allowed_users_for_override: str = Field(
             default="",
             description="Comma-separated list of usernames that are allowed to override valves. If empty, no users can override.",
@@ -283,6 +287,11 @@ class Tools:
         """
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
+        
+        if not self.valves.useracknowledgement:
+            error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the summary output will be hidden.**"
+            await emitter.send_as_message(error_message)
+            return error_message
 
         await emitter.progress_update(f"Parsing '{url}'")
 
@@ -332,6 +341,11 @@ class Tools:
         """
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
+        
+        if not self.valves.useracknowledgement:
+            error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the summary output will be hidden.**"
+            await emitter.send_as_message(error_message)
+            return error_message
 
         await emitter.progress_update(f"Summarizing '{url}'")
 
