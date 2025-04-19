@@ -244,7 +244,8 @@ class Tools:
                 await emitter.error_update(error_message)
                 # raise
                 stack_trace_string = traceback.format_exc()
-                return error_message + "\n\n<userToolsOutput>" + stack_trace_string + "\n</userToolsOutput>"
+                await emitter.send_as_message(f"# Error: {error_message}\n\n{stack_trace_string}")
+                return "An error occured, see the trace below"
             finally:
                 if not self.always_unimport_wdoc:
                     un_import_wdoc()
@@ -292,7 +293,8 @@ class Tools:
             await emitter.error_update(error_message)
             # raise
             stack_trace_string = traceback.format_exc()
-            return error_message + "\n\n<userToolsOutput>" + stack_trace_string + "\n</userToolsOutput>"
+            await emitter.send_as_message(f"# Error: {error_message}\n\n{stack_trace_string}")
+            return "An error occured, see the trace below"
 
         await emitter.success_update(f"Successfully parsed '{url}'")
 
@@ -414,7 +416,8 @@ class Tools:
                 await emitter.error_update(error_message)
                 # raise
                 stack_trace_string = traceback.format_exc()
-                return error_message + "\n\n<userToolsOutput>" + stack_trace_string + "\n</userToolsOutput>"
+                await emitter.send_as_message(f"# Error: {error_message}\n\n{stack_trace_string}")
+                return "An error occured, see the trace below"
             finally:
                 if not self.always_unimport_wdoc:
                     un_import_wdoc()
@@ -552,25 +555,24 @@ class EventEmitter:
         dollar_cost: float,
         tokens: int,
     ):
-        if self.event_emitter:
-            await self.event_emitter(
-                {
-                    "type": "citation",
-                    "data": {
-                        "document": [doc_content],
-                        "metadata": [
-                            {
-                                "date_accessed": datetime.now().isoformat(),
-                                "source": title,
-                                "time saved": time_saved,
-                                "cost in dollars": dollar_cost,
-                                "cost in tokens": tokens,
-                            }
-                        ],
-                        "source": {"name": "Summary", "url": url},
-                    },
-                }
-            )
+        await self.event_emitter(
+            {
+                "type": "citation",
+                "data": {
+                    "document": [doc_content],
+                    "metadata": [
+                        {
+                            "date_accessed": datetime.now().isoformat(),
+                            "source": title,
+                            "time saved": time_saved,
+                            "cost in dollars": dollar_cost,
+                            "cost in tokens": tokens,
+                        }
+                    ],
+                    "source": {"name": "Summary", "url": url},
+                },
+            }
+        )
 
     async def cite_parser(
         self,
@@ -578,22 +580,21 @@ class EventEmitter:
         title: str,
         url: str,
     ):
-        if self.event_emitter:
-            await self.event_emitter(
-                {
-                    "type": "citation",
-                    "data": {
-                        "document": [doc_content],
-                        "metadata": [
-                            {
-                                "date_accessed": datetime.now().isoformat(),
-                                "source": title,
-                            }
-                        ],
-                        "source": {"name": "Parsed Content", "url": url},
-                    },
-                }
-            )
+        await self.event_emitter(
+            {
+                "type": "citation",
+                "data": {
+                    "document": [doc_content],
+                    "metadata": [
+                        {
+                            "date_accessed": datetime.now().isoformat(),
+                            "source": title,
+                        }
+                    ],
+                    "source": {"name": "Parsed Content", "url": url},
+                },
+            }
+        )
 
 
 def import_wdoc():
