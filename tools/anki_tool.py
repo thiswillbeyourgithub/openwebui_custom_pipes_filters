@@ -158,7 +158,6 @@ class Tools:
     async def create_flashcard(
         self,
         fields: dict,
-        *,
         __event_emitter__: Callable[[dict], Any] = None,
         __user__: dict = {},
         __model__: dict = {},
