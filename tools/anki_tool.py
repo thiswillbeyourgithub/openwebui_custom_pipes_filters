@@ -85,7 +85,7 @@ class Tools:
             required=True,
         )
         rules: str = Field(
-            default="Calling this function creates a single Anki flashcard using the `fields` argument as contents.<br>You can leave some fields empty.<br>If not otherwised specified, write the flashcard in the language of the user's request.<br>You are allowed to use html formatting.<br>You cannot refer to embedded media files like images, audio etc.<br>Please pay very close attention to the examples of the user and try to imitate their formulation.",
+            default="Calling this function creates a single Anki flashcard using the `fields` argument as contents.<br>You can leave some fields empty.<br>If not otherwised specified, write the flashcard in the language of the user's request.<br>You are allowed to use html formatting.<br>You cannot refer to embedded media files like images, audio etc.<br>Please pay very close attention to the examples of the user and try to imitate their formulation.<br>If the user didn't specify how many cards to create, assume he wants a single one.<br>If the user does not reply anything useful after creating the flashcard, do NOT assume you should create more cards, if unsure ask them.",
             description="All rules given to the LLM. Any '<br>' will be replaced by a newline to improve formatting.",
             required=True,
         )
