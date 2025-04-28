@@ -1,10 +1,10 @@
 """
 title: WarnIfLongChat
-author: thiswillbeyourgithub
+authors: thiswillbeyourgithubm, karilaa-dev
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
-version: 1.1.0
-date: 2025-03-23
+version: 1.2.0
+date: 2025-04-07
 license: GPLv3
 description: A filter that adds a soft and hard limit to the number of messages in a chat.
 """
@@ -30,6 +30,10 @@ class Filter:
             default=50,
             description="Above that many messages, flat out refuse",
         )
+        limited_models: str = Field(
+            default="",
+            description="Comma-separated list of models for which limits are enabled. Applies to all if empty.",
+        )
         debug: bool = Field(
             default=False, description="True to add emitter prints",
         )
@@ -46,6 +50,12 @@ class Filter:
         assert self.valves.number_of_message_hard_limit > 5, "number_of_message_hard_limit has to be more than 5"
         assert self.valves.number_of_message_hard_limit > self.valves.number_of_message, "number_of_message_hard_limit has to be higher than number_of_message"
         
+        # Validate limited_models format
+        if self.valves.limited_models:
+            limited_models = [model.strip() for model in self.valves.limited_models.split(",")]
+            if self.valves.debug:
+                print(f"Models with limit: {limited_models}")
+
         # Validate exempted_users format
         if self.valves.exempted_users:
             exempted_users = [user.strip() for user in self.valves.exempted_users.split(',')]
@@ -58,6 +68,12 @@ class Filter:
         __user__: Optional[dict] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         ) -> dict:
+        # Check if models are limited
+        limited_models = [model.strip() for model in self.valves.limited_models.split(",") if model.strip()]
+        if limited_models:
+            if body["model"] not in limited_models:
+                return body
+
         # Check if user is exempted
         if __user__ and "name" in __user__:
             exempted_users = [user.strip() for user in self.valves.exempted_users.split(',') if user.strip()]
@@ -94,6 +110,12 @@ class Filter:
         return body
 
     def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
+        # Check if models are limited
+        limited_models = [model.strip() for model in self.valves.limited_models.split(",") if model.strip()]
+        if limited_models:
+            if body["model"] not in limited_models:
+                return body
+
         # Check if user is exempted
         if __user__ and "name" in __user__:
             exempted_users = [user.strip() for user in self.valves.exempted_users.split(',') if user.strip()]
