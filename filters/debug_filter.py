@@ -13,7 +13,7 @@ openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/debug_filter
 
 import json
 from pydantic import BaseModel, Field
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, Literal
 from loguru import logger
 
 
@@ -55,7 +55,7 @@ class Filter:
             default=False,
             description="Print the event emitter",
         )
-        direction: str = Field(
+        direction: Literal["inlet", "outlet", "both"] = Field(
             default="both",
             description="When to print debug info: 'inlet', 'outlet', or 'both'",
         )
