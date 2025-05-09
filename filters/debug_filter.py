@@ -59,6 +59,10 @@ class Filter:
             default=False,
             description="Print the messages list",
         )
+        print_chat_id: bool = Field(
+            default=False,
+            description="Print the chat ID",
+        )
         direction: Literal["inlet", "outlet", "both"] = Field(
             default="both",
             description="When to print debug info: 'inlet', 'outlet', or 'both'",
@@ -80,6 +84,7 @@ class Filter:
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         __messages__: Optional[List] = None,
+        __chat_id__: Optional[str] = None,
     ) -> dict:
         prio = self.valves.priority
         args_to_print = {
@@ -90,6 +95,7 @@ class Filter:
             "__files__": self.valves.print_files,
             "__event_emitter__": self.valves.print_emitter,
             "__messages__": self.valves.print_messages,
+            "__chat_id__": self.valves.print_chat_id,
         }
 
         if self.valves.direction in ["inlet", "both"]:
@@ -116,6 +122,7 @@ class Filter:
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         __messages__: Optional[List] = None,
+        __chat_id__: Optional[str] = None,
     ) -> dict:
         prio = self.valves.priority
         args_to_print = {
@@ -126,6 +133,7 @@ class Filter:
             "__files__": self.valves.print_files,
             "__event_emitter__": self.valves.print_emitter,
             "__messages__": self.valves.print_messages,
+            "__chat_id__": self.valves.print_chat_id,
         }
 
         if self.valves.direction in ["outlet", "both"]:
