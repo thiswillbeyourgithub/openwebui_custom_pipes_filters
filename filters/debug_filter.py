@@ -15,6 +15,7 @@ import json
 from pydantic import BaseModel, Field
 from typing import Optional, Callable, Any, Literal, List
 from loguru import logger
+from open_webui.models.tools import ToolUserModel
 
 
 def p(message: str) -> None:
@@ -83,6 +84,10 @@ class Filter:
             default=False,
             description="Print the task_body info",
         )
+        print_tools: bool = Field(
+            default=False,
+            description="Print the tools info",
+        )
         direction: Literal["inlet", "outlet", "both"] = Field(
             default="both",
             description="When to print debug info: 'inlet', 'outlet', or 'both'",
@@ -110,6 +115,7 @@ class Filter:
         __request__: Optional[Any] = None,
         __task__: Optional[str] = None,
         __task_body__: Optional[dict] = None,
+        __tools__: Optional[List[ToolUserModel]] = None,
     ) -> dict:
         prio = self.valves.priority
         args_to_print = {
@@ -126,6 +132,7 @@ class Filter:
             "__request__": self.valves.print_request,
             "__task__": self.valves.print_task,
             "__task_body__": self.valves.print_task_body,
+            "__tools__": self.valves.print_tools,
         }
 
         if self.valves.direction in ["inlet", "both"]:
@@ -158,6 +165,7 @@ class Filter:
         __request__: Optional[Any] = None,
         __task__: Optional[str] = None,
         __task_body__: Optional[dict] = None,
+        __tools__: Optional[List[ToolUserModel]] = None,
     ) -> dict:
         prio = self.valves.priority
         args_to_print = {
@@ -174,6 +182,7 @@ class Filter:
             "__request__": self.valves.print_request,
             "__task__": self.valves.print_task,
             "__task_body__": self.valves.print_task_body,
+            "__tools__": self.valves.print_tools,
         }
 
         if self.valves.direction in ["outlet", "both"]:
