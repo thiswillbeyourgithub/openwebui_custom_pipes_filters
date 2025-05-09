@@ -13,7 +13,7 @@ openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/TODO
 
 import json
 import os
-from typing import Callable, Any, List, Optional, Dict, Union
+from typing import Callable, Any, List, Optional, Dict, Union, Literal
 from pydantic import BaseModel, Field
 from loguru import logger
 
@@ -42,6 +42,10 @@ class Tools:
         example_dict_as_json: str = Field(
             default='{"key1": "value1", "key2": "value2"}',
             description="An example JSON string that will be parsed into a dictionary"
+        )
+        multiple_choice: Literal["choiceA", "choiceB"] = Field(
+            default="choiceA",
+            description="Multiple choice example"
         )
 
     class UserValves(BaseModel):

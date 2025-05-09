@@ -11,7 +11,7 @@ description: TODO
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/TODO
 """
 
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, Literal
 from pydantic import BaseModel, Field
 from loguru import logger
 
@@ -26,6 +26,10 @@ class Filter:
         priority: int = Field(
             default=0,
             description="Priority level for the filter operations (lower numbers run first).",
+        )
+        multiple_choice: Literal["choiceA", "choiceB"] = Field(
+            default="choiceA",
+            description="Multiple choice example"
         )
         pass
 
