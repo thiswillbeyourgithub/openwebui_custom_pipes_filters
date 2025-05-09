@@ -13,7 +13,7 @@ openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/debug_filter
 
 import json
 from pydantic import BaseModel, Field
-from typing import Optional, Callable, Any, Literal, List
+from typing import Optional, Callable, Any, Literal, List, Dict
 from loguru import logger
 from open_webui.models.tools import ToolUserModel
 
@@ -102,21 +102,21 @@ class Filter:
 
     async def inlet(
         self,
-        body: dict,
-        __user__: dict,
-        __metadata__: dict,
-        __model__: dict,
+        body: Dict,
+        __user__: Dict,
+        __metadata__: Dict,
+        __model__: Dict,
         __messages__: List,
         __chat_id__: str,
         __session_id__: str,
         __message_id__: str,
         __request__: Any,
         __files__: Optional[list] = None,
-        __event_emitter__: Callable[[dict], Any] = None,
+        __event_emitter__: Callable[[Dict], Any] = None,
         __task__: Optional[str] = None,
-        __task_body__: Optional[dict] = None,
+        __task_body__: Optional[Dict] = None,
         __tools__: Optional[List[ToolUserModel]] = None,
-    ) -> dict:
+    ) -> Dict:
         prio = self.valves.priority
         args_to_print = {
             "body": self.valves.print_body,
@@ -152,21 +152,21 @@ class Filter:
 
     def outlet(
         self,
-        body: dict,
-        __user__: dict,
-        __metadata__: dict,
-        __model__: dict,
+        body: Dict,
+        __user__: Dict,
+        __metadata__: Dict,
+        __model__: Dict,
         __messages__: List,
         __chat_id__: str,
         __session_id__: str,
         __message_id__: str,
         __request__: Any,
         __files__: Optional[list] = None,
-        __event_emitter__: Callable[[dict], Any] = None,
+        __event_emitter__: Callable[[Dict], Any] = None,
         __task__: Optional[str] = None,
-        __task_body__: Optional[dict] = None,
+        __task_body__: Optional[Dict] = None,
         __tools__: Optional[List[ToolUserModel]] = None,
-    ) -> dict:
+    ) -> Dict:
         prio = self.valves.priority
         args_to_print = {
             "body": self.valves.print_body,
