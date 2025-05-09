@@ -13,7 +13,7 @@ openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/debug_filter
 
 import json
 from pydantic import BaseModel, Field
-from typing import Optional, Callable, Any, Literal
+from typing import Optional, Callable, Any, Literal, List
 from loguru import logger
 
 
@@ -55,6 +55,10 @@ class Filter:
             default=False,
             description="Print the event emitter",
         )
+        print_messages: bool = Field(
+            default=False,
+            description="Print the messages list",
+        )
         direction: Literal["inlet", "outlet", "both"] = Field(
             default="both",
             description="When to print debug info: 'inlet', 'outlet', or 'both'",
@@ -75,6 +79,7 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
+        __messages__: Optional[List] = None,
     ) -> dict:
         prio = self.valves.priority
         args_to_print = {
@@ -84,6 +89,7 @@ class Filter:
             "__model__": self.valves.print_model,
             "__files__": self.valves.print_files,
             "__event_emitter__": self.valves.print_emitter,
+            "__messages__": self.valves.print_messages,
         }
 
         if self.valves.direction in ["inlet", "both"]:
@@ -109,6 +115,7 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
+        __messages__: Optional[List] = None,
     ) -> dict:
         prio = self.valves.priority
         args_to_print = {
@@ -118,6 +125,7 @@ class Filter:
             "__model__": self.valves.print_model,
             "__files__": self.valves.print_files,
             "__event_emitter__": self.valves.print_emitter,
+            "__messages__": self.valves.print_messages,
         }
 
         if self.valves.direction in ["outlet", "both"]:
