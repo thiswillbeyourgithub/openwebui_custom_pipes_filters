@@ -117,6 +117,8 @@ class Filter:
         __task_body__: Optional[Dict] = None,
         __tools__: Optional[List[ToolUserModel]] = None,
     ) -> Dict:
+        if self.valves.direction == "outlet":
+            return body
         prio = self.valves.priority
         args_to_print = {
             "body": self.valves.print_body,
@@ -134,20 +136,18 @@ class Filter:
             "__task_body__": self.valves.print_task_body,
             "__tools__": self.valves.print_tools,
         }
-
-        if self.valves.direction in ["inlet", "both"]:
-            for arg, should_print in args_to_print.items():
-                if should_print:
-                    try:
-                        indent = None if self.valves.compress_output else 2
-                        val = json.dumps(
-                            locals()[arg], ensure_ascii=False, indent=indent
-                        )
-                    except:
-                        val = str(locals()[arg])
-                    val_lines = val.strip().splitlines()
-                    for vl in val_lines:
-                        p(f"INLET_{prio}: {arg}: {vl}")
+        for arg, should_print in args_to_print.items():
+            if should_print:
+                try:
+                    indent = None if self.valves.compress_output else 2
+                    val = json.dumps(
+                        locals()[arg], ensure_ascii=False, indent=indent
+                    )
+                except:
+                    val = str(locals()[arg])
+                val_lines = val.strip().splitlines()
+                for vl in val_lines:
+                    p(f"INLET_{prio}: {arg}: {vl}")
         return body
 
     def outlet(
@@ -167,6 +167,8 @@ class Filter:
         __task_body__: Optional[Dict] = None,
         __tools__: Optional[List[ToolUserModel]] = None,
     ) -> Dict:
+        if self.valves.direction == "inlet":
+            return body
         prio = self.valves.priority
         args_to_print = {
             "body": self.valves.print_body,
@@ -184,18 +186,16 @@ class Filter:
             "__task_body__": self.valves.print_task_body,
             "__tools__": self.valves.print_tools,
         }
-
-        if self.valves.direction in ["outlet", "both"]:
-            for arg, should_print in args_to_print.items():
-                if should_print:
-                    try:
-                        indent = None if self.valves.compress_output else 2
-                        val = json.dumps(
-                            locals()[arg], ensure_ascii=False, indent=indent
-                        )
-                    except:
-                        val = str(locals()[arg])
-                    val_lines = val.strip().splitlines()
-                    for vl in val_lines:
-                        p(f"OUTLET_{prio}: {arg}: {vl}")
+        for arg, should_print in args_to_print.items():
+            if should_print:
+                try:
+                    indent = None if self.valves.compress_output else 2
+                    val = json.dumps(
+                        locals()[arg], ensure_ascii=False, indent=indent
+                    )
+                except:
+                    val = str(locals()[arg])
+                val_lines = val.strip().splitlines()
+                for vl in val_lines:
+                    p(f"OUTLET_{prio}: {arg}: {vl}")
         return body
