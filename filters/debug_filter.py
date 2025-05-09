@@ -139,15 +139,18 @@ class Filter:
         for arg, should_print in args_to_print.items():
             if should_print:
                 try:
-                    indent = None if self.valves.compress_output else 2
-                    val = json.dumps(
-                        locals()[arg], ensure_ascii=False, indent=indent
-                    )
-                except:
-                    val = str(locals()[arg])
-                val_lines = val.strip().splitlines()
-                for vl in val_lines:
-                    p(f"INLET_{prio}: {arg}: {vl}")
+                    try:
+                        indent = None if self.valves.compress_output else 2
+                        val = json.dumps(
+                            locals()[arg], ensure_ascii=False, indent=indent
+                        )
+                    except Exception:
+                        val = str(locals()[arg])
+                    val_lines = val.strip().splitlines()
+                    for vl in val_lines:
+                        p(f"INLET_{prio}: {arg}: {vl}")
+                except Exception as ee:
+                    p(f"INLET_{prio}: {arg}: Exception when printing value: '{ee}'")
         return body
 
     def outlet(
@@ -189,13 +192,16 @@ class Filter:
         for arg, should_print in args_to_print.items():
             if should_print:
                 try:
-                    indent = None if self.valves.compress_output else 2
-                    val = json.dumps(
-                        locals()[arg], ensure_ascii=False, indent=indent
-                    )
-                except:
-                    val = str(locals()[arg])
-                val_lines = val.strip().splitlines()
-                for vl in val_lines:
-                    p(f"OUTLET_{prio}: {arg}: {vl}")
+                    try:
+                        indent = None if self.valves.compress_output else 2
+                        val = json.dumps(
+                            locals()[arg], ensure_ascii=False, indent=indent
+                        )
+                    except Exception:
+                        val = str(locals()[arg])
+                    val_lines = val.strip().splitlines()
+                    for vl in val_lines:
+                        p(f"OUTLET_{prio}: {arg}: {vl}")
+                except Exception as ee:
+                    p(f"OUTLET_{prio}: {arg}: Exception when printing value: '{ee}'")
         return body
