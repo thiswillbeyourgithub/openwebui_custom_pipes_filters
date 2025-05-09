@@ -75,6 +75,10 @@ class Filter:
             default=False,
             description="Print the request object (converted to string)",
         )
+        print_task: bool = Field(
+            default=False,
+            description="Print the task info",
+        )
         direction: Literal["inlet", "outlet", "both"] = Field(
             default="both",
             description="When to print debug info: 'inlet', 'outlet', or 'both'",
@@ -100,6 +104,7 @@ class Filter:
         __session_id__: Optional[str] = None,
         __message_id__: Optional[str] = None,
         __request__: Optional[Any] = None,
+        __task__: Optional[str] = None,
     ) -> dict:
         prio = self.valves.priority
         args_to_print = {
@@ -114,6 +119,7 @@ class Filter:
             "__session_id__": self.valves.print_session_id,
             "__message_id__": self.valves.print_message_id,
             "__request__": self.valves.print_request,
+            "__task__": self.valves.print_task,
         }
 
         if self.valves.direction in ["inlet", "both"]:
@@ -144,6 +150,7 @@ class Filter:
         __session_id__: Optional[str] = None,
         __message_id__: Optional[str] = None,
         __request__: Optional[Any] = None,
+        __task__: Optional[str] = None,
     ) -> dict:
         prio = self.valves.priority
         args_to_print = {
@@ -158,6 +165,7 @@ class Filter:
             "__session_id__": self.valves.print_session_id,
             "__message_id__": self.valves.print_message_id,
             "__request__": self.valves.print_request,
+            "__task__": self.valves.print_task,
         }
 
         if self.valves.direction in ["outlet", "both"]:
