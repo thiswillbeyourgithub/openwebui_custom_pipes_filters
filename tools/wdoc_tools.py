@@ -77,7 +77,7 @@ class Tools:
     class Valves(BaseModel):
         useracknowledgement: bool = Field(
             default=False,
-            description="Must be set to True to use the tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the summary output will be hidden. Once you made sure it's the case, set this valve to True.",
+            description="Must be set to True to use the tool.",
         )
         allowed_users_for_override: str = Field(
             default="",
@@ -294,7 +294,7 @@ class Tools:
         self.on_valves_updated()
 
         if not self.valves.useracknowledgement:
-            error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the summary output will be hidden.**"
+            error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool.**"
             await emitter.send_as_message(error_message)
             return error_message
 
@@ -363,7 +363,7 @@ class Tools:
         self.on_valves_updated()
 
         if not self.valves.useracknowledgement:
-            error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the summary output will be hidden.**"
+            error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool.**"
             await emitter.send_as_message(error_message)
             return error_message
 
