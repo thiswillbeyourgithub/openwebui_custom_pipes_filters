@@ -9,8 +9,8 @@ description: A tool to create Anki flashcards through Ankiconnect with configura
 version: 1.6.0
 """
 
-# TODO if the example field contains only a string, it is a path to a file that contains examples in a json or toml file.
 # TODO support for specifying input and output (currently we only use output) in the examples
+# TODO if the example field contains only a string, it is a path to a file that contains examples in a json or toml file.
 # TODO add an `Action` button to "add to memory" so the LLM will use it as example
 #   TODO then make a prompt filtering that roughly filters out by semantic cosine, just to avoid issues when having too many examples
 
