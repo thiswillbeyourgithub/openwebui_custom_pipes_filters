@@ -499,9 +499,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             # Send the request with the note (pictures are now inside the note object)
             request_params = {"note": note}
 
-            logger.info(
-                f"Creating the following note: '{note}'"
-            )
+            logger.info(f"Creating the following note: '{note}'")
 
             result = await _ankiconnect_request(
                 self.valves.ankiconnect_host,
@@ -525,11 +523,11 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 for field_name in placeholder_fields:
                     original_content = placeholder_field_contents[field_name]
 
-                    # Create image HTML tags for all images
+                    # Create image filename references for replacement
                     image_tags = []
                     for picture in pictures:
                         if field_name in picture["fields"]:
-                            image_tags.append(f'<img src="{picture["filename"]}">')
+                            image_tags.append(picture["filename"])
 
                     # Replace placeholder with image tags
                     updated_content = original_content.replace(
