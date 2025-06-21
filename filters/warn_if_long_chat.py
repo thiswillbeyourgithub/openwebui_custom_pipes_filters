@@ -15,7 +15,9 @@ import time
 
 
 class Filter:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
 
     class Valves(BaseModel):
         priority: int = Field(
@@ -31,7 +33,8 @@ class Filter:
             description="Above that many messages, flat out refuse",
         )
         debug: bool = Field(
-            default=False, description="True to add emitter prints",
+            default=False,
+            description="True to add emitter prints",
         )
         exempted_users: str = Field(
             default="",
@@ -42,13 +45,21 @@ class Filter:
         self.valves = self.Valves()
 
     async def on_valves_updated(self):
-        assert self.valves.number_of_message > 2, "number_of_message has to be more than 2"
-        assert self.valves.number_of_message_hard_limit > 5, "number_of_message_hard_limit has to be more than 5"
-        assert self.valves.number_of_message_hard_limit > self.valves.number_of_message, "number_of_message_hard_limit has to be higher than number_of_message"
-        
+        assert (
+            self.valves.number_of_message > 2
+        ), "number_of_message has to be more than 2"
+        assert (
+            self.valves.number_of_message_hard_limit > 5
+        ), "number_of_message_hard_limit has to be more than 5"
+        assert (
+            self.valves.number_of_message_hard_limit > self.valves.number_of_message
+        ), "number_of_message_hard_limit has to be higher than number_of_message"
+
         # Validate exempted_users format
         if self.valves.exempted_users:
-            exempted_users = [user.strip() for user in self.valves.exempted_users.split(',')]
+            exempted_users = [
+                user.strip() for user in self.valves.exempted_users.split(",")
+            ]
             if self.valves.debug:
                 print(f"Exempted users: {exempted_users}")
 
@@ -57,15 +68,20 @@ class Filter:
         body: dict,
         __user__: Optional[dict] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        ) -> dict:
+    ) -> dict:
         # Check if user is exempted
         if __user__ and "name" in __user__:
-            exempted_users = [user.strip() for user in self.valves.exempted_users.split(',') if user.strip()]
+            exempted_users = [
+                user.strip()
+                for user in self.valves.exempted_users.split(",")
+                if user.strip()
+            ]
             if __user__["name"] in exempted_users:
                 return body
-            
+
         # printer
         emitter = EventEmitter(__event_emitter__)
+
         async def log(message: str, error: bool = False):
             if self.valves.debug:
                 print(f"WarnIfLongChat filter: inlet: {message}")
@@ -79,13 +95,20 @@ class Filter:
             await log(f"WarnIfLongChat filter: inlet: __user__ {__user__}")
             await log(f"WarnIfLongChat filter: inlet: body {body}")
 
-
         if len(body["messages"]) > self.valves.number_of_message_hard_limit:
-            await log(f"I refuse to answer to chats with more than {self.valves.number_of_message_hard_limit} messages", error=True)
-            raise Exception(f"I refuse to answer to chats with more than {self.valves.number_of_message_hard_limit} messages")
+            await log(
+                f"I refuse to answer to chats with more than {self.valves.number_of_message_hard_limit} messages",
+                error=True,
+            )
+            raise Exception(
+                f"I refuse to answer to chats with more than {self.valves.number_of_message_hard_limit} messages"
+            )
 
         elif len(body["messages"]) > self.valves.number_of_message:
-            await log(f"Tips: don't use more messages than {self.valves.number_of_message} in a single chat, create new chats instead.", error=True)
+            await log(
+                f"Tips: don't use more messages than {self.valves.number_of_message} in a single chat, create new chats instead.",
+                error=True,
+            )
             if len(body["messages"]) == self.valves.number_of_message:
                 time.sleep(5)
             else:
@@ -96,10 +119,14 @@ class Filter:
     def outlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
         # Check if user is exempted
         if __user__ and "name" in __user__:
-            exempted_users = [user.strip() for user in self.valves.exempted_users.split(',') if user.strip()]
+            exempted_users = [
+                user.strip()
+                for user in self.valves.exempted_users.split(",")
+                if user.strip()
+            ]
             if __user__["name"] in exempted_users:
                 return body
-                
+
         return body
 
 
@@ -109,34 +136,39 @@ class EventEmitter:
 
     async def progress_update(self, description):
         if self.event_emitter:
-            await self.event_emitter({
-                "type": "status",
-                "data": {
-                    "status": "in_progress",
-                    "description": description,
-                    "done": False,
-                },
-            })
+            await self.event_emitter(
+                {
+                    "type": "status",
+                    "data": {
+                        "status": "in_progress",
+                        "description": description,
+                        "done": False,
+                    },
+                }
+            )
 
     async def error_update(self, description):
         if self.event_emitter:
-            await self.event_emitter({
-                "type": "status",
-                "data": {
-                    "status": "error",
-                    "description": description,
-                    "done": True,
-                },
-            })
+            await self.event_emitter(
+                {
+                    "type": "status",
+                    "data": {
+                        "status": "error",
+                        "description": description,
+                        "done": True,
+                    },
+                }
+            )
 
     async def success_update(self, description):
         if self.event_emitter:
-            await self.event_emitter({
-                "type": "status",
-                "data": {
-                    "status": "success",
-                    "description": description,
-                    "done": True,
-                },
-            })
-
+            await self.event_emitter(
+                {
+                    "type": "status",
+                    "data": {
+                        "status": "success",
+                        "description": description,
+                        "done": True,
+                    },
+                }
+            )

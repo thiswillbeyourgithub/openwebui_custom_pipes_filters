@@ -408,7 +408,9 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 self.valves.ankiconnect_host, self.valves.ankiconnect_port, "sync"
             )
 
-            assert isinstance(result, int), f"Output of ankiconnect was not an note_id but: {result}"
+            assert isinstance(
+                result, int
+            ), f"Output of ankiconnect was not an note_id but: {result}"
             await emitter.success_update("Successfully created and synced flashcard")
             return f"Note ID: {result}"
 
@@ -522,7 +524,9 @@ def update_docstring(fields_description: str, rules: str, examples: str) -> str:
     temp = TEMPLATE_DOCSTRING
     assert temp.count("RULES") == 1, "Found multiple RULES in the template"
     temp = temp.replace("RULES", rules)
-    assert temp.count("FIELDS_DESCRIPTION") == 1, "Found multiple FIELDS_DESCRIPTION in the template"
+    assert (
+        temp.count("FIELDS_DESCRIPTION") == 1
+    ), "Found multiple FIELDS_DESCRIPTION in the template"
     temp = temp.replace("FIELDS_DESCRIPTION", fields_description)
     assert temp.count("EXAMPLES") == 1, "Found multiple EXAMPLES in the template"
     temp = temp.replace("EXAMPLES", examples)

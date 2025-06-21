@@ -28,8 +28,7 @@ class Filter:
             description="Priority level for the filter operations (lower numbers run first).",
         )
         multiple_choice: Literal["choiceA", "choiceB"] = Field(
-            default="choiceA",
-            description="Multiple choice example"
+            default="choiceA", description="Multiple choice example"
         )
         pass
 

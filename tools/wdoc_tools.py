@@ -35,6 +35,7 @@ WDOC_VERSION = "release"
 # WDOC_VERSION = "git_main"
 # WDOC_VERSION = "git_dev"
 
+
 def normalize_dict_values(input_dict: Dict) -> Dict:
     """
     Iterates over a dictionary and converts string values of 'none', 'true', or 'false'
@@ -157,7 +158,9 @@ class Tools:
             self.valves.allowed_users_for_override, str
         ), f"allowed_users_for_override must be a string, got {type(self.valves.allowed_users_for_override)}"
         self.allowed_users_for_override = [
-            username.strip() for username in self.valves.allowed_users_for_override.split(',') if username.strip()
+            username.strip()
+            for username in self.valves.allowed_users_for_override.split(",")
+            if username.strip()
         ]
 
         assert isinstance(
@@ -248,7 +251,9 @@ class Tools:
                 await emitter.error_update(error_message)
                 # raise
                 stack_trace_string = traceback.format_exc()
-                await emitter.send_as_message(f"# Error: {error_message}\n\n{stack_trace_string}")
+                await emitter.send_as_message(
+                    f"# Error: {error_message}\n\n{stack_trace_string}"
+                )
                 return "An error occured, see the trace below"
             finally:
                 if not self.always_unimport_wdoc:
@@ -287,7 +292,7 @@ class Tools:
         """
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
-        
+
         if not self.valves.useracknowledgement:
             error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the summary output will be hidden.**"
             await emitter.send_as_message(error_message)
@@ -302,7 +307,9 @@ class Tools:
             await emitter.error_update(error_message)
             # raise
             stack_trace_string = traceback.format_exc()
-            await emitter.send_as_message(f"# Error: {error_message}\n\n{stack_trace_string}")
+            await emitter.send_as_message(
+                f"# Error: {error_message}\n\n{stack_trace_string}"
+            )
             return "An error occured, see the trace below"
 
         await emitter.success_update(f"Successfully parsed '{url}'")
@@ -354,7 +361,7 @@ class Tools:
         """
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
-        
+
         if not self.valves.useracknowledgement:
             error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the summary output will be hidden.**"
             await emitter.send_as_message(error_message)
@@ -443,7 +450,9 @@ class Tools:
                 await emitter.error_update(error_message)
                 # raise
                 stack_trace_string = traceback.format_exc()
-                await emitter.send_as_message(f"# Error: {error_message}\n\n{stack_trace_string}")
+                await emitter.send_as_message(
+                    f"# Error: {error_message}\n\n{stack_trace_string}"
+                )
                 return "An error occured, see the trace below"
             finally:
                 if not self.always_unimport_wdoc:
@@ -677,7 +686,9 @@ if "wdoc" in sys.modules:
     try:
         un_import_wdoc()
     except Exception as e:
-        logger.error(f"Error when un importing wdoc before installing/updating it: '{e}'")
+        logger.error(
+            f"Error when un importing wdoc before installing/updating it: '{e}'"
+        )
 
 # install wdoc if not present already
 try:
@@ -688,15 +699,7 @@ except ImportError as e:
 if Path("/app/backend/requirements.txt").exists():
     logger.warning("First uninstalling wdoc")
     subprocess.check_call(
-        [
-            sys.executable,
-            "-m",
-            "uv",
-            "pip",
-            "uninstall",
-            "wdoc",
-            "--system"
-        ]
+        [sys.executable, "-m", "uv", "pip", "uninstall", "wdoc", "--system"]
     )
     logger.warning("Done uninstalling wdoc")
 
@@ -731,6 +734,7 @@ else:
 
 try:
     import wdoc
+
     un_import_wdoc()
 except Exception as e:
     raise Exception(f"Couldn't import wdoc after installation: '{e}'")
