@@ -123,7 +123,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
     @valves.setter
     def valves(self, value):
         self._valves = value
-        self.create_flashcard.__func__.__doc__ = update_docstring(
+        self.create_flashcard.__func__.__doc__ = get_updated_docstring(
             fields_description=value.fields_description,
             rules=value.rules,
             examples=value.examples,
@@ -709,7 +709,7 @@ def _ankiconnect_request_sync(
         raise Exception(f"Ankiconnect error: {str(e)}")
 
 
-def update_docstring(fields_description: str, rules: str, examples: str) -> str:
+def get_updated_docstring(fields_description: str, rules: str, examples: str) -> str:
     assert rules.strip(), f"The rules valve cannot be empty"
 
     examples = examples.strip()
