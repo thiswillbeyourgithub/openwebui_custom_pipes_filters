@@ -54,6 +54,10 @@ class Tools:
     ].split("version: ")[1]
 
     class Valves(BaseModel):
+        useracknowledgement: bool = Field(
+            default=False,
+            description="Must be set to True to use the tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the flashcard creation output will be hidden. Once you made sure it's the case, set this valve to True.",
+        )
         ankiconnect_host: str = Field(
             default="http://localhost",
             description="Host address for Ankiconnect",
@@ -187,6 +191,11 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         )
         logger.info(f"AnkiFlashcardCreator: __files__: {__files__}")
         emitter = EventEmitter(__event_emitter__)
+
+        if not self.valves.useracknowledgement:
+            error_message = "**Anki Tool disabled. Please ask the admin to check the valves of anki tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the flashcard creation output will be hidden.**"
+            await emitter.send_as_message(error_message)
+            return error_message
 
         # check tool parameter validity on first method call instead of
         if not self.parameters_are_checked:
@@ -581,6 +590,11 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         )
         emitter = EventEmitter(__event_emitter__)
 
+        if not self.valves.useracknowledgement:
+            error_message = "**Anki Tool disabled. Please ask the admin to check the valves of anki tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the flashcard creation output will be hidden.**"
+            await emitter.send_as_message(error_message)
+            return ["Anki Tool disabled. Please ask the admin to check the valves."]
+
         if not fields:
             await emitter.error_update("No flashcard fields provided")
             return ["No flashcard fields provided"]
@@ -766,6 +780,20 @@ class EventEmitter:
     async def success_update(self, description):
         logger.info(f"AnkiFlashcardCreator: {description}")
         await self.emit(description, "success", True)
+
+    async def send_as_message(
+        self,
+        message: str,
+    ):
+        if self.event_emitter:
+            await self.event_emitter(
+                {
+                    "type": "message",
+                    "data": {
+                        "content": message,
+                    },
+                }
+            )
 
     async def emit(self, description="Unknown State", status="in_progress", done=False):
         if self.event_emitter:
