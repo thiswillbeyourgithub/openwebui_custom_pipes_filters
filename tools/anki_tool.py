@@ -129,13 +129,13 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         )
 
     class UserValves(BaseModel):
-        field_overrides: str = Field(
-            default="{}",
-            description="JSON string of field values that will override any values specified by the LLM in the fields parameter.",
-        )
         enable_overloading: bool = Field(
             default=True,
             description="If set to false, the LLM's field values will not be overridden by field_overrides.",
+        )
+        field_overrides: str = Field(
+            default="{}",
+            description="JSON string of field values that will override any values specified by the LLM in the fields parameter.",
         )
         pass
 
@@ -187,7 +187,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         logger.info(f"AnkiFlashcardCreator: __files__: {__files__}")
         emitter = EventEmitter(__event_emitter__)
 
-        # Check that function calling is set to native
+        # Check that function calling is set to 1ative
         function_calling_value = None
         try:
             function_calling_value = (
