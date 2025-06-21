@@ -460,6 +460,10 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 "tags": tags,
             }
 
+            # Add pictures to the note object if any were prepared
+            if pictures:
+                note["picture"] = pictures
+
             if self.valves.metadata_field:
                 metadata = flatten_dict(__user__.copy())
                 if "valves" in metadata:
@@ -493,10 +497,8 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                     note["fields"][self.valves.metadata_field] = metadata
                 # note["fields"][self.valves.metadata_field] = note["fields"][self.valves.metadata_field].replace("\r", "\n").replace("\n", "<br>")
 
-            # Include pictures in the request if any were prepared
+            # Send the request with the note (pictures are now inside the note object)
             request_params = {"note": note}
-            if pictures:
-                request_params["picture"] = pictures
 
             result = await _ankiconnect_request(
                 self.valves.ankiconnect_host,
