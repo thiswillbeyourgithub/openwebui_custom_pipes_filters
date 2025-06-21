@@ -523,11 +523,11 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 for field_name in placeholder_fields:
                     original_content = placeholder_field_contents[field_name]
 
-                    # Create image filename references for replacement
+                    # Create image HTML tags for replacement
                     image_tags = []
                     for picture in pictures:
                         if field_name in picture["fields"]:
-                            image_tags.append(picture["filename"])
+                            image_tags.append(f'<img src="{picture["filename"]}">')
 
                     # Replace placeholder with image tags
                     updated_content = original_content.replace(
