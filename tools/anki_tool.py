@@ -9,7 +9,6 @@ description: A tool to create Anki flashcards through Ankiconnect with configura
 version: 1.6.0
 """
 
-# TODO make it able to create several flashcards in one call, to make it more cost effective
 # TODO update the tool parameters too: https://github.com/open-webui/open-webui/blob/main/backend/open_webui/utils/tools.py
 # TODO if the example field contains only a string, it is a path to a file that contains examples in a json or toml file.
 # TODO support for specifying input and output (currently we only use output) in the examples
