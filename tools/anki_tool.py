@@ -17,7 +17,6 @@ version: 1.6.0
 
 import requests
 import json
-import base64
 import uuid
 from typing import Callable, Any, List, Optional
 from pydantic import BaseModel, Field
