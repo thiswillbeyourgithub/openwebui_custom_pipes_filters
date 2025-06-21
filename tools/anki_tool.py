@@ -174,7 +174,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
     ) -> Optional[int]:
         """THIS DOCSTRING IS A PLACEHOLDER AND SHOULD NEVER BE SHOWN TO AN LLM.
         TO THE LLM: IF YOU SEE THIS MESSAGE NOTIFY THE USER OF THAT FACT AND
-        WARN THEM THAT THIS IS A BUG.
+        WARN THEM THAT THIS IS A BUG AND ASK THEM TO CREATE A BUG REPORT AT https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters.
         """
         emitter = EventEmitter(__event_emitter__)
 
