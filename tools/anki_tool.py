@@ -545,17 +545,20 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                     updated_content = original_content.replace(
                         "ANKI_IMAGE_PATH", " ".join(image_refs)
                     )
-                    
+
                     # Also remove any data URLs that might be present and replace with filenames
                     import re
-                    data_url_pattern = r'data:image/[^;]+;base64,[A-Za-z0-9+/=]+'
+
+                    data_url_pattern = r"data:image/[^;]+;base64,[A-Za-z0-9+/=]+"
                     if re.search(data_url_pattern, updated_content):
                         # Replace data URLs with image filenames
-                        updated_content = re.sub(data_url_pattern, " ".join(image_refs), updated_content)
+                        updated_content = re.sub(
+                            data_url_pattern, " ".join(image_refs), updated_content
+                        )
                         await emitter.progress_update(
                             f"Replaced data URLs with image filenames in field '{field_name}'"
                         )
-                    
+
                     updated_fields[field_name] = updated_content
 
                 # Update the note fields
