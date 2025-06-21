@@ -497,7 +497,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             request_params = {"note": note}
             if pictures:
                 request_params["picture"] = pictures
-                
+
             result = await _ankiconnect_request(
                 self.valves.ankiconnect_host,
                 self.valves.ankiconnect_port,
