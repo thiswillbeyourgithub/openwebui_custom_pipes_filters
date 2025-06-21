@@ -179,12 +179,23 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         TO THE LLM: IF YOU SEE THIS MESSAGE NOTIFY THE USER OF THAT FACT AND
         WARN THEM THAT THIS IS A BUG AND ASK THEM TO CREATE A BUG REPORT AT https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters.
         """
+        logger.info(
+            f"AnkiFlashcardCreator: Starting create_flashcard with fields: {fields}"
+        )
+        logger.info(
+            f"AnkiFlashcardCreator: __messages__ length: {len(__messages__) if __messages__ else 0}"
+        )
+        logger.info(
+            f"AnkiFlashcardCreator: __user__: {__user__.get('name', 'unknown')}"
+        )
+        logger.info(f"AnkiFlashcardCreator: __files__: {__files__}")
         emitter = EventEmitter(__event_emitter__)
 
         # check tool parameter validity on first method call instead of
         if not self.parameters_are_checked:
+            logger.info("AnkiFlashcardCreator: Checking tool parameters for first time")
             try:
-                self.__tool_param_checker__()
+                await self.__tool_param_checker__()
             except Exception as e:
                 logger.error(
                     f"AnkiFlashcardCreator: Error when checking tool parameters: '{e}'"
