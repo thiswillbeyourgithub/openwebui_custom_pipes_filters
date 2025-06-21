@@ -326,19 +326,22 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                             {"filename": filename, "data": image_data},
                         )
 
-                        if result == filename:
-                            stored_images.append(f'<img src="{filename}">')
+                        # AnkiConnect returns the filename if successful, or null/error if failed
+                        if result and isinstance(result, str) and result.strip():
+                            # Use the actual filename returned by AnkiConnect
+                            actual_filename = result.strip()
+                            stored_images.append(f'<img src="{actual_filename}">')
                             await emitter.progress_update(
-                                f"Stored image {i+1}/{len(images)}: {filename}"
+                                f"Stored image {i+1}/{len(images)}: {actual_filename}"
                             )
                         else:
                             logger.error(
-                                f"Unexpected result from storeMediaFile: {result}"
+                                f"Failed to store image, AnkiConnect returned: {result}"
                             )
                             await emitter.error_update(
-                                f"Failed to store image {i+1}: unexpected result"
+                                f"Failed to store image {i+1}: AnkiConnect returned {result}"
                             )
-                            return f"Failed to store image {i+1}: unexpected result"
+                            return f"Failed to store image {i+1}: AnkiConnect returned {result}"
 
                     except Exception as e:
                         logger.error(f"Failed to store image {i+1}: {e}")
