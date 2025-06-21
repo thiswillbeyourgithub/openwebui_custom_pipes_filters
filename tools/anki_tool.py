@@ -375,7 +375,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             return "All field values must be strings"
 
         if self.valves.fields_description not in self.create_flashcard.__func__.__doc__:
-            message = f"The field description is not up to date anymore, please turn of then on again the anki tool to update the tool description. The new field description value is '{self.valves.fields_description}'"
+            message = f"The field description is not up to date anymore, please turn off then on again the anki tool to update the tool description. The new field description value is '{self.valves.fields_description}'"
             if self.fields_description != self.valves.fields_description:
                 message += f"\nThe old field description is '{self.fields_description}'"
             await emitter.error_update(message)
