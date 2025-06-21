@@ -330,6 +330,20 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                         if result and isinstance(result, str) and result.strip():
                             # Use the actual filename returned by AnkiConnect
                             actual_filename = result.strip()
+                            
+                            # Ensure we only have the filename, not HTML content
+                            # In case AnkiConnect returns HTML instead of just filename
+                            if actual_filename.startswith('<img'):
+                                # Extract filename from HTML if present
+                                import re
+                                match = re.search(r'src="([^"]+)"', actual_filename)
+                                if match:
+                                    actual_filename = match.group(1)
+                                else:
+                                    logger.error(f"Could not extract filename from HTML: {actual_filename}")
+                                    await emitter.error_update(f"Could not extract filename from HTML: {actual_filename}")
+                                    return f"Could not extract filename from HTML: {actual_filename}"
+                            
                             stored_images.append(f'<img src="{actual_filename}">')
                             await emitter.progress_update(
                                 f"Stored image {i+1}/{len(images)}: {actual_filename}"
