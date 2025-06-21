@@ -271,11 +271,9 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             await emitter.progress_update("Applied field overrides")
         fields = merged_fields
 
-        # Process images from messages and handle ANKI_IMAGE_PATH placeholders
-        image_html = ""
-        has_image_placeholder = any(
-            "ANKI_IMAGE_PATH" in str(value) for value in fields.values()
-        )
+        # Process images from messages for the picture parameter
+        pictures = []
+        target_fields = []
 
         if __messages__:
             images = []
@@ -309,83 +307,31 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
 
             if images:
                 await emitter.progress_update(
-                    f"Found {len(images)} image(s), storing in Anki..."
+                    f"Found {len(images)} image(s), preparing for Anki..."
                 )
-                stored_images = []
 
-                for i, (image_data, image_format) in enumerate(images):
-                    try:
-                        # Generate unique filename
-                        filename = f"anki_image_{uuid.uuid4().hex[:8]}.{image_format}"
-
-                        # Store image in Anki
-                        result = await _ankiconnect_request(
-                            self.valves.ankiconnect_host,
-                            self.valves.ankiconnect_port,
-                            "storeMediaFile",
-                            {"filename": filename, "data": image_data},
-                        )
-
-                        # AnkiConnect returns the filename if successful, or null/error if failed
-                        if result and isinstance(result, str) and result.strip():
-                            # Use the actual filename returned by AnkiConnect
-                            actual_filename = result.strip()
-
-                            # Ensure we only have the filename, not HTML content
-                            # In case AnkiConnect returns HTML instead of just filename
-                            if actual_filename.startswith("<img"):
-                                # Extract filename from HTML if present
-                                import re
-
-                                match = re.search(r'src="([^"]+)"', actual_filename)
-                                if match:
-                                    actual_filename = match.group(1)
-                                else:
-                                    logger.error(
-                                        f"Could not extract filename from HTML: {actual_filename}"
-                                    )
-                                    await emitter.error_update(
-                                        f"Could not extract filename from HTML: {actual_filename}"
-                                    )
-                                    return f"Could not extract filename from HTML: {actual_filename}"
-
-                            stored_images.append(f'<img src="{actual_filename}">')
-                            await emitter.progress_update(
-                                f"Stored image {i+1}/{len(images)}: {actual_filename}"
-                            )
-                        else:
-                            logger.error(
-                                f"Failed to store image, AnkiConnect returned: {result}"
-                            )
-                            await emitter.error_update(
-                                f"Failed to store image {i+1}: AnkiConnect returned {result}"
-                            )
-                            return f"Failed to store image {i+1}: AnkiConnect returned {result}"
-
-                    except Exception as e:
-                        logger.error(f"Failed to store image {i+1}: {e}")
-                        await emitter.error_update(f"Failed to store image {i+1}: {e}")
-                        return f"Failed to store image {i+1}: {e}"
-
-                # Create HTML string for all images
-                image_html = "\n".join(stored_images)
-
-                # Replace ANKI_IMAGE_PATH placeholders or append to last field
-                placeholder_found = False
+                # Determine target fields for images
+                # Check if any field has ANKI_IMAGE_PATH placeholder
+                placeholder_fields = []
                 for field_name, field_value in fields.items():
                     if "ANKI_IMAGE_PATH" in str(field_value):
-                        fields[field_name] = str(field_value).replace(
-                            "ANKI_IMAGE_PATH", image_html
+                        placeholder_fields.append(field_name)
+                        # Remove the placeholder from the field content
+                        fields[field_name] = (
+                            str(field_value).replace("ANKI_IMAGE_PATH", "").strip()
                         )
-                        placeholder_found = True
 
-                if not placeholder_found:
-                    # Append to the last field (get the last key-value pair)
+                if placeholder_fields:
+                    target_fields = placeholder_fields
+                    await emitter.progress_update(
+                        f"Images will be added to fields with ANKI_IMAGE_PATH: {placeholder_fields}"
+                    )
+                else:
+                    # If no placeholder, add to the last field
                     if fields:
-                        last_field = list(fields.keys())[-1]
-                        fields[last_field] = fields[last_field] + "\n" + image_html
+                        target_fields = [list(fields.keys())[-1]]
                         await emitter.progress_update(
-                            f"Added images to field '{last_field}' (no placeholder found)"
+                            f"No ANKI_IMAGE_PATH placeholder found, images will be added to field '{target_fields[0]}'"
                         )
                     else:
                         logger.error("No fields available to add images to")
@@ -393,17 +339,20 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                             "No fields available to add images to"
                         )
                         return "No fields available to add images to"
-                else:
-                    await emitter.progress_update(
-                        "Replaced ANKI_IMAGE_PATH placeholder(s) with images"
-                    )
 
-            elif has_image_placeholder:
-                # Placeholder mentioned but no images found
-                message = "ANKI_IMAGE_PATH placeholder found in fields but no images were detected in the conversation"
-                logger.error(message)
-                await emitter.error_update(message)
-                return message
+                # Prepare picture objects for addNote
+                for i, (image_data, image_format) in enumerate(images):
+                    filename = f"anki_image_{uuid.uuid4().hex[:8]}.{image_format}"
+                    pictures.append(
+                        {
+                            "data": image_data,
+                            "filename": filename,
+                            "fields": target_fields,
+                        }
+                    )
+                    await emitter.progress_update(
+                        f"Prepared image {i+1}/{len(images)}: {filename}"
+                    )
 
         tags = self.valves.tags
         if isinstance(tags, str):
