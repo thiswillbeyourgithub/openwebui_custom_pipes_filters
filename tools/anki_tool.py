@@ -19,6 +19,8 @@ version: 1.5.4
 
 import requests
 import json
+import base64
+import uuid
 from typing import Callable, Any, List, Optional
 from pydantic import BaseModel, Field
 import aiohttp
@@ -90,7 +92,7 @@ class Tools:
 You can leave some fields empty.
 If not otherwised specified, write the flashcard in the language of the user's request.
 You are allowed to use html formatting.
-You cannot refer to embedded media files like images, audio etc.
+You can refer to images by using the placeholder ANKI_IMAGE_PATH in your field values - this will be replaced with the actual image(s) from the conversation.
 Please pay very close attention to the examples of the user and try to imitate their formulation.
 If the user didn't specify how many cards to create, assume he wants a single one.
 If the user does not reply anything useful after creating the flashcard, do NOT assume you should create more cards, if unsure ask them.""",
@@ -166,6 +168,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
     async def create_flashcard(
         self,
         fields: dict,
+        __messages__: List = None,
         __event_emitter__: Callable[[dict], Any] = None,
         __user__: dict = {},
         __model__: dict = {},
@@ -267,6 +270,118 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             merged_fields.update(field_overrides)
             await emitter.progress_update("Applied field overrides")
         fields = merged_fields
+
+        # Process images from messages and handle ANKI_IMAGE_PATH placeholders
+        image_html = ""
+        has_image_placeholder = any(
+            "ANKI_IMAGE_PATH" in str(value) for value in fields.values()
+        )
+
+        if __messages__:
+            images = []
+            for message in __messages__:
+                if isinstance(message, dict) and message.get("role") == "user":
+                    content = message.get("content", [])
+                    if isinstance(content, list):
+                        for item in content:
+                            if (
+                                isinstance(item, dict)
+                                and item.get("type") == "image_url"
+                            ):
+                                image_url = item.get("image_url", {}).get("url", "")
+                                if image_url.startswith("data:image/"):
+                                    # Extract base64 data and format
+                                    try:
+                                        # Parse the data URL: data:image/png;base64,SGVsbG8...
+                                        header, data = image_url.split(",", 1)
+                                        format_part = header.split(";")[0].split("/")[
+                                            1
+                                        ]  # Extract 'png' from 'data:image/png'
+                                        images.append((data, format_part))
+                                    except Exception as e:
+                                        logger.error(
+                                            f"Failed to parse image data URL: {e}"
+                                        )
+                                        await emitter.error_update(
+                                            f"Failed to parse image data: {e}"
+                                        )
+                                        return f"Failed to parse image data: {e}"
+
+            if images:
+                await emitter.progress_update(
+                    f"Found {len(images)} image(s), storing in Anki..."
+                )
+                stored_images = []
+
+                for i, (image_data, image_format) in enumerate(images):
+                    try:
+                        # Generate unique filename
+                        filename = f"anki_image_{uuid.uuid4().hex[:8]}.{image_format}"
+
+                        # Store image in Anki
+                        result = await _ankiconnect_request(
+                            self.valves.ankiconnect_host,
+                            self.valves.ankiconnect_port,
+                            "storeMediaFile",
+                            {"filename": filename, "data": image_data},
+                        )
+
+                        if result == filename:
+                            stored_images.append(f'<img src="{filename}">')
+                            await emitter.progress_update(
+                                f"Stored image {i+1}/{len(images)}: {filename}"
+                            )
+                        else:
+                            logger.error(
+                                f"Unexpected result from storeMediaFile: {result}"
+                            )
+                            await emitter.error_update(
+                                f"Failed to store image {i+1}: unexpected result"
+                            )
+                            return f"Failed to store image {i+1}: unexpected result"
+
+                    except Exception as e:
+                        logger.error(f"Failed to store image {i+1}: {e}")
+                        await emitter.error_update(f"Failed to store image {i+1}: {e}")
+                        return f"Failed to store image {i+1}: {e}"
+
+                # Create HTML string for all images
+                image_html = "\n".join(stored_images)
+
+                # Replace ANKI_IMAGE_PATH placeholders or append to last field
+                placeholder_found = False
+                for field_name, field_value in fields.items():
+                    if "ANKI_IMAGE_PATH" in str(field_value):
+                        fields[field_name] = str(field_value).replace(
+                            "ANKI_IMAGE_PATH", image_html
+                        )
+                        placeholder_found = True
+
+                if not placeholder_found:
+                    # Append to the last field (get the last key-value pair)
+                    if fields:
+                        last_field = list(fields.keys())[-1]
+                        fields[last_field] = fields[last_field] + "\n" + image_html
+                        await emitter.progress_update(
+                            f"Added images to field '{last_field}' (no placeholder found)"
+                        )
+                    else:
+                        logger.error("No fields available to add images to")
+                        await emitter.error_update(
+                            "No fields available to add images to"
+                        )
+                        return "No fields available to add images to"
+                else:
+                    await emitter.progress_update(
+                        "Replaced ANKI_IMAGE_PATH placeholder(s) with images"
+                    )
+
+            elif has_image_placeholder:
+                # Placeholder mentioned but no images found
+                message = "ANKI_IMAGE_PATH placeholder found in fields but no images were detected in the conversation"
+                logger.error(message)
+                await emitter.error_update(message)
+                return message
 
         tags = self.valves.tags
         if isinstance(tags, str):
