@@ -55,7 +55,7 @@ class Tools:
     class Valves(BaseModel):
         useracknowledgement: bool = Field(
             default=False,
-            description="Must be set to True to use the tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the flashcard creation output will be hidden. Once you made sure it's the case, set this valve to True.",
+            description="Must be set to True to use the tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'native' and NOT to 'Default' otherwise the flashcard creation output will be hidden. Once you made sure it's the case, set this valve to True.",
         )
         ankiconnect_host: str = Field(
             default="http://localhost",
@@ -192,7 +192,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         emitter = EventEmitter(__event_emitter__)
 
         if not self.valves.useracknowledgement:
-            error_message = "**Anki Tool disabled. Please ask the admin to check the valves of anki tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the flashcard creation output will be hidden.**"
+            error_message = "**Anki Tool disabled. Please ask the admin to check the valves of anki tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'native' and NOT to 'Default' otherwise the flashcard creation output will be hidden.**"
             await emitter.send_as_message(error_message)
             return error_message
 
@@ -590,7 +590,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         emitter = EventEmitter(__event_emitter__)
 
         if not self.valves.useracknowledgement:
-            error_message = "**Anki Tool disabled. Please ask the admin to check the valves of anki tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'Default' and NOT to 'native' otherwise the flashcard creation output will be hidden.**"
+            error_message = "**Anki Tool disabled. Please ask the admin to check the valves of anki tool. IMPORTANT: Admin must verify that the model settings have the Advanced params of the LLM set to 'native' and NOT to 'Default' otherwise the flashcard creation output will be hidden.**"
             await emitter.send_as_message(error_message)
             return ["Anki Tool disabled. Please ask the admin to check the valves."]
 
