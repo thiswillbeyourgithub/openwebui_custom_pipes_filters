@@ -499,7 +499,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             # Send the request with the note (pictures are now inside the note object)
             request_params = {"note": note}
 
-            logger.info(f"Creating the following note: '{note}'")
+            logger.info(f"AnkiFlashcardCreator: Creating the following note: '{note}'")
 
             result = await _ankiconnect_request(
                 self.valves.ankiconnect_host,
