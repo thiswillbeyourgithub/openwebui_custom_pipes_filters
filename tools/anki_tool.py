@@ -558,6 +558,80 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             await emitter.error_update(f"Failed to create flashcards: {str(e)}")
             return f"Failed to create flashcards: {str(e)}"
 
+    async def batch_create_flashcards(
+        self,
+        fields: List[dict],
+        __messages__: List = None,
+        __event_emitter__: Callable[[dict], Any] = None,
+        __user__: dict = {},
+        __model__: dict = {},
+        __metadata__: dict = {},
+        __files__: list = None,
+    ) -> List[Optional[int]]:
+        """
+        Create multiple Anki flashcards in batch by calling create_flashcard for each field dictionary.
+
+        This method accepts the same arguments as create_flashcard except that fields is now a List[dict].
+        When called, it will dispatch each element of the fields list as separate calls to create_flashcard,
+        effectively allowing the creation of multiple flashcards in one LLM tool call.
+
+        :param fields: List of dictionaries, each mapping flashcard field names to their string content.
+        :return: List of note IDs for the created cards (or error messages if creation failed).
+        """
+        logger.info(
+            f"AnkiFlashcardCreator: Starting batch_create_flashcards with {len(fields)} flashcards"
+        )
+        emitter = EventEmitter(__event_emitter__)
+
+        if not fields:
+            await emitter.error_update("No flashcard fields provided")
+            return ["No flashcard fields provided"]
+
+        if not isinstance(fields, list):
+            await emitter.error_update(
+                "fields parameter must be a list of dictionaries"
+            )
+            return ["fields parameter must be a list of dictionaries"]
+
+        results = []
+        total_cards = len(fields)
+
+        await emitter.progress_update(f"Creating {total_cards} flashcards...")
+
+        for i, field_dict in enumerate(fields, 1):
+            try:
+                await emitter.progress_update(f"Creating flashcard {i}/{total_cards}")
+
+                # Call create_flashcard for each field dictionary
+                result = await self.create_flashcard(
+                    fields=field_dict,
+                    __messages__=__messages__,
+                    __event_emitter__=__event_emitter__,
+                    __user__=__user__,
+                    __model__=__model__,
+                    __metadata__=__metadata__,
+                    __files__=__files__,
+                )
+
+                results.append(result)
+                logger.info(
+                    f"AnkiFlashcardCreator: Created flashcard {i}/{total_cards}: {result}"
+                )
+
+            except Exception as e:
+                error_msg = f"Failed to create flashcard {i}/{total_cards}: {str(e)}"
+                logger.error(f"AnkiFlashcardCreator: {error_msg}")
+                results.append(error_msg)
+
+        success_count = sum(
+            1 for r in results if isinstance(r, str) and r.startswith("Note ID:")
+        )
+        await emitter.success_update(
+            f"Batch creation completed: {success_count}/{total_cards} flashcards created successfully"
+        )
+
+        return results
+
 
 def flatten_dict(input: dict) -> dict:
     if not isinstance(input, dict):
