@@ -324,12 +324,13 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 # Determine target fields for images
                 # Check if any field has ANKI_IMAGE_PATH placeholder
                 placeholder_fields = []
-                placeholder_field_contents = {}
                 for field_name, field_value in fields.items():
                     if "ANKI_IMAGE_PATH" in str(field_value):
                         placeholder_fields.append(field_name)
-                        # Store original content but don't remove placeholder yet
-                        placeholder_field_contents[field_name] = str(field_value)
+                        # Remove the placeholder from the field content
+                        fields[field_name] = (
+                            str(field_value).replace("ANKI_IMAGE_PATH", "").strip()
+                        )
 
                 if placeholder_fields:
                     target_fields = placeholder_fields
@@ -506,50 +507,14 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 request_params,
             )
 
-            assert isinstance(
-                result, int
-            ), f"Output of ankiconnect was not an note_id but: {result}"
-
-            # Update fields to replace placeholders with actual image references
-            if pictures and placeholder_fields:
-                await emitter.progress_update(
-                    "Updating fields with image references..."
-                )
-
-                # Create updated fields with image references
-                updated_fields = {}
-                for field_name in placeholder_fields:
-                    original_content = placeholder_field_contents[field_name]
-
-                    # Create image HTML tags for all images
-                    image_tags = []
-                    for picture in pictures:
-                        if field_name in picture["fields"]:
-                            image_tags.append(f'<img src="{picture["filename"]}">')
-
-                    # Replace placeholder with image tags
-                    updated_content = original_content.replace(
-                        "ANKI_IMAGE_PATH", "".join(image_tags)
-                    )
-                    updated_fields[field_name] = updated_content
-
-                # Update the note fields
-                update_params = {"note": {"id": result, "fields": updated_fields}}
-
-                await _ankiconnect_request(
-                    self.valves.ankiconnect_host,
-                    self.valves.ankiconnect_port,
-                    "updateNoteFields",
-                    update_params,
-                )
-
-                await emitter.progress_update("Successfully updated fields with images")
-
             await emitter.progress_update("Syncing with AnkiWeb...")
             await _ankiconnect_request(
                 self.valves.ankiconnect_host, self.valves.ankiconnect_port, "sync"
             )
 
+            assert isinstance(
+                result, int
+            ), f"Output of ankiconnect was not an note_id but: {result}"
             await emitter.success_update("Successfully created and synced flashcard")
             return f"Note ID: {result}"
 
