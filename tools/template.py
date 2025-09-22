@@ -49,6 +49,8 @@ class Tools:
         )
 
     class UserValves(BaseModel):
+        """User-specific configuration options for the filter. Must be cast
+        as dict to be properly used."""
         user_preference: str = Field(
             default="default",
             description="User-specific preference that can override tool behavior"
@@ -98,7 +100,7 @@ class Tools:
         :return: TODO
         """
         emitter = EventEmitter(__event_emitter__)
-        user_valves = dict(__user__.get("valves", {}))
+        user_valves = dict(__user__.get("valves", {}))  # needs to be cast as dict
         self.__on_valves_updated__()
 
         await self.log(f"Processing input with option: {option}")

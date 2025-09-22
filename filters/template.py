@@ -33,7 +33,8 @@ class Filter:
         pass
 
     class UserValves(BaseModel):
-        """User-specific configuration options for the filter."""
+        """User-specific configuration options for the filter. Must be cast
+        as dict to be properly used."""
 
         enabled: bool = Field(
             default=True, description="Enable or disable this filter for the user"
@@ -67,7 +68,7 @@ class Filter:
         **kwargs,
     ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
-        user_valves = dict(__user__.get("valves"))
+        user_valves = dict(__user__.get("valves"))  # Needs to be cast as dict
 
         await self.log("Processing inlet request")
 
