@@ -10,6 +10,7 @@ A collection of pipes, filters and tools for OpenWebUI. My usual goto templates 
     * As of version 1.0.0 of add_metadata.py, while the user is correctly passed to langfuse and litellm, other metadata are not being transmitted properly.
 - **langfuse filter.py** - should maybe be better than add_metadata, and don't rely on litellm
 - **warn_if_long_chat.py** - Adds soft and hard limits to the number of messages in a chat.
+- **combine_user_messages.py** - Combines all user messages into a single message and removes all assistant messages to improve LLM responses. Preserves files and images.
 - **hide_thinking_filter.py** - Removes thinking XML tags to reduce token count and converts them to HTML details tags. Not used anymore because open-webui now automatically wraps the thoughts.
 - **debug_filter.py** - Filter that prints argument as they pass through it. You can use it multiple times to debug another filter. You can then use `docker logs open-webui --tail 100 --follow | grep DebugFilter` to see the data that interests you.
 - **infinite_chat.py** - keep only the last n messages. Used to not have to create a new chat so often, for example with the anki_tool.
