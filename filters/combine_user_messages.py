@@ -27,15 +27,11 @@ class Filter:
             default=0,
             description="Priority level for the filter operations (lower numbers run first).",
         )
-        enabled: bool = Field(
-            default=True, description="Enable or disable this filter"
-        )
-        debug: bool = Field(
-            default=False, description="Enable debug logging"
-        )
+        enabled: bool = Field(default=True, description="Enable or disable this filter")
+        debug: bool = Field(default=False, description="Enable debug logging")
         message_separator: str = Field(
             default="\n\n---\n\n",
-            description="Separator to use between combined user messages"
+            description="Separator to use between combined user messages",
         )
 
     class UserValves(BaseModel):
@@ -90,10 +86,10 @@ class Filter:
         combined_messages = []
         user_texts = []
         all_files_and_images = []
-        
+
         for message in messages:
             role = message.get("role", "")
-            
+
             if role == "system":
                 # Preserve system messages as-is
                 combined_messages.append(message)
@@ -103,39 +99,33 @@ class Filter:
                 text = self._extract_content_text(content)
                 if text.strip():
                     user_texts.append(text.strip())
-                
+
                 # Collect files and images
                 media_items = self._extract_files_and_images(content)
                 all_files_and_images.extend(media_items)
             # Skip assistant messages completely
-        
+
         # Create combined user message if we have any user content
         if user_texts or all_files_and_images:
             combined_content = []
-            
+
             # Add text content
             if user_texts:
                 combined_text = self.valves.message_separator.join(user_texts)
-                combined_content.append({
-                    "type": "text",
-                    "text": combined_text
-                })
-            
+                combined_content.append({"type": "text", "text": combined_text})
+
             # Add all files and images
             combined_content.extend(all_files_and_images)
-            
+
             # Use string format if only text, otherwise use list format
             if len(combined_content) == 1 and combined_content[0]["type"] == "text":
                 content = combined_content[0]["text"]
             else:
                 content = combined_content
-            
-            combined_user_message = {
-                "role": "user",
-                "content": content
-            }
+
+            combined_user_message = {"role": "user", "content": content}
             combined_messages.append(combined_user_message)
-        
+
         return combined_messages
 
     async def inlet(
@@ -149,16 +139,16 @@ class Filter:
         **kwargs,
     ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
-        
+
         # Check if filter is enabled
         if not self.valves.enabled:
             return body
-            
+
         # Check user-specific settings
         user_valves = {}
         if __user__ and "valves" in __user__:
             user_valves = __user__.get("valves", {})
-        
+
         if not user_valves.get("enabled", True):
             await self.log("Filter disabled for this user")
             return body
@@ -173,10 +163,14 @@ class Filter:
 
             original_count = len(messages)
             user_count = sum(1 for msg in messages if msg.get("role") == "user")
-            assistant_count = sum(1 for msg in messages if msg.get("role") == "assistant")
+            assistant_count = sum(
+                1 for msg in messages if msg.get("role") == "assistant"
+            )
             system_count = sum(1 for msg in messages if msg.get("role") == "system")
 
-            await self.log(f"Original messages: {original_count} (system: {system_count}, user: {user_count}, assistant: {assistant_count})")
+            await self.log(
+                f"Original messages: {original_count} (system: {system_count}, user: {user_count}, assistant: {assistant_count})"
+            )
 
             # Combine user messages and remove assistant messages
             combined_messages = self._combine_user_messages(messages)
@@ -184,14 +178,16 @@ class Filter:
 
             new_count = len(combined_messages)
             await self.log(f"Combined messages: {new_count}")
-            
+
             # Notify user that filter has been applied
-            await self.emitter.progress_update(f"Combined {user_count} user messages into 1, removed {assistant_count} assistant messages")
+            await self.emitter.progress_update(
+                f"Combined {user_count} user messages into 1, removed {assistant_count} assistant messages"
+            )
 
             await self.log("Request processed successfully")
         except Exception as e:
             await self.log(f"Error in inlet: {str(e)}", level="error")
-            
+
         return body
 
     async def outlet(
@@ -209,12 +205,12 @@ class Filter:
         # Check if filter is enabled
         if not self.valves.enabled:
             return body
-            
+
         # Check user-specific settings
         user_valves = {}
         if __user__ and "valves" in __user__:
             user_valves = __user__.get("valves", {})
-        
+
         if not user_valves.get("enabled", True):
             return body
 
@@ -223,30 +219,38 @@ class Filter:
         try:
             messages = body.get("messages", [])
             message_count = len(messages)
-            
+
             system_count = sum(1 for msg in messages if msg.get("role") == "system")
             user_count = sum(1 for msg in messages if msg.get("role") == "user")
-            assistant_count = sum(1 for msg in messages if msg.get("role") == "assistant")
-            
+            assistant_count = sum(
+                1 for msg in messages if msg.get("role") == "assistant"
+            )
+
             # Assert that we have the expected structure:
             # - 2 messages (1 user + 1 assistant) or 3 messages (1 system + 1 user + 1 assistant)
             expected_total = 2 if system_count == 0 else 3
-            
+
             assert message_count == expected_total, (
                 f"Expected {expected_total} messages after filtering "
                 f"(system: {system_count}, user: {user_count}, assistant: {assistant_count}), "
                 f"but got {message_count} messages"
             )
-            
-            assert user_count == 1, f"Expected exactly 1 user message, got {user_count}"
-            assert assistant_count == 1, f"Expected exactly 1 assistant message, got {assistant_count}"
-            assert system_count <= 1, f"Expected at most 1 system message, got {system_count}"
 
-            await self.log(f"Outlet validation passed: {message_count} messages as expected")
+            assert user_count == 1, f"Expected exactly 1 user message, got {user_count}"
+            assert (
+                assistant_count == 1
+            ), f"Expected exactly 1 assistant message, got {assistant_count}"
+            assert (
+                system_count <= 1
+            ), f"Expected at most 1 system message, got {system_count}"
+
+            await self.log(
+                f"Outlet validation passed: {message_count} messages as expected"
+            )
 
         except Exception as e:
             await self.log(f"Error in outlet: {str(e)}", level="error")
-            
+
         return body
 
 
