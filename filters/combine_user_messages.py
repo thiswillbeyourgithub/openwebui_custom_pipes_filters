@@ -27,7 +27,6 @@ class Filter:
             default=0,
             description="Priority level for the filter operations (lower numbers run first).",
         )
-        enabled: bool = Field(default=True, description="Enable or disable this filter")
         debug: bool = Field(default=False, description="Enable debug logging")
         message_separator: str = Field(
             default="\n",
@@ -140,10 +139,6 @@ class Filter:
     ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
 
-        # Check if filter is enabled
-        if not self.valves.enabled:
-            return body
-
         # Check user-specific settings
         user_valves = {}
         if __user__ and "valves" in __user__:
@@ -201,10 +196,6 @@ class Filter:
         **kwargs,
     ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
-
-        # Check if filter is enabled
-        if not self.valves.enabled:
-            return body
 
         # Check user-specific settings
         user_valves = {}
