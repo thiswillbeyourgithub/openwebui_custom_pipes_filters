@@ -37,7 +37,7 @@ class Filter:
         """User-specific configuration options for the filter."""
 
         enabled: bool = Field(
-            default=True, description="Enable or disable this filter for the user"
+            default=False, description="Enable or disable this filter for the user"
         )
 
     def __init__(self):
