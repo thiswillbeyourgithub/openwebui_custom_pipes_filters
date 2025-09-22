@@ -30,7 +30,7 @@ class Filter:
         enabled: bool = Field(default=True, description="Enable or disable this filter")
         debug: bool = Field(default=False, description="Enable debug logging")
         message_separator: str = Field(
-            default="\n\n---\n\n",
+            default="\n",
             description="Separator to use between combined user messages",
         )
 
