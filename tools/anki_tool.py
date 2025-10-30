@@ -21,6 +21,11 @@ from typing import Callable, Any, List, Optional
 from pydantic import BaseModel, Field
 import aiohttp
 from loguru import logger
+import hashlib
+from pathlib import Path
+from PIL import Image
+import io
+import base64
 
 
 TEMPLATE_EXAMPLE = """
@@ -47,7 +52,6 @@ EXAMPLES
 
 
 class Tools:
-
     VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
         0
     ].split("version: ")[1]
@@ -110,6 +114,11 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             description="URL of the OpenWebUI instance. Only used if metadata_field is specified to add a link to the chat.",
             required=False,
         )
+        anki_media_folder_path: str = Field(
+            default="",
+            description="Full path to the Anki profile's media folder (e.g., '/home/user/.local/share/Anki2/User 1/collection.media/'). Required for image support.",
+            required=False,
+        )
         pass
 
     # We need to use a setter property because that's the only way I could find
@@ -150,15 +159,15 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         deck_list = await _ankiconnect_request(
             self.valves.ankiconnect_host, self.valves.ankiconnect_port, "deckNames"
         )
-        assert (
-            self.valves.deck in deck_list
-        ), f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
+        assert self.valves.deck in deck_list, (
+            f"Deck '{self.valves.deck}' was not found in the decks of anki. You must create it first."
+        )
         models = await _ankiconnect_request(
             self.valves.ankiconnect_host, self.valves.ankiconnect_port, "modelNames"
         )
-        assert (
-            self.valves.notetype_name in models
-        ), f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
+        assert self.valves.notetype_name in models, (
+            f"Notetype '{self.valves.notetype_name}' was not found in the notetypes of anki. You must fix the valve first."
+        )
         self.parameters_are_checked = True
 
     async def create_flashcard(
@@ -270,9 +279,9 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 if isinstance(override_value, str):
                     try:
                         field_overrides = json.loads(override_value)
-                        assert isinstance(
-                            field_overrides, dict
-                        ), "field_overrides must be a dictionary"
+                        assert isinstance(field_overrides, dict), (
+                            "field_overrides must be a dictionary"
+                        )
                         await emitter.progress_update(
                             f"Field to override: {field_overrides}"
                         )
@@ -294,10 +303,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             await emitter.progress_update("Applied field overrides")
         fields = merged_fields
 
-        # Process images from messages for the picture parameter
-        pictures = []
-        target_fields = []
-
+        # Process images from messages and save to Anki media folder
         if __messages__:
             images = []
             for message in __messages__:
@@ -311,14 +317,11 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                             ):
                                 image_url = item.get("image_url", {}).get("url", "")
                                 if image_url.startswith("data:image/"):
-                                    # Extract base64 data and format
+                                    # Extract base64 data
                                     try:
                                         # Parse the data URL: data:image/png;base64,SGVsbG8...
                                         header, data = image_url.split(",", 1)
-                                        format_part = header.split(";")[0].split("/")[
-                                            1
-                                        ]  # Extract 'png' from 'data:image/png'
-                                        images.append((data, format_part))
+                                        images.append(data)
                                     except Exception as e:
                                         logger.error(
                                             f"Failed to parse image data URL: {e}"
@@ -329,31 +332,39 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                                         return f"Failed to parse image data: {e}"
 
             if images:
+                # Check if media folder path is configured
+                if not self.valves.anki_media_folder_path:
+                    error_msg = "Images found but anki_media_folder_path valve is not configured. Please set the path to your Anki profile's media folder (e.g., '/home/user/.local/share/Anki2/User 1/collection.media/')."
+                    logger.error(f"AnkiFlashcardCreator: {error_msg}")
+                    await emitter.error_update(error_msg)
+                    return error_msg
+
+                media_folder = Path(self.valves.anki_media_folder_path)
+
+                # Verify media folder exists
+                if not media_folder.exists() or not media_folder.is_dir():
+                    error_msg = f"Anki media folder not found or is not a directory: {media_folder}"
+                    logger.error(f"AnkiFlashcardCreator: {error_msg}")
+                    await emitter.error_update(error_msg)
+                    return error_msg
+
                 await emitter.progress_update(
-                    f"Found {len(images)} image(s), preparing for Anki..."
+                    f"Found {len(images)} image(s), saving to Anki media folder..."
                 )
 
                 # Determine target fields for images
                 # Check if any field has ANKI_IMAGE_PATH placeholder
                 placeholder_fields = []
-                placeholder_field_contents = {}
                 for field_name, field_value in fields.items():
                     if "ANKI_IMAGE_PATH" in str(field_value):
                         placeholder_fields.append(field_name)
-                        # Store original content but don't remove placeholder yet
-                        placeholder_field_contents[field_name] = str(field_value)
 
-                if placeholder_fields:
-                    target_fields = placeholder_fields
-                    await emitter.progress_update(
-                        f"Images will be added to fields with ANKI_IMAGE_PATH: {placeholder_fields}"
-                    )
-                else:
+                if not placeholder_fields:
                     # If no placeholder, add to the last field
                     if fields:
-                        target_fields = [list(fields.keys())[-1]]
+                        placeholder_fields = [list(fields.keys())[-1]]
                         await emitter.progress_update(
-                            f"No ANKI_IMAGE_PATH placeholder found, images will be added to field '{target_fields[0]}'"
+                            f"No ANKI_IMAGE_PATH placeholder found, images will be added to field '{placeholder_fields[0]}'"
                         )
                     else:
                         logger.error("No fields available to add images to")
@@ -361,20 +372,71 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                             "No fields available to add images to"
                         )
                         return "No fields available to add images to"
-
-                # Prepare picture objects for addNote
-                for i, (image_data, image_format) in enumerate(images):
-                    filename = f"anki_image_{uuid.uuid4().hex[:8]}.{image_format}"
-                    pictures.append(
-                        {
-                            "data": image_data,
-                            "filename": filename,
-                            "fields": target_fields,
-                        }
-                    )
+                else:
                     await emitter.progress_update(
-                        f"Prepared image {i+1}/{len(images)}: {filename}"
+                        f"Images will be added to fields with ANKI_IMAGE_PATH: {placeholder_fields}"
                     )
+
+                # Save images and generate img tags
+                img_tags = []
+                for i, image_data in enumerate(images):
+                    try:
+                        # Decode base64 data
+                        image_bytes = base64.b64decode(image_data)
+
+                        # Generate hash for filename (use first 16 chars to keep it reasonable)
+                        image_hash = hashlib.sha256(image_bytes).hexdigest()[:16]
+                        filename = f"anki_image_{image_hash}.png"
+                        file_path = media_folder / filename
+
+                        # Save image if it doesn't already exist
+                        if not file_path.exists():
+                            try:
+                                # Use PIL to ensure it's saved as PNG
+                                image = Image.open(io.BytesIO(image_bytes))
+                                image.save(file_path, format="PNG")
+                                await emitter.progress_update(
+                                    f"Saved image {i + 1}/{len(images)}: {filename}"
+                                )
+                            except Exception as e:
+                                error_msg = f"Failed to save image {i + 1}/{len(images)} to {file_path}: {str(e)}"
+                                logger.error(f"AnkiFlashcardCreator: {error_msg}")
+                                await emitter.error_update(error_msg)
+                                return error_msg
+                        else:
+                            await emitter.progress_update(
+                                f"Image {i + 1}/{len(images)} already exists: {filename}"
+                            )
+
+                        # Generate img tag (Anki will automatically find the file in the media folder)
+                        img_tag = f'<img src="{filename}">'
+                        img_tags.append(img_tag)
+
+                    except Exception as e:
+                        error_msg = (
+                            f"Failed to process image {i + 1}/{len(images)}: {str(e)}"
+                        )
+                        logger.error(f"AnkiFlashcardCreator: {error_msg}")
+                        await emitter.error_update(error_msg)
+                        return error_msg
+
+                # Update fields with img tags
+                combined_img_tags = " ".join(img_tags)
+                for field_name in placeholder_fields:
+                    if "ANKI_IMAGE_PATH" in str(fields[field_name]):
+                        # Replace placeholder with img tags
+                        fields[field_name] = fields[field_name].replace(
+                            "ANKI_IMAGE_PATH", combined_img_tags
+                        )
+                    else:
+                        # Append img tags to the field
+                        fields[field_name] = (
+                            str(fields[field_name]) + "<br>" + combined_img_tags
+                        )
+
+                await emitter.success_update(
+                    f"Successfully processed {len(images)} image(s)"
+                )
 
         tags = self.valves.tags
         if isinstance(tags, str):
@@ -408,27 +470,27 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
             exs = json.loads(self.valves.examples)
             assert isinstance(exs, list), f"It's not a list but {type(exs)}"
             assert len(exs), "The list is empty"
-            assert all(
-                isinstance(ex, dict) for ex in exs
-            ), "The list does not contain only dicts"
-            assert len(exs) == len(
-                set([json.dumps(ex) for ex in exs])
-            ), "The list contains duplicates"
+            assert all(isinstance(ex, dict) for ex in exs), (
+                "The list does not contain only dicts"
+            )
+            assert len(exs) == len(set([json.dumps(ex) for ex in exs])), (
+                "The list contains duplicates"
+            )
         except Exception as e:
             raise Exception(
                 f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'"
             )
         for ex in exs:
             for k, v in ex.items():
-                assert (
-                    k in fd
-                ), f"An example mentions a field '{k}' that was not defined in the fields_description: {fd}."
+                assert k in fd, (
+                    f"An example mentions a field '{k}' that was not defined in the fields_description: {fd}."
+                )
 
         # check that all fields are appropriate
         for k, v in fields.items():
-            assert (
-                k in fd
-            ), f"Field '{k}' of `fields` is not part of fields_description valve"
+            assert k in fd, (
+                f"Field '{k}' of `fields` is not part of fields_description valve"
+            )
 
         try:
             await emitter.progress_update("Connecting to Anki...")
@@ -470,10 +532,6 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 "fields": fields.copy(),
                 "tags": tags,
             }
-
-            # Add pictures to the note object if any were prepared
-            if pictures:
-                note["picture"] = pictures
 
             if self.valves.metadata_field:
                 metadata = flatten_dict(__user__.copy())
@@ -520,58 +578,9 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
                 request_params,
             )
 
-            assert isinstance(
-                result, int
-            ), f"Output of ankiconnect was not an note_id but: {result}"
-
-            # Update fields to replace placeholders with actual image references
-            if pictures and placeholder_fields:
-                await emitter.progress_update(
-                    "Updating fields with image references..."
-                )
-
-                # Create updated fields with image references
-                updated_fields = {}
-                for field_name in placeholder_fields:
-                    original_content = placeholder_field_contents[field_name]
-
-                    # Create image filename references for replacement
-                    image_refs = []
-                    for picture in pictures:
-                        if field_name in picture["fields"]:
-                            image_refs.append(picture["filename"])
-
-                    # Replace placeholder with image filenames (Anki handles the display)
-                    updated_content = original_content.replace(
-                        "ANKI_IMAGE_PATH", " ".join(image_refs)
-                    )
-
-                    # Also remove any data URLs that might be present and replace with filenames
-                    import re
-
-                    data_url_pattern = r"data:image/[^;]+;base64,[A-Za-z0-9+/=]+"
-                    if re.search(data_url_pattern, updated_content):
-                        # Replace data URLs with image filenames
-                        updated_content = re.sub(
-                            data_url_pattern, " ".join(image_refs), updated_content
-                        )
-                        await emitter.progress_update(
-                            f"Replaced data URLs with image filenames in field '{field_name}'"
-                        )
-
-                    updated_fields[field_name] = updated_content
-
-                # Update the note fields
-                update_params = {"note": {"id": result, "fields": updated_fields}}
-
-                await _ankiconnect_request(
-                    self.valves.ankiconnect_host,
-                    self.valves.ankiconnect_port,
-                    "updateNoteFields",
-                    update_params,
-                )
-
-                await emitter.progress_update("Successfully updated fields with images")
+            assert isinstance(result, int), (
+                f"Output of ankiconnect was not an note_id but: {result}"
+            )
 
             await emitter.progress_update("Syncing with AnkiWeb...")
             await _ankiconnect_request(
@@ -748,12 +757,12 @@ def get_updated_docstring(fields_description: str, rules: str, examples: str) ->
         exs = json.loads(examples)
         assert isinstance(exs, list), f"It's not a list but {type(exs)}"
         assert len(exs), "The list is empty"
-        assert all(
-            isinstance(ex, dict) for ex in exs
-        ), "The list does not contain only dicts"
-        assert len(exs) == len(
-            set([json.dumps(ex) for ex in exs])
-        ), "The list contains duplicates"
+        assert all(isinstance(ex, dict) for ex in exs), (
+            "The list does not contain only dicts"
+        )
+        assert len(exs) == len(set([json.dumps(ex) for ex in exs])), (
+            "The list contains duplicates"
+        )
     except Exception as e:
         raise Exception(
             f"Error when parsing examples as json. It must be a json formatted list of dict. Error: '{e}'"
@@ -765,9 +774,9 @@ def get_updated_docstring(fields_description: str, rules: str, examples: str) ->
     temp = TEMPLATE_DOCSTRING
     assert temp.count("RULES") == 1, "Found multiple RULES in the template"
     temp = temp.replace("RULES", rules)
-    assert (
-        temp.count("FIELDS_DESCRIPTION") == 1
-    ), "Found multiple FIELDS_DESCRIPTION in the template"
+    assert temp.count("FIELDS_DESCRIPTION") == 1, (
+        "Found multiple FIELDS_DESCRIPTION in the template"
+    )
     temp = temp.replace("FIELDS_DESCRIPTION", fields_description)
     assert temp.count("EXAMPLES") == 1, "Found multiple EXAMPLES in the template"
     temp = temp.replace("EXAMPLES", examples)
