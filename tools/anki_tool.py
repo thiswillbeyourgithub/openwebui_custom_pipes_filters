@@ -210,7 +210,7 @@ If the user does not reply anything useful after creating the flashcard, do NOT 
         if function_calling_value != "native":
             error_message = f"**Anki Tool Error: Model function calling must be set to 'native' but is currently set to '{function_calling_value}'. Please change the model's Advanced params 'Function Calling' setting from 'Default' to 'Native' in the model configuration.**\nHere is the full model 'info': '{__model__}'."
             await emitter.send_as_message(error_message)
-            return error_message
+            # return error_message
 
         # check tool parameter validity on first method call instead of
         if not self.parameters_are_checked:
