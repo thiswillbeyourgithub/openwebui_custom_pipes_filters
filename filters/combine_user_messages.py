@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 1.0.0
 date: 2025-09-22
-license: GPLv3
+license: AGPLv3
 description: Combines all user messages into a single message and removes all assistant messages to improve LLM responses. Preserves files and images.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/combine_user_messages
 """

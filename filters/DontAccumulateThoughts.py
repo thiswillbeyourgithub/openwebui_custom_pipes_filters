@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 1.0.0
 date: 2025-03-27
-license: GPLv3
+license: AGPLv3
 description: Removes thinking blocks (<thinking>...</thinking>) from assistant messages to avoid resending them in chat history, saving costs and reducing token usage.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/dontaccumulatethoughts
 """

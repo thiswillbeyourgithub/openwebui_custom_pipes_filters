@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 1.1.6
 date: 2024-04-03
-license: GPLv3
+license: AGPLv3
 description: A Filter that adds user and other type of metadata to the requests. Made for litellm set to use langfuse callbacks.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/addmetadata
 """

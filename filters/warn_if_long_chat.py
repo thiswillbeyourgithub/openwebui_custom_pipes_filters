@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filte
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 version: 1.1.0
 date: 2025-03-23
-license: GPLv3
+license: AGPLv3
 description: A filter that adds a soft and hard limit to the number of messages in a chat.
 """
 

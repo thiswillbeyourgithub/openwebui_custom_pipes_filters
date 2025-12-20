@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filte
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 date: 2024-10-11
 version: 1.5.0
-license: GPLv3
+license: AGPLv3
 description: A pipe function that automatically replaces <thinking> xml tags to display as <details> (should be obsolete now)
 """
 

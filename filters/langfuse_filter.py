@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 1.0.2
 date: 2025-02-21
-license: GPLv3
+license: AGPLv3
 description: A Filter that prints arguments as they go through it. Still a WIP because having issues with token counting, prices etc.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/langfuse_filter
 ---

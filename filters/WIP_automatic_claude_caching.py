@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 date: 2024-10-11
 version: 0.0 (not yet working)
 description: the inlet is used to automatically replace the system prompt by a cached system prompt.
-license: GPLv3
+license: AGPLv3
 """
 
 import re

@@ -6,7 +6,7 @@ funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filt
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 1.0.0
 date: TODO
-license: GPLv3
+license: AGPLv3
 description: TODO
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/TODO
 """

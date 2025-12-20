@@ -5,7 +5,7 @@ author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filte
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 version: 3.1.1
 date: 2024-08-21
-license: GPLv3
+license: AGPLv3
 description: A pipe function to track user costs and remove 'thinking' blocks
 """
 
