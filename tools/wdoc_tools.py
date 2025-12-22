@@ -703,6 +703,8 @@ if Path("/app/backend/requirements.txt").exists():
         [sys.executable, "-m", "uv", "pip", "uninstall", "wdoc", "--system"]
     )
     logger.warning("Done uninstalling wdoc")
+    subprocess.check_call([sys.executable, "-m", "uv", "cache", "clean"])
+    logger.warning("Done clearing uv cache")
 
     if WDOC_VERSION == "latest_release":
         ver = "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION
