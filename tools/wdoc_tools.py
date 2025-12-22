@@ -31,7 +31,8 @@ from loguru import logger
 from datetime import datetime
 
 # change this to choose which wdoc version to install
-WDOC_VERSION = "release"
+WDOC_VERSION = "latest_release"
+# WDOC_VERSION = "pinned"
 # WDOC_VERSION = "git_main"
 # WDOC_VERSION = "git_dev"
 
@@ -703,8 +704,10 @@ if Path("/app/backend/requirements.txt").exists():
     )
     logger.warning("Done uninstalling wdoc")
 
-    if WDOC_VERSION == "release":
+    if WDOC_VERSION == "latest_release":
         ver = "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION
+    elif WDOC_VERSION == "pinned":
+        ver = "wdoc==" + Tools.APPROPRIATE_WDOC_VERSION
     elif WDOC_VERSION == "git_main":
         ver = "git+https://github.com/thiswillbeyourgithub/wdoc"
     elif WDOC_VERSION == "git_dev":
