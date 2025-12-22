@@ -73,7 +73,7 @@ class Tools:
     VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
         0
     ].split("version: ")[1]
-    APPROPRIATE_WDOC_VERSION: str = "3.1.0"
+    APPROPRIATE_WDOC_VERSION: str = "4.1.2"
 
     class Valves(BaseModel):
         useracknowledgement: bool = Field(
@@ -717,6 +717,11 @@ if Path("/app/backend/requirements.txt").exists():
     else:
         raise ValueError("Invalid WDOC_VERSION value")
     logger.warning(f"Reinsalling wdoc version '{wdoc_ver}'")
+
+    # override some things specified in the wdoc setup.py file
+    with open("/app/backend/wdoc_overrides.txt", "w") as f:
+        f.write("chonkie[all]\n")
+
     subprocess.check_call(
         [
             sys.executable,
@@ -724,12 +729,12 @@ if Path("/app/backend/requirements.txt").exists():
             "uv",
             "pip",
             "install",
-            # "-U",
             "--reinstall",
-            "--overrides",
+            "-r",
             "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-            "langchain-core>=0.3.37",  #  apparently needed for smooth installation as of open-webui 0.6.5
             wdoc_ver,
+            "--overrides",
+            "/app/backend/wdoc_overrides.txt",
             "--system",
         ]
     )
