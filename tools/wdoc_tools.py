@@ -707,16 +707,16 @@ if Path("/app/backend/requirements.txt").exists():
     logger.warning("Done clearing uv cache")
 
     if WDOC_VERSION == "latest_release":
-        ver = "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION
+        wdoc_ver = "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION
     elif WDOC_VERSION == "pinned":
-        ver = "wdoc==" + Tools.APPROPRIATE_WDOC_VERSION
+        wdoc_ver = "wdoc==" + Tools.APPROPRIATE_WDOC_VERSION
     elif WDOC_VERSION == "git_main":
-        ver = "git+https://github.com/thiswillbeyourgithub/wdoc"
+        wdoc_ver = "git+https://github.com/thiswillbeyourgithub/wdoc"
     elif WDOC_VERSION == "git_dev":
-        ver = "git+https://github.com/thiswillbeyourgithub/wdoc@dev"
+        wdoc_ver = "git+https://github.com/thiswillbeyourgithub/wdoc@dev"
     else:
         raise ValueError("Invalid WDOC_VERSION value")
-    logger.warning(f"Reinsalling wdoc version '{ver}'")
+    logger.warning(f"Reinsalling wdoc version '{wdoc_ver}'")
     subprocess.check_call(
         [
             sys.executable,
@@ -728,8 +728,8 @@ if Path("/app/backend/requirements.txt").exists():
             "--reinstall",
             "--overrides",
             "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-            ver,
             "langchain-core>=0.3.37",  #  apparently needed for smooth installation as of open-webui 0.6.5
+            wdoc_ver,
             "--system",
         ]
     )
