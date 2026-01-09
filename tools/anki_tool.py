@@ -95,7 +95,9 @@ You are allowed to use html formatting.
 You can refer to images by using the placeholder ANKI_IMAGE_PATH in your field values - this will be replaced with the actual image(s) from the conversation.
 Please pay very close attention to the examples of the user and try to imitate their formulation.
 If the user didn't specify how many cards to create, assume he wants a single one.
-If the user does not reply anything useful after creating the flashcard, do NOT assume you should create more cards, if unsure ask them.""",
+If the user does not reply anything useful after creating the flashcard, do NOT assume you should create more cards, if unsure ask them.
+If you really insist on using formatting, do not use markdown as it won't render in anki and instead use basic HTML.
+""",
             description="All rules given to the LLM.",
             required=True,
         )
