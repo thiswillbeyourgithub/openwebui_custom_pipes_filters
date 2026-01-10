@@ -4,7 +4,7 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 1.0.0
+version: 1.0.1
 date: 2025-09-22
 license: AGPLv3
 description: Combines all user messages into a single message and removes all assistant messages to improve LLM responses. Preserves files and images.
