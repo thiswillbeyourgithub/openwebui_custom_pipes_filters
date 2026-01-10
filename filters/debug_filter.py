@@ -33,59 +33,59 @@ class Filter:
             description="Priority level for the filter operations (default 0).",
         )
         print_body: bool = Field(
-            default=False,
+            default=True,
             description="Print the body content",
         )
         print_user: bool = Field(
-            default=False,
+            default=True,
             description="Print the user info",
         )
         print_metadata: bool = Field(
-            default=False,
+            default=True,
             description="Print the metadata",
         )
         print_model: bool = Field(
-            default=False,
+            default=True,
             description="Print the model info",
         )
         print_files: bool = Field(
-            default=False,
+            default=True,
             description="Print the files info",
         )
         print_emitter: bool = Field(
-            default=False,
+            default=True,
             description="Print the event emitter",
         )
         print_messages: bool = Field(
-            default=False,
+            default=True,
             description="Print the messages list",
         )
         print_chat_id: bool = Field(
-            default=False,
+            default=True,
             description="Print the chat ID",
         )
         print_session_id: bool = Field(
-            default=False,
+            default=True,
             description="Print the session ID",
         )
         print_message_id: bool = Field(
-            default=False,
+            default=True,
             description="Print the message ID",
         )
         print_request: bool = Field(
-            default=False,
+            default=True,
             description="Print the request object (converted to string)",
         )
         print_task: bool = Field(
-            default=False,
+            default=True,
             description="Print the task info",
         )
         print_task_body: bool = Field(
-            default=False,
+            default=True,
             description="Print the task_body info",
         )
         print_tools: bool = Field(
-            default=False,
+            default=True,
             description="Print the tools info",
         )
         direction: Literal["inlet", "outlet", "both"] = Field(
@@ -93,7 +93,7 @@ class Filter:
             description="When to print debug info: 'inlet', 'outlet', or 'both'",
         )
         compress_output: bool = Field(
-            default=False,
+            default=True,
             description="When true, JSON output is compact (single line). When false, it's indented and readable.",
         )
 
