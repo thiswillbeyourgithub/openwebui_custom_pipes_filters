@@ -200,7 +200,7 @@ class Filter:
         # Check user-specific settings
         user_valves = {}
         if __user__ and "valves" in __user__:
-            user_valves = __user__.get("valves", {})
+            user_valves = dict(__user__.get("valves", {}))
 
         if not user_valves.get("enabled", True):
             return body
