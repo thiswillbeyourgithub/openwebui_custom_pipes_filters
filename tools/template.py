@@ -75,13 +75,13 @@ class Tools:
         getattr(logger, level)(f"[{self.NAME}] {message}")
         if level == "info":
             if self.valves.debug:
-                await emitter.progress_update(f"[{self.NAME}]" {message}")
+                await emitter.progress_update(f"[{self.NAME}] {message}")
         elif level == "debug":
             if self.valves.debug:
-                await emitter.progress_update(f"[{self.NAME}]" {message}")
+                await emitter.progress_update(f"[{self.NAME}] {message}")
         elif level == "error":
-            await emitter.error_update(f"[{self.NAME}]" {message}")
 
+            await emitter.error_update(f"[{self.NAME}] {message}")
 
     async def example_tool(
         self,
