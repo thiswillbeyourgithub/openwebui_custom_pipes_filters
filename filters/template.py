@@ -9,7 +9,9 @@ date: TODO
 license: AGPLv3
 description: TODO
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/TODO
+requirements: bs4
 """
+# the requirements field above in the fontmatter is how we can specify packages to install
 
 from typing import Any, Callable, Dict, List, Optional, Union, Literal
 from pydantic import BaseModel, Field
