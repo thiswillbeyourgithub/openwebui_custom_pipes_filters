@@ -101,7 +101,9 @@ class Filter:
     def _save_cards(self, chat_id: str, cards: List[dict]) -> Path:
         """Save cards to the JSON file."""
         cards_file = self._get_cards_file_path(chat_id)
-        cards_file.write_text(json.dumps(cards, indent=2, ensure_ascii=False), encoding="utf-8")
+        cards_file.write_text(
+            json.dumps(cards, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
         return cards_file
 
     def _create_anki_model(self, fields: List[str]) -> "genanki.Model":
@@ -109,18 +111,18 @@ class Filter:
         # Generate a stable model ID based on field names to ensure consistency
         # across multiple generations of the same deck structure
         model_id = random.randrange(1 << 30, 1 << 31)
-        
+
         field_list = [{"name": field} for field in fields]
-        
+
         # Create cloze template that shows all fields
         # The first field will be used for cloze deletions
         qfmt = "{{cloze:" + fields[0] + "}}"
         afmt = "{{cloze:" + fields[0] + "}}"
-        
+
         # Add remaining fields to the answer side
         for field in fields[1:]:
             afmt += f"<br><br><b>{field}:</b><br>{{{{{field}}}}}"
-        
+
         templates = [
             {
                 "name": "Cloze",
@@ -128,7 +130,7 @@ class Filter:
                 "afmt": afmt,
             },
         ]
-        
+
         return genanki.Model(
             model_id,
             self.valves.model_name,
@@ -140,20 +142,22 @@ class Filter:
     def _create_apkg(self, chat_id: str, cards: List[dict]) -> Path:
         """Create an .apkg file from the cards using genanki."""
         if not genanki:
-            raise ImportError("genanki is not installed. Install it with: pip install genanki")
-        
+            raise ImportError(
+                "genanki is not installed. Install it with: pip install genanki"
+            )
+
         # Get field names from the fields_description
         try:
             fields_desc = json.loads(self.valves.fields_description)
             field_names = list(fields_desc.keys())
         except Exception as e:
             raise ValueError(f"Invalid fields_description JSON: {e}")
-        
+
         # Create model and deck
         model = self._create_anki_model(field_names)
         deck_id = random.randrange(1 << 30, 1 << 31)
         deck = genanki.Deck(deck_id, self.valves.deck_name)
-        
+
         # Add notes to deck
         for card in cards:
             # Extract field values in the correct order
@@ -163,11 +167,11 @@ class Filter:
                 fields=field_values,
             )
             deck.add_note(note)
-        
+
         # Write to file
         apkg_path = self._get_chat_directory(chat_id) / "cards.apkg"
         genanki.Package(deck).write_to_file(str(apkg_path))
-        
+
         return apkg_path
 
     async def inlet(
@@ -203,33 +207,39 @@ class Filter:
                 return body
 
             # Build the instruction
-            instruction = "\n\n---\n\n**IMPORTANT INSTRUCTION FOR FLASHCARD CREATION:**\n\n"
+            instruction = (
+                "\n\n---\n\n**IMPORTANT INSTRUCTION FOR FLASHCARD CREATION:**\n\n"
+            )
             instruction += "At the end of your response, you MUST include a JSON array of flashcard dictionaries enclosed in <json> tags.\n\n"
-            instruction += "Each flashcard should be a dictionary with the following fields:\n"
+            instruction += (
+                "Each flashcard should be a dictionary with the following fields:\n"
+            )
             for field_name, field_description in fields_desc.items():
                 instruction += f"- **{field_name}**: {field_description}\n"
-            
+
             instruction += "\nFor cloze deletions, use the format {{c1::text to hide}}, {{c2::another hidden text}}, etc.\n"
             instruction += "\nExample format:\n"
             instruction += "<json>\n"
-            
+
             # Create example based on fields
             example_card = {}
             first_field = True
             for field_name, field_description in fields_desc.items():
                 if first_field:
-                    example_card[field_name] = "What is this?<br>{{c1::This is an example of hidden content}}"
+                    example_card[field_name] = (
+                        "What is this?<br>{{c1::This is an example of hidden content}}"
+                    )
                     first_field = False
                 else:
                     example_card[field_name] = "Additional information here"
-            
+
             instruction += json.dumps([example_card], indent=2)
             instruction += "\n</json>\n"
 
             # Find or create system message and append the instruction
             messages = body.get("messages", [])
             system_message_found = False
-            
+
             for message in messages:
                 if message.get("role") == "system":
                     # Append to existing system message
@@ -241,15 +251,15 @@ class Filter:
                         message["content"].append({"type": "text", "text": instruction})
                     system_message_found = True
                     break
-            
+
             if not system_message_found:
                 # Create a new system message at the beginning
                 messages.insert(0, {"role": "system", "content": instruction})
-            
+
             body["messages"] = messages
-            
+
             await self.log("Added flashcard creation instruction to system prompt")
-            
+
         except Exception as e:
             await self.log(f"Error in inlet: {str(e)}", level="error")
 
@@ -280,7 +290,9 @@ class Filter:
 
         try:
             if not __chat_id__:
-                await self.log("No chat_id provided, cannot process cards", level="error")
+                await self.log(
+                    "No chat_id provided, cannot process cards", level="error"
+                )
                 return body
 
             messages = body.get("messages", [])
@@ -300,11 +312,11 @@ class Filter:
                 return body
 
             content = last_assistant_msg.get("content", "")
-            
+
             # Extract JSON from <json>...</json> tags
             json_pattern = r"<json>\s*(.*?)\s*</json>"
             json_matches = re.findall(json_pattern, content, re.DOTALL | re.IGNORECASE)
-            
+
             if not json_matches:
                 await self.log("No <json> tags found in response")
                 return body
@@ -323,8 +335,10 @@ class Filter:
             # Load existing cards and merge
             existing_cards = self._load_existing_cards(__chat_id__)
             all_cards = existing_cards + new_cards
-            
-            await self.log(f"Total cards: {len(all_cards)} (previous: {len(existing_cards)}, new: {len(new_cards)})")
+
+            await self.log(
+                f"Total cards: {len(all_cards)} (previous: {len(existing_cards)}, new: {len(new_cards)})"
+            )
 
             # Save cards to JSON file
             cards_json_path = self._save_cards(__chat_id__, all_cards)
@@ -339,18 +353,22 @@ class Filter:
                 apkg_path = None
 
             # Remove JSON section from the message content
-            cleaned_content = re.sub(json_pattern, "", content, flags=re.DOTALL | re.IGNORECASE)
+            cleaned_content = re.sub(
+                json_pattern, "", content, flags=re.DOTALL | re.IGNORECASE
+            )
             cleaned_content = cleaned_content.strip()
 
             # Add file information to the cleaned content
             file_info = f"\n\n---\n\n✅ **Flashcards created successfully!**\n\n"
             file_info += f"📊 Total cards in deck: **{len(all_cards)}**\n"
             file_info += f"🆕 New cards added: **{len(new_cards)}**\n\n"
-            file_info += f"📁 Files location: `{self._get_chat_directory(__chat_id__)}`\n"
+            file_info += (
+                f"📁 Files location: `{self._get_chat_directory(__chat_id__)}`\n"
+            )
             file_info += f"- `cards.json` - All cards in JSON format\n"
             if apkg_path:
                 file_info += f"- `cards.apkg` - Anki package ready to import\n"
-            
+
             last_assistant_msg["content"] = cleaned_content + file_info
 
             await self.emitter.success_update(
