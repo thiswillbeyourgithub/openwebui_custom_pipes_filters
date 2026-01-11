@@ -210,7 +210,9 @@ class Filter:
             instruction = (
                 "\n\n---\n\n**IMPORTANT INSTRUCTION FOR FLASHCARD CREATION:**\n\n"
             )
-            instruction += "At the end of your response, you MUST include a JSON array of flashcard dictionaries enclosed in <json> tags.\n\n"
+            instruction += "Keep your response VERY brief - ideally just 'Done.' or 'Flashcards created.' followed immediately by the JSON.\n"
+            instruction += "Do NOT write a lengthy explanation before the JSON. Just acknowledge and provide the cards.\n\n"
+            instruction += "You MUST include a JSON array of flashcard dictionaries enclosed in <json> tags.\n\n"
             instruction += (
                 "Each flashcard should be a dictionary with the following fields:\n"
             )
