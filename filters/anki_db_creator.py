@@ -64,11 +64,11 @@ class Filter:
         self.valves = self.Valves()
 
     async def log(self, message: str, level="info") -> None:
-        """Log a message."""
+        """Log a message to both logger and emitter. Info and error messages
+        are always shown to the user, debug messages only when debug valve is enabled."""
         getattr(logger, level)(f"[{self.NAME}] {message}")
         if level == "info":
-            if self.valves.debug:
-                await self.emitter.progress_update(f"[{self.NAME}] {message}")
+            await self.emitter.progress_update(f"[{self.NAME}] {message}")
         elif level == "debug":
             if self.valves.debug:
                 await self.emitter.progress_update(f"[{self.NAME}] {message}")
