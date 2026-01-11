@@ -12,6 +12,7 @@ openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/anki_db_creator
 requirements: genanki
 """
 
+import base64
 import json
 import re
 import random
@@ -375,16 +376,60 @@ class Filter:
             )
             cleaned_content = cleaned_content.strip()
 
-            # Add file information to the cleaned content
+            # Prepare files to attach to the message as data URLs
+            # This allows the client to download them even though they're on the server
+            files_to_attach = []
+
+            # Add JSON file as data URL
+            if cards_json_path.exists():
+                json_content = cards_json_path.read_text(encoding="utf-8")
+                json_b64 = base64.b64encode(json_content.encode("utf-8")).decode(
+                    "utf-8"
+                )
+                files_to_attach.append(
+                    {
+                        "type": "file",
+                        "url": f"data:application/json;base64,{json_b64}",
+                        "name": "cards.json",
+                    }
+                )
+
+            # Add APKG file as data URL
+            if apkg_path and apkg_path.exists():
+                apkg_content = apkg_path.read_bytes()
+                apkg_b64 = base64.b64encode(apkg_content).decode("utf-8")
+                files_to_attach.append(
+                    {
+                        "type": "file",
+                        "url": f"data:application/x-apkg;base64,{apkg_b64}",
+                        "name": "cards.apkg",
+                    }
+                )
+
+            # Add success message to content
             file_info = f"\n\n---\n\n✅ **Flashcards created successfully!**\n\n"
             file_info += f"📊 Total cards in deck: **{len(all_cards)}**\n"
             file_info += f"🆕 New cards added: **{len(new_cards)}**\n\n"
-            file_info += f"📁 Files location: `{self._get_chat_directory(chat_id)}`\n"
-            file_info += f"- `cards.json` - All cards in JSON format\n"
+            file_info += "📥 Files attached to this message for download:\n"
+            file_info += "- `cards.json` - All cards in JSON format\n"
             if apkg_path:
-                file_info += f"- `cards.apkg` - Anki package ready to import\n"
+                file_info += "- `cards.apkg` - Anki package ready to import\n"
 
             last_assistant_msg["content"] = cleaned_content + file_info
+
+            # Attach files to the message - convert content to list format if needed
+            # to support file attachments alongside text
+            if files_to_attach:
+                # If content is a string, convert to list format with text and files
+                if isinstance(last_assistant_msg["content"], str):
+                    text_content = last_assistant_msg["content"]
+                    last_assistant_msg["content"] = [
+                        {"type": "text", "text": text_content}
+                    ]
+                    last_assistant_msg["content"].extend(files_to_attach)
+                elif isinstance(last_assistant_msg["content"], list):
+                    # Content is already a list, just append files
+                    last_assistant_msg["content"].extend(files_to_attach)
 
             await self.emitter.success_update(
                 f"Created {len(new_cards)} new flashcard(s). Total: {len(all_cards)}"
