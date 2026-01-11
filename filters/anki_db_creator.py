@@ -192,7 +192,7 @@ class Filter:
             chat_id = __metadata__.get("chat_id")
         if not chat_id and body:
             chat_id = body.get("chat_id")
-        
+
         if not chat_id:
             await self.log("No chat_id found in metadata or body", level="error")
             return body
@@ -295,11 +295,9 @@ class Filter:
             chat_id = __metadata__.get("chat_id")
         if not chat_id and body:
             chat_id = body.get("chat_id")
-        
+
         if not chat_id:
-            await self.log(
-                "No chat_id found in metadata or body", level="error"
-            )
+            await self.log("No chat_id found in metadata or body", level="error")
             return body
 
         # Check user-specific settings
@@ -313,7 +311,6 @@ class Filter:
         await self.log("Processing outlet request")
 
         try:
-
             messages = body.get("messages", [])
             if not messages:
                 await self.log("No messages in body")
@@ -381,9 +378,7 @@ class Filter:
             file_info = f"\n\n---\n\n✅ **Flashcards created successfully!**\n\n"
             file_info += f"📊 Total cards in deck: **{len(all_cards)}**\n"
             file_info += f"🆕 New cards added: **{len(new_cards)}**\n\n"
-            file_info += (
-                f"📁 Files location: `{self._get_chat_directory(chat_id)}`\n"
-            )
+            file_info += f"📁 Files location: `{self._get_chat_directory(chat_id)}`\n"
             file_info += f"- `cards.json` - All cards in JSON format\n"
             if apkg_path:
                 file_info += f"- `cards.apkg` - Anki package ready to import\n"
