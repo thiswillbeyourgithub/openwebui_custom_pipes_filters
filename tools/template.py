@@ -105,7 +105,7 @@ class Tools:
         await self.log(f"Processing input with option: {option}")
 
         try:
-            # TODOO
+            # TODO
 
             await emitter.success_update("Successfully processed input")
             return result
