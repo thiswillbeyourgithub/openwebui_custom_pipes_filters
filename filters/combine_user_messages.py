@@ -228,12 +228,12 @@ class Filter:
             )
 
             assert user_count == 1, f"Expected exactly 1 user message, got {user_count}"
-            assert (
-                assistant_count == 1
-            ), f"Expected exactly 1 assistant message, got {assistant_count}"
-            assert (
-                system_count <= 1
-            ), f"Expected at most 1 system message, got {system_count}"
+            assert assistant_count == 1, (
+                f"Expected exactly 1 assistant message, got {assistant_count}"
+            )
+            assert system_count <= 1, (
+                f"Expected at most 1 system message, got {system_count}"
+            )
 
             await self.log(
                 f"Outlet validation passed: {message_count} messages as expected"

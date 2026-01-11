@@ -45,12 +45,12 @@ class Filter:
         self.valves = self.Valves()
 
     async def on_valves_updated(self):
-        assert (
-            self.valves.number_of_message > 2
-        ), "number_of_message has to be more than 2"
-        assert (
-            self.valves.number_of_message_hard_limit > 5
-        ), "number_of_message_hard_limit has to be more than 5"
+        assert self.valves.number_of_message > 2, (
+            "number_of_message has to be more than 2"
+        )
+        assert self.valves.number_of_message_hard_limit > 5, (
+            "number_of_message_hard_limit has to be more than 5"
+        )
         assert (
             self.valves.number_of_message_hard_limit > self.valves.number_of_message
         ), "number_of_message_hard_limit has to be higher than number_of_message"

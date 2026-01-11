@@ -122,9 +122,9 @@ class Filter:
         assert isinstance(body, dict), f"Unexpected type of body: '{body}'"
         assert "messages" in body, f"Body is missing messages: '{body}'"
         last_message = body["messages"][-1]
-        assert (
-            "content" in last_message
-        ), f"last_message does not have a 'content' key: '{last_message}'"
+        assert "content" in last_message, (
+            f"last_message does not have a 'content' key: '{last_message}'"
+        )
         last_message = last_message["content"]
 
         modified = 0

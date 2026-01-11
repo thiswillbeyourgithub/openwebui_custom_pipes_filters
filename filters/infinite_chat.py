@@ -125,9 +125,9 @@ class Filter:
             elif isinstance(latest_content, list):
                 for ili, li in enumerate(latest_content):
                     if li["type"] == "text":
-                        messages[latest_user_msg_idx]["content"][ili][
-                            "text"
-                        ] = new_content
+                        messages[latest_user_msg_idx]["content"][ili]["text"] = (
+                            new_content
+                        )
                         break
             else:
                 raise ValueError(latest_content)
