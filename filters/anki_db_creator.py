@@ -9,6 +9,7 @@ date: 2026-01-11
 license: AGPLv3
 description: Creates Anki flashcards from LLM responses. Accumulates cards across conversation and exports to .apkg format.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/anki_db_creator
+requirements: genanki
 """
 
 import json
