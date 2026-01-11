@@ -19,41 +19,39 @@ from loguru import logger
 
 
 class Tools:
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][0].split("version: ")[1]
+    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
+        0
+    ].split("version: ")[1]
     NAME: str = "TODO"
 
     class Valves(BaseModel):
-        verbose: bool = Field(
-            default=True, 
-            description="Enable verbose logging"
-        )
+        verbose: bool = Field(default=True, description="Enable verbose logging")
         priority: int = Field(
             default=00,
-            description="Priority level for the tool operations (lower numbers run first)"
+            description="Priority level for the tool operations (lower numbers run first)",
         )
         example_string: str = Field(
-            default="default value",
-            description="An example string configuration value"
+            default="default value", description="An example string configuration value"
         )
         example_list: List[str] = Field(
             default=["item1", "item2"],
-            description="An example list configuration value"
+            description="An example list configuration value",
         )
         example_dict_as_json: str = Field(
             default='{"key1": "value1", "key2": "value2"}',
-            description="An example JSON string that will be parsed into a dictionary"
+            description="An example JSON string that will be parsed into a dictionary",
         )
         multiple_choice: Literal["choiceA", "choiceB"] = Field(
-            default="choiceA",
-            description="Multiple choice example"
+            default="choiceA", description="Multiple choice example"
         )
 
     class UserValves(BaseModel):
         """User-specific configuration options for the filter. Must be cast
         as dict to be properly used."""
+
         user_preference: str = Field(
             default="default",
-            description="User-specific preference that can override tool behavior"
+            description="User-specific preference that can override tool behavior",
         )
 
     def __init__(self):
@@ -65,7 +63,9 @@ class Tools:
         # Parse any JSON string valves into Python objects
         try:
             self.example_dict = json.loads(self.valves.example_dict_as_json)
-            assert isinstance(self.example_dict, dict), "example_dict_as_json must parse to a dictionary"
+            assert isinstance(self.example_dict, dict), (
+                "example_dict_as_json must parse to a dictionary"
+            )
         except Exception as e:
             logger.error(f"Error parsing example_dict_as_json: {e}")
             self.example_dict = {}
@@ -80,7 +80,6 @@ class Tools:
             if self.valves.debug:
                 await emitter.progress_update(f"[{self.NAME}] {message}")
         elif level == "error":
-
             await emitter.error_update(f"[{self.NAME}] {message}")
 
     async def example_tool(
@@ -91,11 +90,11 @@ class Tools:
         __metadata__: Optional[dict] = None,
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
-        **kwargs
+        **kwargs,
     ) -> str:
         """
         TODO
-        
+
         :param a_var: TODO
         :return: TODO
         """
@@ -104,13 +103,13 @@ class Tools:
         self.__on_valves_updated__()
 
         await self.log(f"Processing input with option: {option}")
-        
+
         try:
             # TODOO
-                
+
             await emitter.success_update("Successfully processed input")
             return result
-            
+
         except Exception as e:
             error_message = f"Error processing input: {str(e)}"
             await emitter.error_update(error_message)
@@ -119,7 +118,7 @@ class Tools:
 
 class EventEmitter:
     """Helper class for emitting events to the client."""
-    
+
     def __init__(self, event_emitter: Callable[[dict], Any] = None):
         self.event_emitter = event_emitter
 
@@ -138,7 +137,12 @@ class EventEmitter:
         logger.info(f"ToolTemplate: SUCCESS - {description}")
         await self.emit(description, "success", True)
 
-    async def emit(self, description: str = "Unknown State", status: str = "in_progress", done: bool = False):
+    async def emit(
+        self,
+        description: str = "Unknown State",
+        status: str = "in_progress",
+        done: bool = False,
+    ):
         """Emit an event with the given description, status, and completion state"""
         if self.event_emitter:
             await self.event_emitter(
