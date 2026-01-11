@@ -182,10 +182,20 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        __chat_id__: Optional[str] = None,
         **kwargs,
     ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
+
+        # Extract chat_id from metadata or body
+        chat_id = None
+        if __metadata__:
+            chat_id = __metadata__.get("chat_id")
+        if not chat_id and body:
+            chat_id = body.get("chat_id")
+        
+        if not chat_id:
+            await self.log("No chat_id found in metadata or body", level="error")
+            return body
 
         # Check user-specific settings
         user_valves = {}
@@ -275,10 +285,22 @@ class Filter:
         __model__: Optional[dict] = None,
         __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        __chat_id__: Optional[str] = None,
         **kwargs,
     ) -> dict:
         self.emitter = EventEmitter(__event_emitter__)
+
+        # Extract chat_id from metadata or body
+        chat_id = None
+        if __metadata__:
+            chat_id = __metadata__.get("chat_id")
+        if not chat_id and body:
+            chat_id = body.get("chat_id")
+        
+        if not chat_id:
+            await self.log(
+                "No chat_id found in metadata or body", level="error"
+            )
+            return body
 
         # Check user-specific settings
         user_valves = {}
@@ -291,11 +313,6 @@ class Filter:
         await self.log("Processing outlet request")
 
         try:
-            if not __chat_id__:
-                await self.log(
-                    "No chat_id provided, cannot process cards", level="error"
-                )
-                return body
 
             messages = body.get("messages", [])
             if not messages:
@@ -335,7 +352,7 @@ class Filter:
             await self.log(f"Extracted {len(new_cards)} new card(s)")
 
             # Load existing cards and merge
-            existing_cards = self._load_existing_cards(__chat_id__)
+            existing_cards = self._load_existing_cards(chat_id)
             all_cards = existing_cards + new_cards
 
             await self.log(
@@ -343,12 +360,12 @@ class Filter:
             )
 
             # Save cards to JSON file
-            cards_json_path = self._save_cards(__chat_id__, all_cards)
+            cards_json_path = self._save_cards(chat_id, all_cards)
             await self.log(f"Saved cards to {cards_json_path}")
 
             # Create .apkg file
             try:
-                apkg_path = self._create_apkg(__chat_id__, all_cards)
+                apkg_path = self._create_apkg(chat_id, all_cards)
                 await self.log(f"Created .apkg file at {apkg_path}")
             except Exception as e:
                 await self.log(f"Error creating .apkg file: {e}", level="error")
@@ -365,7 +382,7 @@ class Filter:
             file_info += f"📊 Total cards in deck: **{len(all_cards)}**\n"
             file_info += f"🆕 New cards added: **{len(new_cards)}**\n\n"
             file_info += (
-                f"📁 Files location: `{self._get_chat_directory(__chat_id__)}`\n"
+                f"📁 Files location: `{self._get_chat_directory(chat_id)}`\n"
             )
             file_info += f"- `cards.json` - All cards in JSON format\n"
             if apkg_path:
