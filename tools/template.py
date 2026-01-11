@@ -89,7 +89,7 @@ class Tools:
         __user__: Optional[dict] = None,
         __metadata__: Optional[dict] = None,
         __model__: Optional[dict] = None,
-        __files__: Optional[list] = None,
+        __files__: Optional[list] = None,  # [ { "type": "image", "url": "generated_chart.png", "name": "Analysis Chart" } ] }
         **kwargs,
     ) -> str:
         """

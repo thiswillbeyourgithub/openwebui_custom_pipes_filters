@@ -63,7 +63,7 @@ class Filter:
         __user__: Optional[dict] = None,
         __metadata__: Optional[dict] = None,
         __model__: Optional[dict] = None,
-        __files__: Optional[list] = None,
+        __files__: Optional[list] = None,  # [ { "type": "image", "url": "generated_chart.png", "name": "Analysis Chart" } ] }
         __event_emitter__: Callable[[dict], Any] = None,
         **kwargs,
     ) -> dict:
@@ -86,7 +86,7 @@ class Filter:
         __user__: Optional[dict] = None,
         __metadata__: Optional[dict] = None,
         __model__: Optional[dict] = None,
-        __files__: Optional[list] = None,
+        __files__: Optional[list] = None,  # [ { "type": "image", "url": "generated_chart.png", "name": "Analysis Chart" } ] }
         __event_emitter__: Callable[[dict], Any] = None,
         **kwargs,
     ) -> dict:
