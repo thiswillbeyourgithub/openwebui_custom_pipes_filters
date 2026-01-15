@@ -24,6 +24,11 @@ try:
 except ImportError:
     genanki = None
 
+__versions = [li for li in __doc__.splitlines() if li.strip().startswith("version: ")]
+VERSION: str = "v?"
+if __versions:
+    VERSION = __versions[0].split("version: ")[1]
+
 
 class Action:
     """
@@ -31,9 +36,7 @@ class Action:
     Works in conjunction with the Anki Card Accumulator Filter.
     """
 
-    VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
-        0
-    ].split("version: ")[1]
+    VERSION: str = VERSION
     NAME: str = "Generate Anki Deck"
 
     class Valves(BaseModel):
@@ -280,3 +283,4 @@ class EventEmitter:
             await self.event_emitter(
                 {"description": description, "status": status, "done": done}
             )
+
