@@ -1,37 +1,29 @@
 """
-title: Anki DB Creator Filter
+title: Anki Card Accumulator Filter
 author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 1.0.0
-date: 2026-01-11
+version: 2.0.0
+date: 2026-01-15
 license: AGPLv3
-description: Creates Anki flashcards from LLM responses. Accumulates cards across conversation and exports to .apkg format.
-openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/anki_db_creator
-requirements: genanki
+description: Adds instructions for Anki flashcard creation and helps accumulate cards across conversation. Use with the Anki DB Creator Action to generate .apkg files.
+openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/anki_card_accumulator
+requirements: None
 """
 
-import base64
 import json
 import re
-import random
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, List, Optional
 from pydantic import BaseModel, Field
 from loguru import logger
-
-try:
-    import genanki
-except ImportError:
-    genanki = None
 
 
 class Filter:
     VERSION: str = [li for li in __doc__.splitlines() if li.startswith("version: ")][
         0
     ].split("version: ")[1]
-    NAME: str = "Anki DB Creator Filter"
+    NAME: str = "Anki Card Accumulator Filter"
 
     class Valves(BaseModel):
         priority: int = Field(
@@ -42,16 +34,6 @@ class Filter:
         fields_description: str = Field(
             default='{"body": "Main content with cloze deletions like {{c1::hidden text}}", "more": "Additional context or explanations"}',
             description="JSON dict where keys are field names and values are descriptions of what should go in each field",
-        )
-        deck_name: str = Field(
-            default="LLM Generated Cards", description="Name of the Anki deck"
-        )
-        model_name: str = Field(
-            default="Cloze Model", description="Name of the Anki note type/model"
-        )
-        cards_directory: str = Field(
-            default="/tmp",
-            description="Directory to store cards JSON and apkg files (will create subdirectories per chat)",
         )
 
     class UserValves(BaseModel):
@@ -77,127 +59,15 @@ class Filter:
         elif level == "error":
             await self.emitter.error_update(f"[{self.NAME}] {message}")
 
-    def _get_chat_directory(self, chat_id: str) -> Path:
-        """Get the directory for storing files for this chat."""
-        # Use chat_id to create unique directory per conversation
-        base_dir = Path(self.valves.cards_directory)
-        chat_dir = base_dir / f"anki_cards_{chat_id}"
-        chat_dir.mkdir(parents=True, exist_ok=True)
-        return chat_dir
-
-    def _get_cards_file_path(self, chat_id: str) -> Path:
-        """Get the path to the cards JSON file for this chat."""
-        return self._get_chat_directory(chat_id) / "cards.json"
-
-    def _load_existing_cards(self, chat_id: str) -> List[dict]:
-        """Load existing cards from the JSON file if it exists."""
-        cards_file = self._get_cards_file_path(chat_id)
-        if cards_file.exists():
-            try:
-                return json.loads(cards_file.read_text(encoding="utf-8"))
-            except Exception as e:
-                logger.error(f"Error loading cards file: {e}")
-                return []
-        return []
-
-    def _save_cards(self, chat_id: str, cards: List[dict]) -> Path:
-        """Save cards to the JSON file."""
-        cards_file = self._get_cards_file_path(chat_id)
-        cards_file.write_text(
-            json.dumps(cards, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        return cards_file
-
-    def _create_anki_model(self, fields: List[str]) -> "genanki.Model":
-        """Create a genanki cloze model with the specified fields."""
-        # Generate a stable model ID based on field names to ensure consistency
-        # across multiple generations of the same deck structure
-        model_id = random.randrange(1 << 30, 1 << 31)
-
-        field_list = [{"name": field} for field in fields]
-
-        # Create cloze template that shows all fields
-        # The first field will be used for cloze deletions
-        qfmt = "{{cloze:" + fields[0] + "}}"
-        afmt = "{{cloze:" + fields[0] + "}}"
-
-        # Add remaining fields to the answer side
-        for field in fields[1:]:
-            afmt += f"<br><br><b>{field}:</b><br>{{{{{field}}}}}"
-
-        templates = [
-            {
-                "name": "Cloze",
-                "qfmt": qfmt,
-                "afmt": afmt,
-            },
-        ]
-
-        return genanki.Model(
-            model_id,
-            self.valves.model_name,
-            fields=field_list,
-            templates=templates,
-            model_type=genanki.Model.CLOZE,
-        )
-
-    def _create_apkg(self, chat_id: str, cards: List[dict]) -> Path:
-        """Create an .apkg file from the cards using genanki."""
-        if not genanki:
-            raise ImportError(
-                "genanki is not installed. Install it with: pip install genanki"
-            )
-
-        # Get field names from the fields_description
-        try:
-            fields_desc = json.loads(self.valves.fields_description)
-            field_names = list(fields_desc.keys())
-        except Exception as e:
-            raise ValueError(f"Invalid fields_description JSON: {e}")
-
-        # Create model and deck
-        model = self._create_anki_model(field_names)
-        deck_id = random.randrange(1 << 30, 1 << 31)
-        deck = genanki.Deck(deck_id, self.valves.deck_name)
-
-        # Add notes to deck
-        for card in cards:
-            # Extract field values in the correct order
-            field_values = [card.get(field, "") for field in field_names]
-            note = genanki.Note(
-                model=model,
-                fields=field_values,
-            )
-            deck.add_note(note)
-
-        # Write to file
-        apkg_path = self._get_chat_directory(chat_id) / "cards.apkg"
-        genanki.Package(deck).write_to_file(str(apkg_path))
-
-        return apkg_path
-
     async def inlet(
         self,
         body: dict,
         __user__: Optional[dict] = None,
-        __metadata__: Optional[dict] = None,
-        __model__: Optional[dict] = None,
-        __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         **kwargs,
     ) -> dict:
+        """Add flashcard creation instructions to the system prompt."""
         self.emitter = EventEmitter(__event_emitter__)
-
-        # Extract chat_id from metadata or body
-        chat_id = None
-        if __metadata__:
-            chat_id = __metadata__.get("chat_id")
-        if not chat_id and body:
-            chat_id = body.get("chat_id")
-
-        if not chat_id:
-            await self.log("No chat_id found in metadata or body", level="error")
-            return body
 
         # Check user-specific settings
         user_valves = {}
@@ -218,13 +88,13 @@ class Filter:
                 await self.log(f"Invalid fields_description JSON: {e}", level="error")
                 return body
 
-            # Build the instruction
+            # Build the instruction - this guides the LLM to format cards correctly
             instruction = (
                 "\n\n---\n\n**IMPORTANT INSTRUCTION FOR FLASHCARD CREATION:**\n\n"
             )
-            instruction += "Keep your response VERY brief - ideally just 'Done.' or 'Flashcards created.' followed immediately by the JSON.\n"
-            instruction += "Do NOT write a lengthy explanation before the JSON. Just acknowledge and provide the cards.\n\n"
-            instruction += "You MUST include a JSON array of flashcard dictionaries enclosed in <json> tags.\n\n"
+            instruction += "When creating flashcards, keep your response VERY brief.\n"
+            instruction += "Just acknowledge briefly and provide the cards in the specified format.\n\n"
+            instruction += "You MUST include a JSON array of flashcard dictionaries enclosed in <anki_cards> tags.\n\n"
             instruction += (
                 "Each flashcard should be a dictionary with the following fields:\n"
             )
@@ -233,7 +103,7 @@ class Filter:
 
             instruction += "\nFor cloze deletions, use the format {{c1::text to hide}}, {{c2::another hidden text}}, etc.\n"
             instruction += "\nExample format:\n"
-            instruction += "<json>\n"
+            instruction += "<anki_cards>\n"
 
             # Create example based on fields
             example_card = {}
@@ -248,7 +118,8 @@ class Filter:
                     example_card[field_name] = "Additional information here"
 
             instruction += json.dumps([example_card], indent=2)
-            instruction += "\n</json>\n"
+            instruction += "\n</anki_cards>\n\n"
+            instruction += "The user can then use the 'Generate Anki Deck' action button to create a downloadable .apkg file.\n"
 
             # Find or create system message and append the instruction
             messages = body.get("messages", [])
@@ -283,24 +154,11 @@ class Filter:
         self,
         body: dict,
         __user__: Optional[dict] = None,
-        __metadata__: Optional[dict] = None,
-        __model__: Optional[dict] = None,
-        __files__: Optional[list] = None,
         __event_emitter__: Callable[[dict], Any] = None,
         **kwargs,
     ) -> dict:
+        """Extract and count flashcards from LLM responses."""
         self.emitter = EventEmitter(__event_emitter__)
-
-        # Extract chat_id from metadata or body
-        chat_id = None
-        if __metadata__:
-            chat_id = __metadata__.get("chat_id")
-        if not chat_id and body:
-            chat_id = body.get("chat_id")
-
-        if not chat_id:
-            await self.log("No chat_id found in metadata or body", level="error")
-            return body
 
         # Check user-specific settings
         user_valves = {}
@@ -331,15 +189,15 @@ class Filter:
 
             content = last_assistant_msg.get("content", "")
 
-            # Extract JSON from <json>...</json> tags
-            json_pattern = r"<json>\s*(.*?)\s*</json>"
+            # Extract JSON from <anki_cards>...</anki_cards> tags
+            json_pattern = r"<anki_cards>\s*(.*?)\s*</anki_cards>"
             json_matches = re.findall(json_pattern, content, re.DOTALL | re.IGNORECASE)
 
             if not json_matches:
-                await self.log("No <json> tags found in response")
+                # No cards in this message, that's fine
                 return body
 
-            # Parse the JSON
+            # Parse the JSON to count cards
             try:
                 new_cards = json.loads(json_matches[0])
                 if not isinstance(new_cards, list):
@@ -348,91 +206,37 @@ class Filter:
                 await self.log(f"Error parsing JSON from response: {e}", level="error")
                 return body
 
-            await self.log(f"Extracted {len(new_cards)} new card(s)")
+            await self.log(f"Found {len(new_cards)} new card(s) in this response")
 
-            # Load existing cards and merge
-            existing_cards = self._load_existing_cards(chat_id)
-            all_cards = existing_cards + new_cards
+            # Count total cards in conversation
+            messages = body.get("messages", [])
+            total_cards = 0
+            for msg in messages:
+                if msg.get("role") == "assistant":
+                    msg_content = msg.get("content", "")
+                    msg_matches = re.findall(
+                        json_pattern, msg_content, re.DOTALL | re.IGNORECASE
+                    )
+                    for match in msg_matches:
+                        try:
+                            cards = json.loads(match)
+                            if isinstance(cards, list):
+                                total_cards += len(cards)
+                            else:
+                                total_cards += 1
+                        except Exception:
+                            pass
 
-            await self.log(
-                f"Total cards: {len(all_cards)} (previous: {len(existing_cards)}, new: {len(new_cards)})"
-            )
+            # Add informative message after the cards
+            info_msg = f"\n\n---\n\n✅ **Flashcards formatted successfully!**\n\n"
+            info_msg += f"🆕 New cards in this response: **{len(new_cards)}**\n"
+            info_msg += f"📊 Total cards in conversation: **{total_cards}**\n\n"
+            info_msg += "💡 Click the **'Generate Anki Deck'** action button below to download all cards as a .apkg file.\n"
 
-            # Save cards to JSON file
-            cards_json_path = self._save_cards(chat_id, all_cards)
-            await self.log(f"Saved cards to {cards_json_path}")
-
-            # Create .apkg file
-            try:
-                apkg_path = self._create_apkg(chat_id, all_cards)
-                await self.log(f"Created .apkg file at {apkg_path}")
-            except Exception as e:
-                await self.log(f"Error creating .apkg file: {e}", level="error")
-                apkg_path = None
-
-            # Remove JSON section from the message content
-            cleaned_content = re.sub(
-                json_pattern, "", content, flags=re.DOTALL | re.IGNORECASE
-            )
-            cleaned_content = cleaned_content.strip()
-
-            # Prepare files to attach to the message as data URLs
-            # This allows the client to download them even though they're on the server
-            files_to_attach = []
-
-            # Add JSON file as data URL
-            if cards_json_path.exists():
-                json_content = cards_json_path.read_text(encoding="utf-8")
-                json_b64 = base64.b64encode(json_content.encode("utf-8")).decode(
-                    "utf-8"
-                )
-                files_to_attach.append(
-                    {
-                        "type": "file",
-                        "url": f"data:application/json;base64,{json_b64}",
-                        "name": "cards.json",
-                    }
-                )
-
-            # Add APKG file as data URL
-            if apkg_path and apkg_path.exists():
-                apkg_content = apkg_path.read_bytes()
-                apkg_b64 = base64.b64encode(apkg_content).decode("utf-8")
-                files_to_attach.append(
-                    {
-                        "type": "file",
-                        "url": f"data:application/x-apkg;base64,{apkg_b64}",
-                        "name": "cards.apkg",
-                    }
-                )
-
-            # Add success message to content
-            file_info = f"\n\n---\n\n✅ **Flashcards created successfully!**\n\n"
-            file_info += f"📊 Total cards in deck: **{len(all_cards)}**\n"
-            file_info += f"🆕 New cards added: **{len(new_cards)}**\n\n"
-            file_info += "📥 Files attached to this message for download:\n"
-            file_info += "- `cards.json` - All cards in JSON format\n"
-            if apkg_path:
-                file_info += "- `cards.apkg` - Anki package ready to import\n"
-
-            last_assistant_msg["content"] = cleaned_content + file_info
-
-            # Attach files to the message - convert content to list format if needed
-            # to support file attachments alongside text
-            if files_to_attach:
-                # If content is a string, convert to list format with text and files
-                if isinstance(last_assistant_msg["content"], str):
-                    text_content = last_assistant_msg["content"]
-                    last_assistant_msg["content"] = [
-                        {"type": "text", "text": text_content}
-                    ]
-                    last_assistant_msg["content"].extend(files_to_attach)
-                elif isinstance(last_assistant_msg["content"], list):
-                    # Content is already a list, just append files
-                    last_assistant_msg["content"].extend(files_to_attach)
+            last_assistant_msg["content"] = content + info_msg
 
             await self.emitter.success_update(
-                f"Created {len(new_cards)} new flashcard(s). Total: {len(all_cards)}"
+                f"Found {len(new_cards)} new cards. Total: {total_cards}"
             )
 
         except Exception as e:
