@@ -14,10 +14,14 @@ The system consists of two parts that work together:
 
 ### 1. Anki Deck Creator Filter (`filters/anki_deck_creator_filter.py`)
 
-**Purpose:** Guides the LLM to format flashcards correctly and tracks card accumulation.
+**Purpose:** Guides the LLM to format flashcards correctly, tracks card accumulation, and optimizes context for long conversations.
 
 **What it does:**
-- **Inlet (before LLM):** Adds instructions to the system prompt explaining how to format flashcards using `<anki_cards>` tags with JSON arrays
+- **Inlet (before LLM):**
+  - Adds instructions to the system prompt explaining how to format flashcards using `<anki_cards>` tags with JSON arrays
+  - Filters conversation history to keep only the last N messages (configurable), reducing token usage in long conversations
+  - Preserves important metadata from filtered messages using regex patterns
+  - Cleans up previous info messages to save tokens
 - **Outlet (after LLM):** Detects and counts flashcards in LLM responses, providing feedback to users about how many cards were created
 
 ### 2. Anki Deck Creator Action (`actions/anki_deck_creator_action.py`)
@@ -79,6 +83,14 @@ fields_description: str = Field(
     default='{"body": "Main content with cloze deletions", "more": "Additional context"}',
     description="JSON dict defining flashcard fields"
 )
+N_messages_to_keep: int = Field(
+    default=0,
+    description="Number of previous messages to keep (0 = only system + current user, 1 = + last assistant, 2 = + last user + last assistant, etc.)"
+)
+regex_keeper: str = Field(
+    default="",
+    description="Multi-line regex patterns to preserve important lines from filtered messages (e.g., 'Source:.*\\nTeacher:.*')"
+)
 debug: bool = False  # Enable debug logging
 ```
 
@@ -125,6 +137,42 @@ You can customize what fields your flashcards have by modifying the `fields_desc
 
 The filter will instruct the LLM to fill these fields, and the action will include them in the .apkg file.
 
+## Advanced Features
+
+### Message Filtering for Long Conversations
+
+The filter includes a message filtering system to optimize token usage in long conversations:
+
+- **`N_messages_to_keep`**: Controls how many previous messages to keep in context
+  - `0` = Only system prompt + current user message (most token-efficient)
+  - `1` = System + last assistant message + current user
+  - `2` = System + last user + last assistant + current user
+  - And so on...
+- System messages (with flashcard instructions) are always preserved
+- The current user message is always included
+- This allows you to have very long flashcard creation sessions without hitting token limits
+
+### Regex Keeper for Metadata Preservation
+
+Use `regex_keeper` to preserve important information from messages that would otherwise be filtered out:
+
+- Each line is a separate regex pattern (no `/` delimiters needed)
+- Matched lines from user messages are kept and prepended to the last kept message
+- Useful for preserving source citations, teacher names, dates, etc.
+
+**Example configuration:**
+```
+Source:.*
+Teacher:.*
+Date:.*
+```
+
+This ensures that even if messages are filtered, lines like "Source: Chapter 5" or "Teacher: Dr. Smith" will be preserved.
+
+### Token Optimization
+
+The filter automatically cleans up its own info messages (the "✅ Flashcards formatted successfully!" notifications) from previous messages to save tokens. This happens transparently during the inlet phase.
+
 ## Why Not AnkiConnect?
 
 This approach was chosen because:
@@ -134,6 +182,7 @@ This approach was chosen because:
 3. **Accumulation:** Cards can be created across multiple messages in a conversation
 4. **Portability:** .apkg files work anywhere Anki is installed, including mobile apps
 5. **Simplicity:** No need to configure AnkiConnect or keep Anki running in the background
+6. **Scalability:** Message filtering allows very long flashcard creation sessions without token limit issues
 
 ## Tips for Best Results
 
@@ -142,6 +191,9 @@ This approach was chosen because:
 3. **Review before downloading:** Check the cards in the conversation first
 4. **Keep conversations focused:** One topic per conversation makes deck organization easier
 5. **Customize fields:** Adjust `fields_description` to match your study needs
+6. **Use message filtering for long sessions:** Set `N_messages_to_keep` to 1-2 for extended flashcard creation without hitting token limits
+7. **Preserve important metadata:** Use `regex_keeper` to keep source citations, page numbers, or other references even when filtering messages
+8. **Include metadata in prompts:** Start messages with structured metadata (e.g., "Source: Chapter 5\nPage: 42") that regex_keeper can preserve
 
 ## Troubleshooting
 
@@ -158,6 +210,11 @@ This approach was chosen because:
 ### Cards missing fields
 - Verify `fields_description` matches in both filter and action
 - Check the JSON structure in LLM responses
+
+### Long conversations hitting token limits
+- Reduce `N_messages_to_keep` to 0-2 to keep only recent context
+- Use `regex_keeper` to preserve important metadata from filtered messages
+- The filter automatically cleans up its own info messages to save tokens
 
 ## License
 
