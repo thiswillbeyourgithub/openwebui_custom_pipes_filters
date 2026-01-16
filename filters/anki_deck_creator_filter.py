@@ -395,16 +395,14 @@ class Filter:
                 self.valves.N_messages_to_keep,
                 prepend_text,
             )
-            
+
             # Add current user message back
             if current_user_msg:
                 filtered_messages.append(current_user_msg)
-            
+
             body["messages"] = filtered_messages
-            
-            new_count = len(
-                [m for m in body["messages"] if m.get("role") != "system"]
-            )
+
+            new_count = len([m for m in body["messages"] if m.get("role") != "system"])
             # Subtract 1 to not count the current user message
             kept_count = new_count - (1 if current_user_msg else 0)
             await self.log(
