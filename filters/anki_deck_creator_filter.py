@@ -24,8 +24,6 @@ from loguru import logger
 # EXAMPLE_PLACEHOLDER will be replaced with the example card JSON
 FLASHCARD_INSTRUCTION_TEMPLATE = """
 
----
-
 **IMPORTANT INSTRUCTION FOR FLASHCARD CREATION:**
 
 When creating flashcards, keep your response VERY brief.
@@ -172,13 +170,13 @@ class Filter:
 
             for message in messages:
                 if message.get("role") == "system":
-                    # Append to existing system message
+                    # Append to existing system message with separator
                     content = message.get("content", "")
                     if isinstance(content, str):
-                        message["content"] = content + instruction
+                        message["content"] = content + "\n\n---" + instruction
                     elif isinstance(content, list):
-                        # If content is a list, append as text item
-                        message["content"].append({"type": "text", "text": instruction})
+                        # If content is a list, append as text item with separator
+                        message["content"].append({"type": "text", "text": "\n\n---" + instruction})
                     system_message_found = True
                     break
 
