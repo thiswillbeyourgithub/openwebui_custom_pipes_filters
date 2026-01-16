@@ -17,12 +17,18 @@ A collection of pipes, filters and tools for OpenWebUI. My usual goto templates 
 - **tool_compressor.py** - by default tool execution metadata (like output values etc) is stored as escaped html/json inside the content and results variables of a details html tag in the body of the message. Depending on formatting this can be uselessly token intensive, hence this tool removes them and prints only the content or results as regular html, making the whole chat much less token intensive. **This might not be needed since openwebui version 0.6.1**
 - **DontAccumulateThoughts.py** - remove the `<thinking></thinking>` blocks in the input. Making the chat faster and less expensive as successive turns actually could only be paying attention to the conclusion.
 - ~~**WIP_automatic_claude_caching.py**  - [WIP] Automatically replaces system prompts with cached versions. Unfinished project.~~
+- **anki_deck_creator_filter** - To create [Anki](https://apps.ankiweb.net/) cards. See [Anki Deck Creator](./anki_deck_creator/).
 
 ### Tools
 
-- **anki_tool.py** - Creates Anki flashcards through [AnkiConnect](https://ankiweb.net/shared/info/2055492159) with configurable settings. Pairs nicely with **infinite_chat.py**.
+- **anki_tool.py** - Creates [Anki](https://apps.ankiweb.net/) flashcards through [AnkiConnect](https://ankiweb.net/shared/info/2055492159) with configurable settings. Pairs nicely with **infinite_chat.py**.
+    - The open-webui instance must be able to reach the [Anki](https://apps.ankiweb.net/) app. Hence this tool is really only usable if a single user is using anki. For multiple anki users, see [Anki Deck Creator](./anki_deck_creator/).
+
 - **wdoc_tool.py** - tool to use wdoc as an url parser or summarizer. Make sure that the LLM is using default tool calling instead of native.
     - **WARNING: you might have issues with wdoc versions. You can specify in the file the installation source of wdoc: either from the latest release or from the main branch or the dev brainch, or even a specific version.**
+
+### Actions
+- **anki_deck_creator_action** - To create [Anki](https://apps.ankiweb.net/) cards. See [Anki Deck Creator](./anki_deck_creator/).
 
 ### Pipes
 
