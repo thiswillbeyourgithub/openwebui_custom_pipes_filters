@@ -109,6 +109,14 @@ class Filter:
             default='{"body": "Main content with cloze deletions like {{c1::hidden text}}", "more": "Additional context or explanations"}',
             description="JSON dict where keys are field names and values are descriptions of what should go in each field",
         )
+        regex_keeper: str = Field(
+            default="",
+            description="Multi-line text where each line is a regex pattern. Matched lines from user messages will be preserved and prepended to the last kept message. Example:\n[sS]ource:.*\n[tT]eacher:.*",
+        )
+        keep_last_N_assistant_message: int = Field(
+            default=1,
+            description="Keep only the last N user/assistant message pairs (0 or below to disable). System messages are always kept. This helps maintain focus in long conversations.",
+        )
 
     class UserValves(BaseModel):
         """User-specific configuration options for the filter."""
@@ -132,6 +140,156 @@ class Filter:
                 await self.emitter.progress_update(f"[{self.NAME}] {message}")
         elif level == "error":
             await self.emitter.error_update(f"[{self.NAME}] {message}")
+
+    def _extract_regex_patterns(self, regex_keeper: str) -> List[re.Pattern]:
+        """
+        Extract and compile regex patterns from RegexKeeper valve.
+        
+        Each line in regex_keeper is treated as a separate pattern.
+        Invalid patterns are skipped with a log message.
+        
+        Parameters
+        ----------
+        regex_keeper : str
+            Multi-line string where each line is a regex pattern
+            
+        Returns
+        -------
+        List[re.Pattern]
+            List of compiled regex patterns
+        """
+        patterns = []
+        for line in regex_keeper.strip().splitlines():
+            line = line.strip()
+            if line:
+                try:
+                    patterns.append(re.compile(line))
+                except re.error as e:
+                    logger.warning(
+                        f"[{self.NAME}] Invalid regex pattern '{line}': {str(e)}"
+                    )
+        return patterns
+
+    def _extract_matched_values(
+        self, messages: List[dict], patterns: List[re.Pattern]
+    ) -> Dict[str, str]:
+        """
+        Extract the last matched value for each regex pattern from user messages.
+        
+        This iterates through all user messages, splits each by lines, and checks
+        if any line matches any of the provided patterns. The last match for each
+        pattern is kept (later matches override earlier ones).
+        
+        Parameters
+        ----------
+        messages : List[dict]
+            List of message dictionaries to search through
+        patterns : List[re.Pattern]
+            List of compiled regex patterns to match against
+            
+        Returns
+        -------
+        Dict[str, str]
+            Dictionary mapping pattern string to the last matched line
+        """
+        matched_values = {}
+
+        for message in messages:
+            if message.get("role") != "user":
+                continue
+
+            content = message.get("content", "")
+            if isinstance(content, list):
+                # Extract text from list-type content (used for multimodal messages)
+                text_parts = []
+                for item in content:
+                    if isinstance(item, dict) and item.get("type") == "text":
+                        text_parts.append(item.get("text", ""))
+                content = "\n".join(text_parts)
+
+            # Split by lines and check each pattern
+            for line in content.splitlines():
+                for pattern in patterns:
+                    match = pattern.match(line.strip())
+                    if match:
+                        # Store the full matched line, keyed by pattern
+                        matched_values[pattern.pattern] = line.strip()
+
+        return matched_values
+
+    def _keep_last_n_messages(
+        self, messages: List[dict], n: int, prepend_text: str = ""
+    ) -> List[dict]:
+        """
+        Keep only the system message and the last N user/assistant message pairs.
+        
+        This processes messages backwards to find the last N complete user/assistant
+        pairs. System messages are always preserved. Orphaned user or assistant
+        messages (without their pair) are discarded.
+        
+        Parameters
+        ----------
+        messages : List[dict]
+            List of all messages in the conversation
+        n : int
+            Number of message pairs to keep (if <= 0, returns all messages)
+        prepend_text : str, optional
+            Text to prepend to the first kept user message
+            
+        Returns
+        -------
+        List[dict]
+            Filtered list of messages
+        """
+        if n <= 0:
+            return messages
+
+        # Separate system messages from conversation messages
+        # System messages are always kept to preserve instructions
+        system_messages = [msg for msg in messages if msg.get("role") == "system"]
+        conversation_messages = [
+            msg for msg in messages if msg.get("role") != "system"
+        ]
+
+        # Group messages into user/assistant pairs (working backwards)
+        kept_messages = []
+        pairs_kept = 0
+        i = len(conversation_messages) - 1
+
+        while i >= 0 and pairs_kept < n:
+            # Look for assistant message
+            if conversation_messages[i].get("role") == "assistant":
+                assistant_msg = conversation_messages[i]
+                # Look for preceding user message
+                if i > 0 and conversation_messages[i - 1].get("role") == "user":
+                    user_msg = conversation_messages[i - 1]
+                    kept_messages.insert(0, user_msg)
+                    kept_messages.insert(1, assistant_msg)
+                    pairs_kept += 1
+                    i -= 2
+                else:
+                    # Orphaned assistant message, skip it
+                    i -= 1
+            else:
+                # User message without assistant response, skip it
+                i -= 1
+
+        # Prepend text to the first user message if provided
+        # This is used to add the regex-matched content
+        if prepend_text and kept_messages:
+            for msg in kept_messages:
+                if msg.get("role") == "user":
+                    content = msg.get("content", "")
+                    if isinstance(content, str):
+                        msg["content"] = prepend_text + "\n\n" + content
+                    elif isinstance(content, list):
+                        msg["content"].insert(
+                            0, {"type": "text", "text": prepend_text + "\n\n"}
+                        )
+                    break
+
+        # Return system messages + kept conversation messages
+        return system_messages + kept_messages
 
     async def inlet(
         self,
@@ -215,6 +373,45 @@ class Filter:
             body["messages"] = messages
 
             await self.log("Added flashcard creation instruction to system prompt")
+
+            # Apply message filtering to keep only last N pairs
+            # This allows long conversations while maintaining LLM focus
+            if self.valves.keep_last_N_assistant_message > 0:
+                # First, extract regex-matched values from all user messages
+                # before we filter them out
+                patterns = self._extract_regex_patterns(self.valves.regex_keeper)
+                prepend_text = ""
+
+                if patterns:
+                    matched_values = self._extract_matched_values(
+                        body["messages"], patterns
+                    )
+                    if matched_values:
+                        # Build prepend text from all matched values
+                        prepend_lines = list(matched_values.values())
+                        prepend_text = "\n".join(prepend_lines)
+                        await self.log(
+                            f"Preserved {len(prepend_lines)} regex-matched line(s)",
+                            level="debug",
+                        )
+
+                # Now filter messages to keep only last N pairs
+                original_count = len(
+                    [m for m in body["messages"] if m.get("role") != "system"]
+                )
+                body["messages"] = self._keep_last_n_messages(
+                    body["messages"],
+                    self.valves.keep_last_N_assistant_message,
+                    prepend_text,
+                )
+                new_count = len(
+                    [m for m in body["messages"] if m.get("role") != "system"]
+                )
+                await self.log(
+                    f"Filtered messages: kept last {self.valves.keep_last_N_assistant_message} pair(s) "
+                    f"({new_count}/{original_count} messages)",
+                    level="debug",
+                )
 
         except Exception as e:
             await self.log(f"Error in inlet: {str(e)}", level="error")
