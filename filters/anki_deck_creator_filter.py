@@ -157,7 +157,7 @@ class Filter:
             # Clean up previous info messages to save tokens in long conversations
             # Remove content between text markers added by outlet
             messages = body.get("messages", [])
-            info_pattern = r"\n\n---\n\n✅ \*\*Flashcards formatted successfully!\*\*.*?💡 Click the \*\*'Generate Anki Deck'\*\* action button below to download all cards as a \.apkg file\.\n"
+            info_pattern = r"\n+---\n+✅ \*\*Flashcards formatted successfully!\*\*.*?💡 Click the \*\*'Generate Anki Deck'\*\* action button below to download all cards as a \.apkg file\.\n*"
 
             for message in messages:
                 content = message.get("content", "")
