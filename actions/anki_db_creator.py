@@ -309,8 +309,5 @@ class EventEmitter:
         """Emit an event with the given parameters."""
         if self.event_emitter:
             await self.event_emitter(
-                {
-                    "type": "status",
-                    "data": {"description": description, "done": done}
-                }
+                {"type": "status", "data": {"description": description, "done": done}}
             )
