@@ -158,7 +158,7 @@ class Filter:
             # Remove content between HTML comment markers added by outlet
             messages = body.get("messages", [])
             info_pattern = r"<!-- ANKI_INFO_START -->.*?<!-- ANKI_INFO_END -->"
-            
+
             for message in messages:
                 content = message.get("content", "")
                 if isinstance(content, str):
@@ -171,10 +171,12 @@ class Filter:
                     for item in content:
                         if isinstance(item, dict) and item.get("type") == "text":
                             text = item.get("text", "")
-                            cleaned_text = re.sub(info_pattern, "", text, flags=re.DOTALL)
+                            cleaned_text = re.sub(
+                                info_pattern, "", text, flags=re.DOTALL
+                            )
                             if cleaned_text != text:
                                 item["text"] = cleaned_text
-            
+
             body["messages"] = messages
 
             # Parse the field descriptions from valves
