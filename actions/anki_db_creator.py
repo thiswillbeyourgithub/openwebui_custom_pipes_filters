@@ -180,9 +180,9 @@ class Action:
         body: dict,
         __user__: Optional[dict] = None,
         __event_emitter__: Callable[[dict], Any] = None,
-        __event_call__: Callable[[dict], Any] = None,
+        __event_call__: Optional[Callable[[dict], Any]] = None,
         **kwargs,
-    ) -> dict:
+    ) -> Optional[dict]:
         """
         Main action method that generates the .apkg file.
         This is called when the user clicks the action button.
@@ -225,32 +225,60 @@ class Action:
             # Encode as base64 for download
             apkg_b64 = base64.b64encode(apkg_bytes).decode("utf-8")
 
+            # Create filename
+            filename = f"{self.valves.deck_name.replace(' ', '_')}.apkg"
+
+            # Generate JavaScript to trigger download (similar to Word export action)
+            js_download_code = f"""
+                (function() {{
+                    const b64Data = "{apkg_b64}";
+                    const filename = "{filename}";
+                    const mimeType = "application/x-apkg";
+                    
+                    // Convert base64 to blob
+                    const byteCharacters = atob(b64Data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {{
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }}
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], {{ type: mimeType }});
+                    
+                    // Create download link
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Cleanup
+                    setTimeout(() => {{
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    }}, 100);
+                }})();
+            """
+
+            # Execute the download JavaScript
+            if __event_call__:
+                await __event_call__(
+                    {
+                        "type": "execute",
+                        "data": {"code": js_download_code},
+                    }
+                )
+
             await emitter.success_update(
                 f"Successfully generated Anki deck with {len(all_cards)} cards!"
             )
 
-            # Return the file as a downloadable attachment
-            # Using the multi-part content format to include both text and file
-            return {
-                "content": [
-                    {
-                        "type": "text",
-                        "text": f"✅ **Anki deck generated successfully!**\n\n"
-                        f"📊 Total cards: **{len(all_cards)}**\n"
-                        f"📦 Deck name: **{self.valves.deck_name}**\n\n"
-                        f"📥 Download the .apkg file below and import it into Anki.",
-                    },
-                    {
-                        "type": "file",
-                        "url": f"data:application/x-apkg;base64,{apkg_b64}",
-                        "name": f"{self.valves.deck_name.replace(' ', '_')}.apkg",
-                    },
-                ]
-            }
+            # Return success message
+            return None
 
         except Exception as e:
             await emitter.error_update(f"Unexpected error: {str(e)}")
-            return {"content": f"❌ Unexpected error: {str(e)}"}
+            return None
 
 
 class EventEmitter:
