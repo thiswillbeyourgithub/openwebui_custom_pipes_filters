@@ -65,7 +65,7 @@ class Action:
         messages = body.get("messages", [])
 
         # Pattern to find card JSON in messages - matches the filter's pattern
-        json_pattern = r"<anki_cards>\s*(.*?)\s*</anki_cards>"
+        json_pattern = r"<details id=anki_card>\s*(.*?)\s*</details>"
 
         for msg in messages:
             if msg.get("role") == "assistant":
@@ -197,7 +197,7 @@ class Action:
             if not all_cards:
                 await emitter.error_update(
                     "No flashcards found in this conversation. "
-                    "Make sure the LLM has generated cards in <anki_cards> tags."
+                    "Make sure the LLM has generated cards in <details id=anki_card> tags."
                 )
                 return {
                     "content": "❌ No flashcards found in this conversation. "

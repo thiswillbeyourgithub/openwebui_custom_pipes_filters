@@ -37,9 +37,9 @@ FIELDS_LIST_PLACEHOLDER
 For cloze deletions, use the format {{c1::text to hide}}, {{c2::another hidden text}}, etc.
 
 Example format:
-<anki_cards>
+<details id=anki_card>
 EXAMPLE_PLACEHOLDER
-</anki_cards>
+</details>
 
 The user can then use the 'Generate Anki Deck' action button to create a downloadable .apkg file.
 """
@@ -259,8 +259,8 @@ class Filter:
 
             content = last_assistant_msg.get("content", "")
 
-            # Extract JSON from <anki_cards>...</anki_cards> tags
-            json_pattern = r"<anki_cards>\s*(.*?)\s*</anki_cards>"
+            # Extract JSON from <details id=anki_card>...</details> tags
+            json_pattern = r"<details id=anki_card>\s*(.*?)\s*</details>"
             json_matches = re.findall(json_pattern, content, re.DOTALL | re.IGNORECASE)
 
             if not json_matches:
