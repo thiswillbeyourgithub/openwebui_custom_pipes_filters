@@ -14,9 +14,86 @@ requirements: None
 
 import json
 import re
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Dict
 from pydantic import BaseModel, Field
 from loguru import logger
+
+
+# Template for flashcard creation instructions
+# FIELDS_LIST_PLACEHOLDER will be replaced with the actual field descriptions
+# EXAMPLE_PLACEHOLDER will be replaced with the example card JSON
+FLASHCARD_INSTRUCTION_TEMPLATE = """
+
+---
+
+**IMPORTANT INSTRUCTION FOR FLASHCARD CREATION:**
+
+When creating flashcards, keep your response VERY brief.
+Just acknowledge briefly and provide the cards in the specified format.
+
+You MUST include a JSON array of flashcard dictionaries enclosed in <anki_cards> tags.
+
+Each flashcard should be a dictionary with the following fields:
+FIELDS_LIST_PLACEHOLDER
+
+For cloze deletions, use the format {{c1::text to hide}}, {{c2::another hidden text}}, etc.
+
+Example format:
+<anki_cards>
+EXAMPLE_PLACEHOLDER
+</anki_cards>
+
+The user can then use the 'Generate Anki Deck' action button to create a downloadable .apkg file.
+"""
+
+
+def generate_flashcard_instruction(fields_desc: Dict[str, str]) -> str:
+    """
+    Generate the flashcard creation instruction from the template.
+    
+    This creates the instruction text that guides the LLM on how to format flashcards,
+    using the field descriptions to customize the output format.
+    
+    Parameters
+    ----------
+    fields_desc : Dict[str, str]
+        Dictionary where keys are field names and values are field descriptions
+        
+    Returns
+    -------
+    str
+        The complete instruction text with placeholders replaced
+    """
+    # Build the fields list section
+    fields_list = ""
+    for field_name, field_description in fields_desc.items():
+        fields_list += f"- **{field_name}**: {field_description}\n"
+    
+    # Create example card based on fields
+    example_card = {}
+    first_field = True
+    for field_name in fields_desc.keys():
+        if first_field:
+            # First field gets cloze deletion example
+            example_card[field_name] = (
+                "What is this?<br>{{c1::This is an example of hidden content}}"
+            )
+            first_field = False
+        else:
+            # Other fields get generic content
+            example_card[field_name] = "Additional information here"
+    
+    # Format the example as JSON
+    example_json = json.dumps([example_card], indent=2)
+    
+    # Replace placeholders in template
+    instruction = FLASHCARD_INSTRUCTION_TEMPLATE.replace(
+        "FIELDS_LIST_PLACEHOLDER", fields_list.rstrip()
+    ).replace(
+        "EXAMPLE_PLACEHOLDER", example_json
+    )
+    
+    return instruction
 
 
 class Filter:
@@ -81,45 +158,15 @@ class Filter:
         await self.log("Processing inlet request")
 
         try:
-            # Generate the instruction text based on fields_description
+            # Parse the field descriptions from valves
             try:
                 fields_desc = json.loads(self.valves.fields_description)
             except Exception as e:
                 await self.log(f"Invalid fields_description JSON: {e}", level="error")
                 return body
 
-            # Build the instruction - this guides the LLM to format cards correctly
-            instruction = (
-                "\n\n---\n\n**IMPORTANT INSTRUCTION FOR FLASHCARD CREATION:**\n\n"
-            )
-            instruction += "When creating flashcards, keep your response VERY brief.\n"
-            instruction += "Just acknowledge briefly and provide the cards in the specified format.\n\n"
-            instruction += "You MUST include a JSON array of flashcard dictionaries enclosed in <anki_cards> tags.\n\n"
-            instruction += (
-                "Each flashcard should be a dictionary with the following fields:\n"
-            )
-            for field_name, field_description in fields_desc.items():
-                instruction += f"- **{field_name}**: {field_description}\n"
-
-            instruction += "\nFor cloze deletions, use the format {{c1::text to hide}}, {{c2::another hidden text}}, etc.\n"
-            instruction += "\nExample format:\n"
-            instruction += "<anki_cards>\n"
-
-            # Create example based on fields
-            example_card = {}
-            first_field = True
-            for field_name, field_description in fields_desc.items():
-                if first_field:
-                    example_card[field_name] = (
-                        "What is this?<br>{{c1::This is an example of hidden content}}"
-                    )
-                    first_field = False
-                else:
-                    example_card[field_name] = "Additional information here"
-
-            instruction += json.dumps([example_card], indent=2)
-            instruction += "\n</anki_cards>\n\n"
-            instruction += "The user can then use the 'Generate Anki Deck' action button to create a downloadable .apkg file.\n"
+            # Generate the instruction text using the template
+            instruction = generate_flashcard_instruction(fields_desc)
 
             # Find or create system message and append the instruction
             messages = body.get("messages", [])
