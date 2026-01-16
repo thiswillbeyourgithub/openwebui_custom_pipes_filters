@@ -59,7 +59,7 @@ class Action:
     def _extract_all_cards(self, body: dict) -> List[dict]:
         """
         Extract all flashcards from all assistant messages in the conversation.
-        Cards are stored in <anki_cards>...</anki_cards> tags.
+        Cards are stored in <details id=anki_card>...</details> tags.
         """
         all_cards = []
         messages = body.get("messages", [])
