@@ -20,10 +20,7 @@ import re
 from typing import Any, Callable, Dict, List, Optional
 from pydantic import BaseModel, Field
 
-try:
-    import genanki
-except ImportError:
-    genanki = None
+import genanki
 
 # For some reason there are quicks when parsing the __doc__ from actions
 __versions = [li for li in __doc__.splitlines() if li.strip().startswith("version: ")]
