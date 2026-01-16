@@ -154,6 +154,29 @@ class Filter:
         await self.log("Processing inlet request")
 
         try:
+            # Clean up previous info messages to save tokens in long conversations
+            # Remove content between HTML comment markers added by outlet
+            messages = body.get("messages", [])
+            info_pattern = r"<!-- ANKI_INFO_START -->.*?<!-- ANKI_INFO_END -->"
+            
+            for message in messages:
+                content = message.get("content", "")
+                if isinstance(content, str):
+                    # Remove all occurrences of info messages
+                    cleaned_content = re.sub(info_pattern, "", content, flags=re.DOTALL)
+                    if cleaned_content != content:
+                        message["content"] = cleaned_content
+                elif isinstance(content, list):
+                    # Handle list-type content (with text items)
+                    for item in content:
+                        if isinstance(item, dict) and item.get("type") == "text":
+                            text = item.get("text", "")
+                            cleaned_text = re.sub(info_pattern, "", text, flags=re.DOTALL)
+                            if cleaned_text != text:
+                                item["text"] = cleaned_text
+            
+            body["messages"] = messages
+
             # Parse the field descriptions from valves
             try:
                 fields_desc = json.loads(self.valves.fields_description)
@@ -273,10 +296,12 @@ class Filter:
                             pass
 
             # Add informative message after the cards
-            info_msg = f"\n\n---\n\n✅ **Flashcards formatted successfully!**\n\n"
+            # Wrapped in HTML comments so it can be removed in subsequent requests to save tokens
+            info_msg = f"\n\n<!-- ANKI_INFO_START -->\n\n---\n\n✅ **Flashcards formatted successfully!**\n\n"
             info_msg += f"🆕 New cards in this response: **{len(new_cards)}**\n"
             info_msg += f"📊 Total cards in conversation: **{total_cards}**\n\n"
             info_msg += "💡 Click the **'Generate Anki Deck'** action button below to download all cards as a .apkg file.\n"
+            info_msg += "\n<!-- ANKI_INFO_END -->"
 
             last_assistant_msg["content"] = content + info_msg
 
