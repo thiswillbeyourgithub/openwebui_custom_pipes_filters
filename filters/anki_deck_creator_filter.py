@@ -155,9 +155,9 @@ class Filter:
 
         try:
             # Clean up previous info messages to save tokens in long conversations
-            # Remove content between HTML comment markers added by outlet
+            # Remove content between text markers added by outlet
             messages = body.get("messages", [])
-            info_pattern = r"<!-- ANKI_INFO_START -->.*?<!-- ANKI_INFO_END -->"
+            info_pattern = r"\n\n---\n\n✅ \*\*Flashcards formatted successfully!\*\*.*?💡 Click the \*\*'Generate Anki Deck'\*\* action button below to download all cards as a \.apkg file\.\n"
 
             for message in messages:
                 content = message.get("content", "")
@@ -298,12 +298,11 @@ class Filter:
                             pass
 
             # Add informative message after the cards
-            # Wrapped in HTML comments so it can be removed in subsequent requests to save tokens
-            info_msg = f"\n\n<!-- ANKI_INFO_START -->\n\n---\n\n✅ **Flashcards formatted successfully!**\n\n"
+            # This text will be matched and removed in subsequent requests to save tokens
+            info_msg = f"\n\n---\n\n✅ **Flashcards formatted successfully!**\n\n"
             info_msg += f"🆕 New cards in this response: **{len(new_cards)}**\n"
             info_msg += f"📊 Total cards in conversation: **{total_cards}**\n\n"
             info_msg += "💡 Click the **'Generate Anki Deck'** action button below to download all cards as a .apkg file.\n"
-            info_msg += "\n<!-- ANKI_INFO_END -->"
 
             last_assistant_msg["content"] = content + info_msg
 
