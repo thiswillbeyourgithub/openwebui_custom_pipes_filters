@@ -7,7 +7,7 @@ git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 1.0.0
 date: 2026-01-15
 license: AGPLv3
-description: Action button to generate and download an Anki .apkg file from all flashcards in the conversation. This action was built using aider.chat.
+description: Action button to generate and download an Anki .apkg file from all flashcards in the conversation. REQUIRES the companion 'Anki Card Accumulator Filter' to be installed and enabled to properly format cards. Both filter and action must be enabled to work properly. This action was built using aider.chat.
 required_open_webui_version: 0.3.0
 requirements: genanki
 """

@@ -7,7 +7,7 @@ git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 2.0.0
 date: 2026-01-15
 license: AGPLv3
-description: Adds instructions for Anki flashcard creation and helps accumulate cards across conversation. Use with the Anki DB Creator Action to generate .apkg files.
+description: Adds instructions for Anki flashcard creation and helps accumulate cards across conversation. REQUIRES the companion 'Generate Anki Deck' action to be installed to generate downloadable .apkg files. Both filter and action must be enabled to work properly.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/anki_card_accumulator
 requirements: None
 """
