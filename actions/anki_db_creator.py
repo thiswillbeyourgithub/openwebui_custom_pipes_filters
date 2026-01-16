@@ -311,4 +311,3 @@ class EventEmitter:
             await self.event_emitter(
                 {"description": description, "status": status, "done": done}
             )
-
