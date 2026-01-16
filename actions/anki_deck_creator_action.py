@@ -65,7 +65,8 @@ class Action:
         messages = body.get("messages", [])
 
         # Pattern to find card JSON in messages - matches the filter's pattern
-        json_pattern = r"<details id=anki_card>\s*(.*?)\s*</details>"
+        # Skips the <summary> tag to extract only the JSON content
+        json_pattern = r"<details id=anki_card>\s*<summary>.*?</summary>\s*(.*?)\s*</details>"
 
         for msg in messages:
             if msg.get("role") == "assistant":

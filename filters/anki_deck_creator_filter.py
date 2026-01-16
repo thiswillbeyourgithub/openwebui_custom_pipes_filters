@@ -38,6 +38,7 @@ For cloze deletions, use the format {{c1::text to hide}}, {{c2::another hidden t
 
 Example format:
 <details id=anki_card>
+<summary>Flashcards</summary>
 EXAMPLE_PLACEHOLDER
 </details>
 
