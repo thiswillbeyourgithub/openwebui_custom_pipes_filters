@@ -20,7 +20,7 @@ A collection of pipes, filters and tools for OpenWebUI. My usual goto templates 
 
 ### Tools
 
-- **anki_tool.py** - Creates Anki flashcards through AnkiConnect with configurable settings. Pairs nicely with **infinite_chat.py**.
+- **anki_tool.py** - Creates Anki flashcards through [AnkiConnect](https://ankiweb.net/shared/info/2055492159) with configurable settings. Pairs nicely with **infinite_chat.py**.
 - **wdoc_tool.py** - tool to use wdoc as an url parser or summarizer. Make sure that the LLM is using default tool calling instead of native.
     - **WARNING: you might have issues with wdoc versions. You can specify in the file the installation source of wdoc: either from the latest release or from the main branch or the dev brainch, or even a specific version.**
 
