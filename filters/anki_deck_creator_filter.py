@@ -262,7 +262,9 @@ class Filter:
 
             # Extract JSON from <details id=anki_card>...</details> tags
             # Skips the <summary> tag to extract only the JSON content
-            json_pattern = r"<details id=anki_card>\s*<summary>.*?</summary>\s*(.*?)\s*</details>"
+            json_pattern = (
+                r"<details id=anki_card>\s*<summary>.*?</summary>\s*(.*?)\s*</details>"
+            )
             json_matches = re.findall(json_pattern, content, re.DOTALL | re.IGNORECASE)
 
             if not json_matches:
