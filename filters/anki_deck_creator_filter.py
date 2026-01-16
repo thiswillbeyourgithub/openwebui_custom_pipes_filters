@@ -261,7 +261,8 @@ class Filter:
             content = last_assistant_msg.get("content", "")
 
             # Extract JSON from <details id=anki_card>...</details> tags
-            json_pattern = r"<details id=anki_card>\s*(.*?)\s*</details>"
+            # Skips the <summary> tag to extract only the JSON content
+            json_pattern = r"<details id=anki_card>\s*<summary>.*?</summary>\s*(.*?)\s*</details>"
             json_matches = re.findall(json_pattern, content, re.DOTALL | re.IGNORECASE)
 
             if not json_matches:
@@ -285,8 +286,10 @@ class Filter:
             for msg in messages:
                 if msg.get("role") == "assistant":
                     msg_content = msg.get("content", "")
+                    # Skips the <summary> tag to extract only the JSON content
+                    msg_pattern = r"<details id=anki_card>\s*<summary>.*?</summary>\s*(.*?)\s*</details>"
                     msg_matches = re.findall(
-                        json_pattern, msg_content, re.DOTALL | re.IGNORECASE
+                        msg_pattern, msg_content, re.DOTALL | re.IGNORECASE
                     )
                     for match in msg_matches:
                         try:
