@@ -176,7 +176,9 @@ class Filter:
                         message["content"] = content + "\n\n---" + instruction
                     elif isinstance(content, list):
                         # If content is a list, append as text item with separator
-                        message["content"].append({"type": "text", "text": "\n\n---" + instruction})
+                        message["content"].append(
+                            {"type": "text", "text": "\n\n---" + instruction}
+                        )
                     system_message_found = True
                     break
 
