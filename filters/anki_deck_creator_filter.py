@@ -50,15 +50,15 @@ The user can then use the 'Generate Anki Deck' action button to create a downloa
 def generate_flashcard_instruction(fields_desc: Dict[str, str]) -> str:
     """
     Generate the flashcard creation instruction from the template.
-    
+
     This creates the instruction text that guides the LLM on how to format flashcards,
     using the field descriptions to customize the output format.
-    
+
     Parameters
     ----------
     fields_desc : Dict[str, str]
         Dictionary where keys are field names and values are field descriptions
-        
+
     Returns
     -------
     str
@@ -68,7 +68,7 @@ def generate_flashcard_instruction(fields_desc: Dict[str, str]) -> str:
     fields_list = ""
     for field_name, field_description in fields_desc.items():
         fields_list += f"- **{field_name}**: {field_description}\n"
-    
+
     # Create example card based on fields
     example_card = {}
     first_field = True
@@ -82,17 +82,15 @@ def generate_flashcard_instruction(fields_desc: Dict[str, str]) -> str:
         else:
             # Other fields get generic content
             example_card[field_name] = "Additional information here"
-    
+
     # Format the example as JSON
     example_json = json.dumps([example_card], indent=2)
-    
+
     # Replace placeholders in template
     instruction = FLASHCARD_INSTRUCTION_TEMPLATE.replace(
         "FIELDS_LIST_PLACEHOLDER", fields_list.rstrip()
-    ).replace(
-        "EXAMPLE_PLACEHOLDER", example_json
-    )
-    
+    ).replace("EXAMPLE_PLACEHOLDER", example_json)
+
     return instruction
 
 
