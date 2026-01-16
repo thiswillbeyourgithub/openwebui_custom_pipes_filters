@@ -1,5 +1,5 @@
 """
-title: Generate Anki Deck
+title: Anki Deck Creator Action
 author: thiswillbeyourgithub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
@@ -7,8 +7,9 @@ git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 1.0.0
 date: 2026-01-15
 license: AGPLv3
-description: Action button to generate and download an Anki .apkg file from all flashcards in the conversation. REQUIRES the companion 'Anki Card Accumulator Filter' to be installed and enabled to properly format cards. Both filter and action must be enabled to work properly. This action was built using aider.chat.
+description: Action button to generate and download an Anki .apkg file from all flashcards in the conversation. REQUIRES the companion 'Anki Deck Creator Filter' to be installed and enabled to properly format cards. Both filter and action must be enabled to work properly. This action was built using aider.chat.
 required_open_webui_version: 0.3.0
+openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/anki_deck_creator_action
 requirements: genanki
 """
 
@@ -24,6 +25,7 @@ try:
 except ImportError:
     genanki = None
 
+# For some reason there are quicks when parsing the __doc__ from actions
 __versions = [li for li in __doc__.splitlines() if li.strip().startswith("version: ")]
 VERSION: str = "v?"
 if __versions:
