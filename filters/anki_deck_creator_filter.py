@@ -144,15 +144,15 @@ class Filter:
     def _extract_regex_patterns(self, regex_keeper: str) -> List[re.Pattern]:
         """
         Extract and compile regex patterns from RegexKeeper valve.
-        
+
         Each line in regex_keeper is treated as a separate pattern.
         Invalid patterns are skipped with a log message.
-        
+
         Parameters
         ----------
         regex_keeper : str
             Multi-line string where each line is a regex pattern
-            
+
         Returns
         -------
         List[re.Pattern]
@@ -175,18 +175,18 @@ class Filter:
     ) -> Dict[str, str]:
         """
         Extract the last matched value for each regex pattern from user messages.
-        
+
         This iterates through all user messages, splits each by lines, and checks
         if any line matches any of the provided patterns. The last match for each
         pattern is kept (later matches override earlier ones).
-        
+
         Parameters
         ----------
         messages : List[dict]
             List of message dictionaries to search through
         patterns : List[re.Pattern]
             List of compiled regex patterns to match against
-            
+
         Returns
         -------
         Dict[str, str]
@@ -222,11 +222,11 @@ class Filter:
     ) -> List[dict]:
         """
         Keep only the system message and the last N user/assistant message pairs.
-        
+
         This processes messages backwards to find the last N complete user/assistant
         pairs. System messages are always preserved. Orphaned user or assistant
         messages (without their pair) are discarded.
-        
+
         Parameters
         ----------
         messages : List[dict]
@@ -235,7 +235,7 @@ class Filter:
             Number of message pairs to keep (if <= 0, returns all messages)
         prepend_text : str, optional
             Text to prepend to the first kept user message
-            
+
         Returns
         -------
         List[dict]
@@ -247,9 +247,7 @@ class Filter:
         # Separate system messages from conversation messages
         # System messages are always kept to preserve instructions
         system_messages = [msg for msg in messages if msg.get("role") == "system"]
-        conversation_messages = [
-            msg for msg in messages if msg.get("role") != "system"
-        ]
+        conversation_messages = [msg for msg in messages if msg.get("role") != "system"]
 
         # Group messages into user/assistant pairs (working backwards)
         kept_messages = []
