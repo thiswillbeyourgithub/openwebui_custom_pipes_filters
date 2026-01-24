@@ -500,11 +500,14 @@ class Filter:
             # Parse the JSONL (one JSON object per line) to count cards
             try:
                 new_cards = []
-                for line in json_matches[0].strip().splitlines():
-                    line = line.strip()
-                    if line:  # Skip empty lines
-                        card = json.loads(line)
-                        new_cards.append(card)
+                for (
+                    match
+                ) in json_matches:  # Iterate through all matches, not just the first
+                    for line in match.strip().splitlines():
+                        line = line.strip()
+                        if line:  # Skip empty lines
+                            card = json.loads(line)
+                            new_cards.append(card)
             except Exception as e:
                 await self.log(f"Error parsing JSONL from response: {e}", level="error")
                 return body
