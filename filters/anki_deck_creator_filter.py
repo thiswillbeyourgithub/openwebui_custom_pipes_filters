@@ -29,14 +29,14 @@ FLASHCARD_INSTRUCTION_TEMPLATE = """
 When creating flashcards, keep your response VERY brief.
 Just acknowledge briefly and provide the cards in the specified format.
 
-You MUST include a JSON array of flashcard dictionaries enclosed in <anki_cards> tags.
+You MUST include flashcards in JSONL format (JSON Lines - one JSON object per line, NO brackets or commas) enclosed in <anki_cards> tags.
 
 Each flashcard should be a dictionary with the following fields:
 FIELDS_LIST_PLACEHOLDER
 
 For cloze deletions, use the format {{c1::text to hide}}, {{c2::another hidden text}}, etc.
 
-Example format:
+Example format (note: each card is on its own line, no array brackets or commas):
 <details id=anki_card>
 <summary>Flashcards</summary>
 EXAMPLE_PLACEHOLDER
@@ -68,22 +68,40 @@ def generate_flashcard_instruction(fields_desc: Dict[str, str]) -> str:
     for field_name, field_description in fields_desc.items():
         fields_list += f"- **{field_name}**: {field_description}\n"
 
-    # Create example card based on fields
-    example_card = {}
+    # Create example cards to demonstrate JSONL format
+    # JSONL = one JSON object per line, no array brackets, no commas between lines
+    example_cards = []
+
+    # First card
+    example_card1 = {}
     first_field = True
     for field_name in fields_desc.keys():
         if first_field:
             # First field gets cloze deletion example
-            example_card[field_name] = (
+            example_card1[field_name] = (
                 "What is this?<br>{{c1::This is an example of hidden content}}"
             )
             first_field = False
         else:
             # Other fields get generic content
-            example_card[field_name] = "Additional information here"
+            example_card1[field_name] = "Additional information here"
+    example_cards.append(json.dumps(example_card1))
 
-    # Format the example as JSONL (one JSON object per line)
-    example_json = json.dumps(example_card)
+    # Second card to show it's one per line
+    example_card2 = {}
+    first_field = True
+    for field_name in fields_desc.keys():
+        if first_field:
+            example_card2[field_name] = (
+                "Another example: {{c1::hidden text}} and {{c2::more hidden text}}"
+            )
+            first_field = False
+        else:
+            example_card2[field_name] = "More context for the second card"
+    example_cards.append(json.dumps(example_card2))
+
+    # Format as JSONL: one JSON object per line, no array brackets
+    example_json = "\n".join(example_cards)
 
     # Replace placeholders in template
     instruction = FLASHCARD_INSTRUCTION_TEMPLATE.replace(
