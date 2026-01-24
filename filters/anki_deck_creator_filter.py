@@ -484,6 +484,19 @@ class Filter:
                 # No cards in this message, that's fine
                 return body
 
+            # Inject fields configuration into the card details for the action to use
+            # This creates a nested collapsed details tag so it's not intrusive
+            fields_config_tag = f"\n<details id=anki_fields_config>\n<summary>Fields Configuration</summary>\n{self.valves.fields_description}\n</details>\n"
+
+            # Insert the config right after the summary tag in the card details
+            content = re.sub(
+                r"(<details id=anki_card>\s*<summary>.*?</summary>)",
+                r"\1" + fields_config_tag,
+                content,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
+            last_assistant_msg["content"] = content
+
             # Parse the JSON to count cards
             try:
                 new_cards = json.loads(json_matches[0])

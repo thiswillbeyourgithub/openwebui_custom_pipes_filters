@@ -47,30 +47,43 @@ class Action:
         model_name: str = Field(
             default="Cloze Model", description="Name of the Anki note type/model"
         )
-        fields_description: str = Field(
-            default='{"body": "Main content with cloze deletions like {{c1::hidden text}}", "more": "Additional context or explanations"}',
-            description="JSON dict where keys are field names and values are descriptions. Must match the filter configuration.",
-        )
 
     def __init__(self):
         """Initialize the action with default valves."""
         self.valves = self.Valves()
 
-    def _extract_all_cards(self, body: dict) -> List[dict]:
+    def _extract_all_cards(self, body: dict) -> tuple[List[dict], Optional[str]]:
         """
-        Extract all flashcards from all assistant messages in the conversation.
+        Extract all flashcards and fields configuration from assistant messages.
         Cards are stored in <details id=anki_card>...</details> tags.
+        Fields config is stored in nested <details id=anki_fields_config>...</details> tags.
+
+        Returns:
+            Tuple of (all_cards, fields_description_json)
         """
         all_cards = []
+        fields_description = None
         messages = body.get("messages", [])
 
         # Pattern to find card JSON in messages - matches the filter's pattern
-        # Skips the <summary> tag to extract only the JSON content
-        json_pattern = r"<details id=anki_card>\s*<summary>.*?</summary>\s*(.*?)\s*</details>"
+        # Skips the <summary> tag and fields config to extract only the card JSON
+        json_pattern = r"<details id=anki_card>\s*<summary>.*?</summary>\s*(?:<details id=anki_fields_config>.*?</details>\s*)?(.*?)\s*</details>"
+
+        # Pattern to extract fields configuration
+        fields_pattern = r"<details id=anki_fields_config>\s*<summary>.*?</summary>\s*(.*?)\s*</details>"
 
         for msg in messages:
             if msg.get("role") == "assistant":
                 content = msg.get("content", "")
+
+                # Extract fields configuration (from the first occurrence)
+                if fields_description is None:
+                    fields_match = re.search(
+                        fields_pattern, content, re.DOTALL | re.IGNORECASE
+                    )
+                    if fields_match:
+                        fields_description = fields_match.group(1).strip()
+
                 # Find all card sections in this message
                 matches = re.findall(json_pattern, content, re.DOTALL | re.IGNORECASE)
 
@@ -85,7 +98,7 @@ class Action:
                         # Skip malformed JSON sections
                         continue
 
-        return all_cards
+        return all_cards, fields_description
 
     def _create_anki_model(self, fields: List[str]) -> "genanki.Model":
         """
@@ -122,10 +135,17 @@ class Action:
             model_type=genanki.Model.CLOZE,
         )
 
-    def _create_apkg(self, cards: List[dict]) -> bytes:
+    def _create_apkg(self, cards: List[dict], fields_description: str) -> bytes:
         """
         Create an .apkg file from the cards using genanki.
         Returns the binary content of the .apkg file.
+
+        Parameters
+        ----------
+        cards : List[dict]
+            List of flashcard dictionaries
+        fields_description : str
+            JSON string containing field descriptions
         """
         if not genanki:
             raise ImportError(
@@ -137,7 +157,7 @@ class Action:
 
         # Get field names from the fields_description
         try:
-            fields_desc = json.loads(self.valves.fields_description)
+            fields_desc = json.loads(fields_description)
             field_names = list(fields_desc.keys())
         except Exception as e:
             raise ValueError(f"Invalid fields_description JSON: {e}")
@@ -192,8 +212,8 @@ class Action:
         try:
             await emitter.progress_update("Extracting flashcards from conversation...")
 
-            # Extract all cards from the conversation
-            all_cards = self._extract_all_cards(body)
+            # Extract all cards and fields configuration from the conversation
+            all_cards, fields_description = self._extract_all_cards(body)
 
             if not all_cards:
                 await emitter.error_update(
@@ -205,13 +225,23 @@ class Action:
                     "Please ask the LLM to create flashcards first."
                 }
 
+            if not fields_description:
+                await emitter.error_update(
+                    "No fields configuration found. "
+                    "Make sure the 'Anki Deck Creator Filter' is enabled and properly configured."
+                )
+                return {
+                    "content": "❌ No fields configuration found in the cards. "
+                    "Please ensure the 'Anki Deck Creator Filter' is enabled."
+                }
+
             await emitter.progress_update(
                 f"Found {len(all_cards)} cards. Generating .apkg file..."
             )
 
             # Generate the .apkg file
             try:
-                apkg_bytes = self._create_apkg(all_cards)
+                apkg_bytes = self._create_apkg(all_cards, fields_description)
             except ImportError as e:
                 await emitter.error_update(str(e))
                 return {
