@@ -89,13 +89,14 @@ class Action:
 
                 for match in matches:
                     try:
-                        cards = json.loads(match)
-                        if isinstance(cards, list):
-                            all_cards.extend(cards)
-                        else:
-                            all_cards.append(cards)
+                        # Parse JSONL format (one JSON object per line)
+                        for line in match.strip().splitlines():
+                            line = line.strip()
+                            if line:  # Skip empty lines
+                                card = json.loads(line)
+                                all_cards.append(card)
                     except Exception as e:
-                        # Skip malformed JSON sections
+                        # Skip malformed JSONL sections
                         continue
 
         return all_cards, fields_description

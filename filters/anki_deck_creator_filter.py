@@ -82,8 +82,8 @@ def generate_flashcard_instruction(fields_desc: Dict[str, str]) -> str:
             # Other fields get generic content
             example_card[field_name] = "Additional information here"
 
-    # Format the example as JSON
-    example_json = json.dumps([example_card], indent=2)
+    # Format the example as JSONL (one JSON object per line)
+    example_json = json.dumps(example_card)
 
     # Replace placeholders in template
     instruction = FLASHCARD_INSTRUCTION_TEMPLATE.replace(
@@ -497,13 +497,16 @@ class Filter:
             )
             last_assistant_msg["content"] = content
 
-            # Parse the JSON to count cards
+            # Parse the JSONL (one JSON object per line) to count cards
             try:
-                new_cards = json.loads(json_matches[0])
-                if not isinstance(new_cards, list):
-                    new_cards = [new_cards]
+                new_cards = []
+                for line in json_matches[0].strip().splitlines():
+                    line = line.strip()
+                    if line:  # Skip empty lines
+                        card = json.loads(line)
+                        new_cards.append(card)
             except Exception as e:
-                await self.log(f"Error parsing JSON from response: {e}", level="error")
+                await self.log(f"Error parsing JSONL from response: {e}", level="error")
                 return body
 
             await self.log(f"Found {len(new_cards)} new card(s) in this response")
@@ -521,11 +524,12 @@ class Filter:
                     )
                     for match in msg_matches:
                         try:
-                            cards = json.loads(match)
-                            if isinstance(cards, list):
-                                total_cards += len(cards)
-                            else:
-                                total_cards += 1
+                            # Parse JSONL format (one JSON object per line)
+                            for line in match.strip().splitlines():
+                                line = line.strip()
+                                if line:  # Skip empty lines
+                                    json.loads(line)  # Validate it's valid JSON
+                                    total_cards += 1
                         except Exception:
                             pass
 
