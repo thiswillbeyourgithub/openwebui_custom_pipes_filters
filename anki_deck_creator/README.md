@@ -162,9 +162,9 @@ Use `regex_keeper` to preserve important information from messages that would ot
 
 **Example configuration:**
 ```
-Source:.*
-Teacher:.*
-Date:.*
+[sS]ource:.*
+[tT]eacher:.*
+[dD]ate:.*
 ```
 
 This ensures that even if messages are filtered, lines like "Source: Chapter 5" or "Teacher: Dr. Smith" will be preserved.
