@@ -514,8 +514,8 @@ class Filter:
             for msg in messages:
                 if msg.get("role") == "assistant":
                     msg_content = msg.get("content", "")
-                    # Skips the <summary> tag to extract only the JSON content
-                    msg_pattern = r"<details id=anki_card>\s*<summary>.*?</summary>\s*(.*?)\s*</details>"
+                    # Skips the <summary> tag and optional fields config to extract only the JSON content
+                    msg_pattern = r"<details id=anki_card>\s*<summary>.*?</summary>\s*(?:<details id=anki_fields_config>.*?</details>\s*)?(.*?)\s*</details>"
                     msg_matches = re.findall(
                         msg_pattern, msg_content, re.DOTALL | re.IGNORECASE
                     )
