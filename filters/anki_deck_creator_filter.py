@@ -390,11 +390,29 @@ class Filter:
             original_count = len(
                 [m for m in messages_without_current if m.get("role") != "system"]
             )
+
+            # Only prepend to kept messages if we're keeping any (n > 0)
+            # If n=0, we'll prepend to current user message instead
             filtered_messages = self._keep_last_n_messages(
                 messages_without_current,
                 self.valves.N_messages_to_keep,
-                prepend_text,
+                prepend_text if self.valves.N_messages_to_keep > 0 else "",
             )
+
+            # If n=0 and there's regex-matched content, prepend it to the current user message
+            # This ensures the context is preserved even when no conversation history is kept
+            if (
+                prepend_text
+                and self.valves.N_messages_to_keep == 0
+                and current_user_msg
+            ):
+                content = current_user_msg.get("content", "")
+                if isinstance(content, str):
+                    current_user_msg["content"] = prepend_text + "\n\n" + content
+                elif isinstance(content, list):
+                    current_user_msg["content"].insert(
+                        0, {"type": "text", "text": prepend_text + "\n\n"}
+                    )
 
             # Add current user message back
             if current_user_msg:
