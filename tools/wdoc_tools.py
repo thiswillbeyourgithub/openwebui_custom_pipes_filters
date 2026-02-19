@@ -21,6 +21,7 @@ import os
 import subprocess
 import json
 import time
+import threading
 from typing import Callable, Any, Dict
 import traceback
 import re
@@ -41,6 +42,9 @@ _WDOC_INSTALL_WINDOW_SECONDS = 300  # 5 minutes
 # Set to True when installation was skipped due to circuit breaker, so that
 # tool methods can detect this and inform the user
 _WDOC_INSTALL_SKIPPED = False
+# Set to True while wdoc is being installed in a background thread, so that
+# tool methods can detect this and tell the user to wait
+_WDOC_INSTALLING = False
 
 # change this to choose which wdoc version to install
 WDOC_VERSION = "latest_release"
@@ -316,6 +320,16 @@ class Tools:
             await emitter.error_update(error_message)
             return error_message
 
+        if _WDOC_INSTALLING:
+            # wdoc is still being installed in a background thread, tell
+            # the user to wait and try again shortly
+            message = (
+                "**wdoc is currently being installed in the background. "
+                "Please try again in a few minutes.**"
+            )
+            await emitter.status_update(message)
+            return message
+
         if not self.valves.useracknowledgement:
             error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool.**"
             await emitter.send_as_message(error_message)
@@ -394,6 +408,16 @@ class Tools:
             )
             await emitter.error_update(error_message)
             return error_message
+
+        if _WDOC_INSTALLING:
+            # wdoc is still being installed in a background thread, tell
+            # the user to wait and try again shortly
+            message = (
+                "**wdoc is currently being installed in the background. "
+                "Please try again in a few minutes.**"
+            )
+            await emitter.status_update(message)
+            return message
 
         if not self.valves.useracknowledgement:
             error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool.**"
@@ -770,17 +794,16 @@ try:
 except ImportError as e:
     logger.warning(f"ImportError for wdoc before trying to install/update it: '{e}'")
 
-if Path("/app/backend/requirements.txt").exists():
-    if not _check_install_circuit_breaker():
-        # Circuit breaker tripped: skip installation entirely so open-webui
-        # can still start. Tool methods will detect _WDOC_INSTALL_SKIPPED
-        # and inform the user.
-        _WDOC_INSTALL_SKIPPED = True
-        logger.error(
-            "Skipping wdoc installation due to repeated failures. "
-            "The wdoc tool will be unavailable."
-        )
-    else:
+def _install_wdoc_in_background() -> None:
+    """Run the wdoc install/update process in a background thread.
+
+    This avoids blocking open-webui startup, which can take a long time
+    because wdoc has many dependencies. On success, wdoc is imported and
+    then un-imported to verify it works. On failure, _WDOC_INSTALL_SKIPPED
+    is set so tool methods can inform the user.
+    """
+    global _WDOC_INSTALLING, _WDOC_INSTALL_SKIPPED
+    try:
         logger.warning("First uninstalling wdoc")
         subprocess.check_call(
             [sys.executable, "-m", "uv", "pip", "uninstall", "wdoc", "--system"]
@@ -799,7 +822,7 @@ if Path("/app/backend/requirements.txt").exists():
             wdoc_ver = "git+https://github.com/thiswillbeyourgithub/wdoc@dev"
         else:
             raise ValueError("Invalid WDOC_VERSION value")
-        logger.warning(f"Reinsalling wdoc version '{wdoc_ver}'")
+        logger.warning(f"Reinstalling wdoc version '{wdoc_ver}'")
 
         # override some things specified in the wdoc setup.py file
         with open("/app/backend/wdoc_overrides.txt", "w") as f:
@@ -828,5 +851,39 @@ if Path("/app/backend/requirements.txt").exists():
             un_import_wdoc()
         except Exception as e:
             raise Exception(f"Couldn't import wdoc after installation: '{e}'")
+
+        logger.warning("wdoc background installation completed successfully")
+    except Exception as e:
+        logger.error(f"wdoc background installation failed: '{e}'")
+        _WDOC_INSTALL_SKIPPED = True
+    finally:
+        _WDOC_INSTALLING = False
+
+
+if Path("/app/backend/requirements.txt").exists():
+    if not _check_install_circuit_breaker():
+        # Circuit breaker tripped: skip installation entirely so open-webui
+        # can still start. Tool methods will detect _WDOC_INSTALL_SKIPPED
+        # and inform the user.
+        _WDOC_INSTALL_SKIPPED = True
+        logger.error(
+            "Skipping wdoc installation due to repeated failures. "
+            "The wdoc tool will be unavailable."
+        )
+    else:
+        # Run installation in a background thread so we don't block
+        # open-webui startup. wdoc has many dependencies and installation
+        # can take a long time.
+        _WDOC_INSTALLING = True
+        _install_thread = threading.Thread(
+            target=_install_wdoc_in_background,
+            daemon=True,  # won't prevent open-webui from shutting down
+            name="wdoc-installer",
+        )
+        _install_thread.start()
+        logger.warning(
+            "wdoc installation started in background thread. "
+            "The tool will be available once installation completes."
+        )
 else:
     logger.error(f"No /app/backend/requirements.txt file found")
