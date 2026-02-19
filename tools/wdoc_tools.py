@@ -20,6 +20,7 @@ description: use wdoc (cf github repo) as rag system to parse online stuff or su
 import os
 import subprocess
 import json
+import time
 from typing import Callable, Any, Dict
 import traceback
 import re
@@ -29,6 +30,17 @@ import sys
 from pathlib import Path
 from loguru import logger
 from datetime import datetime
+
+# Env variable used as a circuit breaker to avoid repeated failed installs
+# crashing open-webui. Format: "<attempt_count>/<unix_timestamp_of_last_attempt>"
+_WDOC_INSTALL_TRACKER_ENV = "WDOC_INSTALL_TRACKER"
+# Max install attempts allowed within the time window before giving up
+_WDOC_MAX_INSTALL_ATTEMPTS = 3
+# Time window in seconds: if we exceed max attempts within this window, stop trying
+_WDOC_INSTALL_WINDOW_SECONDS = 300  # 5 minutes
+# Set to True when installation was skipped due to circuit breaker, so that
+# tool methods can detect this and inform the user
+_WDOC_INSTALL_SKIPPED = False
 
 # change this to choose which wdoc version to install
 WDOC_VERSION = "latest_release"
@@ -294,6 +306,16 @@ class Tools:
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
 
+        if _WDOC_INSTALL_SKIPPED:
+            error_message = (
+                "**wdoc installation failed repeatedly and was disabled to prevent "
+                "crashing open-webui. Please open an issue at "
+                "https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/issues "
+                "with your open-webui and wdoc versions.**"
+            )
+            await emitter.error_update(error_message)
+            return error_message
+
         if not self.valves.useracknowledgement:
             error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool.**"
             await emitter.send_as_message(error_message)
@@ -362,6 +384,16 @@ class Tools:
         """
         emitter = EventEmitter(__event_emitter__)
         self.on_valves_updated()
+
+        if _WDOC_INSTALL_SKIPPED:
+            error_message = (
+                "**wdoc installation failed repeatedly and was disabled to prevent "
+                "crashing open-webui. Please open an issue at "
+                "https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/issues "
+                "with your open-webui and wdoc versions.**"
+            )
+            await emitter.error_update(error_message)
+            return error_message
 
         if not self.valves.useracknowledgement:
             error_message = "**Wdoc Tool disabled. Please ask the admin to check the valves of wdoc tool.**"
@@ -682,6 +714,47 @@ def un_import_wdoc():
     importlib.invalidate_caches()
 
 
+def _check_install_circuit_breaker() -> bool:
+    """
+    Check the install attempt tracker env variable to decide whether we should
+    attempt another wdoc installation. Returns True if it's safe to proceed,
+    False if we've exceeded the max attempts within the time window.
+
+    The env variable format is "<count>/<unix_timestamp>", e.g. "2/1708300000.0".
+    The counter tracks how many install attempts happened recently; the timestamp
+    records when the last attempt occurred. If more than _WDOC_MAX_INSTALL_ATTEMPTS
+    happen within _WDOC_INSTALL_WINDOW_SECONDS, we stop trying to prevent an
+    infinite restart loop that blocks open-webui startup.
+    """
+    tracker = os.environ.get(_WDOC_INSTALL_TRACKER_ENV, "0/0")
+    try:
+        count_str, ts_str = tracker.split("/")
+        count = int(count_str)
+        last_ts = float(ts_str)
+    except (ValueError, IndexError):
+        # Malformed tracker, reset it
+        count = 0
+        last_ts = 0.0
+
+    now = time.time()
+
+    # If the last attempt was outside the time window, reset the counter
+    if now - last_ts > _WDOC_INSTALL_WINDOW_SECONDS:
+        count = 0
+
+    if count >= _WDOC_MAX_INSTALL_ATTEMPTS:
+        logger.error(
+            f"wdoc install circuit breaker triggered: {count} attempts in the "
+            f"last {_WDOC_INSTALL_WINDOW_SECONDS}s. Skipping installation to "
+            f"avoid crashing open-webui in a loop."
+        )
+        return False
+
+    # Record this new attempt
+    os.environ[_WDOC_INSTALL_TRACKER_ENV] = f"{count + 1}/{now}"
+    return True
+
+
 # force unimporting wdoc to test import it
 if "wdoc" in sys.modules:
     try:
@@ -698,53 +771,62 @@ except ImportError as e:
     logger.warning(f"ImportError for wdoc before trying to install/update it: '{e}'")
 
 if Path("/app/backend/requirements.txt").exists():
-    logger.warning("First uninstalling wdoc")
-    subprocess.check_call(
-        [sys.executable, "-m", "uv", "pip", "uninstall", "wdoc", "--system"]
-    )
-    logger.warning("Done uninstalling wdoc")
-    subprocess.check_call([sys.executable, "-m", "uv", "cache", "clean"])
-    logger.warning("Done clearing uv cache")
-
-    if WDOC_VERSION == "latest_release":
-        wdoc_ver = "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION
-    elif WDOC_VERSION == "pinned":
-        wdoc_ver = "wdoc==" + Tools.APPROPRIATE_WDOC_VERSION
-    elif WDOC_VERSION == "git_main":
-        wdoc_ver = "git+https://github.com/thiswillbeyourgithub/wdoc"
-    elif WDOC_VERSION == "git_dev":
-        wdoc_ver = "git+https://github.com/thiswillbeyourgithub/wdoc@dev"
+    if not _check_install_circuit_breaker():
+        # Circuit breaker tripped: skip installation entirely so open-webui
+        # can still start. Tool methods will detect _WDOC_INSTALL_SKIPPED
+        # and inform the user.
+        _WDOC_INSTALL_SKIPPED = True
+        logger.error(
+            "Skipping wdoc installation due to repeated failures. "
+            "The wdoc tool will be unavailable."
+        )
     else:
-        raise ValueError("Invalid WDOC_VERSION value")
-    logger.warning(f"Reinsalling wdoc version '{wdoc_ver}'")
+        logger.warning("First uninstalling wdoc")
+        subprocess.check_call(
+            [sys.executable, "-m", "uv", "pip", "uninstall", "wdoc", "--system"]
+        )
+        logger.warning("Done uninstalling wdoc")
+        subprocess.check_call([sys.executable, "-m", "uv", "cache", "clean"])
+        logger.warning("Done clearing uv cache")
 
-    # override some things specified in the wdoc setup.py file
-    with open("/app/backend/wdoc_overrides.txt", "w") as f:
-        f.write("chonkie[all]\n")
+        if WDOC_VERSION == "latest_release":
+            wdoc_ver = "wdoc>=" + Tools.APPROPRIATE_WDOC_VERSION
+        elif WDOC_VERSION == "pinned":
+            wdoc_ver = "wdoc==" + Tools.APPROPRIATE_WDOC_VERSION
+        elif WDOC_VERSION == "git_main":
+            wdoc_ver = "git+https://github.com/thiswillbeyourgithub/wdoc"
+        elif WDOC_VERSION == "git_dev":
+            wdoc_ver = "git+https://github.com/thiswillbeyourgithub/wdoc@dev"
+        else:
+            raise ValueError("Invalid WDOC_VERSION value")
+        logger.warning(f"Reinsalling wdoc version '{wdoc_ver}'")
 
-    subprocess.check_call(
-        [
-            sys.executable,
-            "-m",
-            "uv",
-            "pip",
-            "install",
-            "--reinstall",
-            "-r",
-            "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
-            wdoc_ver,
-            "--overrides",
-            "/app/backend/wdoc_overrides.txt",
-            "--system",
-        ]
-    )
+        # override some things specified in the wdoc setup.py file
+        with open("/app/backend/wdoc_overrides.txt", "w") as f:
+            f.write("chonkie[all]\n")
+
+        subprocess.check_call(
+            [
+                sys.executable,
+                "-m",
+                "uv",
+                "pip",
+                "install",
+                "--reinstall",
+                "-r",
+                "/app/backend/requirements.txt",  # to make sure we don't remove any dependency from open-webui
+                wdoc_ver,
+                "--overrides",
+                "/app/backend/wdoc_overrides.txt",
+                "--system",
+            ]
+        )
+
+        try:
+            import wdoc
+
+            un_import_wdoc()
+        except Exception as e:
+            raise Exception(f"Couldn't import wdoc after installation: '{e}'")
 else:
     logger.error(f"No /app/backend/requirements.txt file found")
-
-
-try:
-    import wdoc
-
-    un_import_wdoc()
-except Exception as e:
-    raise Exception(f"Couldn't import wdoc after installation: '{e}'")
