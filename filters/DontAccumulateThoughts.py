@@ -4,7 +4,7 @@ author: thiswillbeyourightub
 author_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 funding_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/
 git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
-version: 1.0.0
+version: 1.1.0
 date: 2025-03-27
 license: AGPLv3
 description: Removes thinking blocks (<think(ing)?>...</think(ing)?>) from assistant messages to avoid resending them in chat history, saving costs and reducing token usage.
