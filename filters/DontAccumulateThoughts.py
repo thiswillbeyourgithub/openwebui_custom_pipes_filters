@@ -7,7 +7,7 @@ git_url: https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters
 version: 1.0.0
 date: 2025-03-27
 license: AGPLv3
-description: Removes thinking blocks (<thinking>...</thinking>) from assistant messages to avoid resending them in chat history, saving costs and reducing token usage.
+description: Removes thinking blocks (<think(ing)?>...</think(ing)?>) from assistant messages to avoid resending them in chat history, saving costs and reducing token usage.
 openwebui_url: https://openwebui.com/f/qqqqqqqqqqqqqqqqqqqq/dontaccumulatethoughts
 """
 
@@ -30,7 +30,7 @@ class Filter:
         )
         debug: bool = Field(default=False, description="Enable debug logging")
         thinking_pattern: str = Field(
-            default=r"<thinking>.*?</thinking>",
+            default=r"<think(ing)?>.*?</think(ing)?>",
             description="Regex pattern to match thinking blocks (supports multiline with (?s) flag)",
         )
 
