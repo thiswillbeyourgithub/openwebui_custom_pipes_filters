@@ -255,7 +255,7 @@ class Tools:
             # Check wdoc version
             check_wdoc_version(wdoc, self.APPROPRIATE_WDOC_VERSION)
             try:
-                parsed = wdoc.wdoc.parse_file(
+                parsed = wdoc.wdoc.parse_doc(
                     path=url,
                     filetype="auto",
                     format="langchain_dict",
