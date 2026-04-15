@@ -327,7 +327,7 @@ class Tools:
                 "**wdoc is currently being installed in the background. "
                 "Please try again in a few minutes.**"
             )
-            await emitter.status_update(message)
+            await emitter.progress_update(message)
             return message
 
         if not self.valves.useracknowledgement:
@@ -416,7 +416,7 @@ class Tools:
                 "**wdoc is currently being installed in the background. "
                 "Please try again in a few minutes.**"
             )
-            await emitter.status_update(message)
+            await emitter.progress_update(message)
             return message
 
         if not self.valves.useracknowledgement:
