@@ -109,8 +109,8 @@ class Tools:
             description="If True, use the citation system for summaries instead of outputting the text directly. Keep in mind that if using userToolsOutput with wdoc, your token might mention the whole summary twice so be careful if using multiturn chats!",
         )
         use_citations_for_parse: bool = Field(
-            default=False,
-            description="If True, use the citation system for parsed content instead of outputting the text directly.",
+            default=True,
+            description="If True, use the citation system for parsed content instead of outputting the text directly, otherwise it will appear as a tool output value to the LLM. Default to True.",
         )
         parse_before_summary: bool = Field(
             default=True,
